@@ -10,8 +10,8 @@ RUN npm install -g pnpm
 # Copy package files first for better Docker layer caching
 COPY package*.json pnpm-lock.yaml* ./
 
-# Install dependencies
-RUN pnpm install
+# Install all dependencies (including devDependencies for build)
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .

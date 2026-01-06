@@ -1155,7 +1155,24 @@ The authentication logic is implemented in `src/common/middleware/auth.middlewar
 
 ## Changelog
 
-### Version 3.0.1 (Latest) - Database Migration Fix
+### Version 3.0.2 (Latest) - Local JWKS Authentication Mode
+
+**New Features:**
+
+- 🔐 **AUTH_MODE Environment Variable**: Choose between `local` or `keycloak` authentication modes
+  - `local` (default): Use local JWKS file (`config/jwks/jwks.json`) for token verification
+  - `keycloak`: Use remote Keycloak SSO (requires ISSUER and AUDIENCE)
+- ✅ **Removed Keycloak Dependency**: App can now run without ISSUER/AUDIENCE env vars when using local mode
+- 🔑 **Token Verification Still Works**: JWT verification uses local JWKS file
+
+**Files Changed:**
+
+- `auth.service.ts` - Added AUTH_MODE support with local/keycloak modes
+- `.env.example` - Added AUTH_MODE documentation
+
+---
+
+### Version 3.0.1 - Database Migration Fix
 
 **Bug Fixes:**
 

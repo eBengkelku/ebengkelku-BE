@@ -1155,7 +1155,23 @@ The authentication logic is implemented in `src/common/middleware/auth.middlewar
 
 ## Changelog
 
-### Version 3.0.0 (Latest) - Rich Domain Model Architecture
+### Version 3.0.1 (Latest) - Database Migration Fix
+
+**Bug Fixes:**
+
+- 🐛 **Fixed `pnpm run db:migrate` ESM Error**: Resolved `Unexpected token 'export'` error when running database migrations
+  - Updated scripts to use `node -r ts-node/register -r tsconfig-paths/register` for TypeScript execution
+  - Fixed Windows compatibility by pointing to `node_modules/knex/bin/cli.js` instead of bash shim
+  - All database scripts now properly support TypeScript configuration files
+
+**Affected Scripts:**
+
+- `db:migrate`, `db:migrate:rollback`, `db:seed`, `db:reset`
+- `db:migrate:dev`, `db:seed:dev`, `db:reset:dev`
+
+---
+
+### Version 3.0.0 - Rich Domain Model Architecture
 
 **Major Features:**
 

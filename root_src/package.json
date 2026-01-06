@@ -1,7 +1,7 @@
 {
-  "name": "nest-getting-started",
-  "version": "0.0.1",
-  "description": "",
+  "name": "ebengkelku-backend",
+  "version": "3.0.0",
+  "description": "E-bengkelku Backend - Workshop Management System API",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

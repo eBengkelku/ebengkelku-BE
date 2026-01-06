@@ -1,6 +1,6 @@
-# NestJS Getting Started - Products API
+# E-bengkelku Backend
 
-A simple NestJS application with a clean architecture for managing products using MySQL and Knex.js.
+A NestJS backend application for workshop management systems with Rich Domain Model architecture, MySQL, and Knex.js.
 
 ## Project Structure
 
@@ -1155,7 +1155,41 @@ The authentication logic is implemented in `src/common/middleware/auth.middlewar
 
 ## Changelog
 
-### Version 2.1.0 (Latest) - File Upload System & Enhanced Documentation
+### Version 3.0.0 (Latest) - Rich Domain Model Architecture
+
+**Major Features:**
+
+- 🏗️ **Rich Domain Model Pattern**: Implemented DDD-inspired architecture with encapsulated business logic
+- 🧱 **Base Infrastructure**: `BaseDomainModel`, `BaseDomainRepository`, `BaseDomainService` in `src/common/domain/`
+- 🔄 **Hybrid Architecture**: Supports both Anemic and Rich Domain Model patterns in the same codebase
+
+**Products Domain (Fully Migrated to Rich Domain Model):**
+
+- ✅ **ProductModel**: Complete business logic encapsulation
+  - Factory methods: `create()`, `reconstitute()`
+  - Business methods: `adjustStock()`, `restockItems()`, `sellItems()`, `applyDiscount()`, `updatePrice()`
+  - Query methods: `isInStock()`, `isOutOfStock()`, `isLowStock()`
+  - Validation: price, stock, name constraints enforced at model level
+- ✅ **ProductRepository**: Clean data access abstraction
+  - Custom queries: `findByCategory()`, `findLowStock()`, `findByPriceRange()`, `searchByName()`, `findOutOfStock()`
+  - Automatic soft delete handling
+
+**Architecture Benefits:**
+
+- ✅ Business logic in models, not scattered in services (DDD approach)
+- ✅ Impossible to create invalid product states
+- ✅ Testable without database mocking
+- ✅ Clear separation of concerns
+
+**Documentation:**
+
+- 📚 `docs/architecture-domain-model-pattern-documentation.md` - Full blueprint
+- 📚 `docs/domain-model-usage-guide.md` - Implementation guide
+- 📚 `docs/domain-model-implementation-documentation.md` - Technical details
+
+---
+
+### Version 2.1.0 - File Upload System & Enhanced Documentation
 
 **Major Features:**
 

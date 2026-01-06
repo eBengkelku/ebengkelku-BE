@@ -1,0 +1,133 @@
+{
+  "name": "nest-getting-started",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:unit": "jest --testPathPatterns=__tests__",
+    "test:integration": "jest --testPathPatterns=test/integration",
+    "test:e2e": "jest --testPathPatterns=test/e2e",
+    "test:watch": "jest --watch --testPathPatterns=__tests__",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:products": "jest --testPathPatterns=products",
+    "db:migrate": "knex migrate:latest",
+    "db:migrate:rollback": "knex migrate:rollback",
+    "db:seed": "knex seed:run",
+    "db:reset": "knex migrate:rollback --all && knex migrate:latest && knex seed:run",
+    "dev:local": "NODE_ENV=local npm run start:dev",
+    "dev:remote": "NODE_ENV=development npm run start:dev",
+    "db:migrate:dev": "NODE_ENV=development knex migrate:latest",
+    "db:seed:dev": "NODE_ENV=development knex seed:run",
+    "db:reset:dev": "NODE_ENV=development knex migrate:rollback --all && NODE_ENV=development knex migrate:latest && NODE_ENV=development knex seed:run"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/mapped-types": "*",
+    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/swagger": "^8.0.0",
+    "@types/multer": "^2.0.0",
+    "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^17.2.1",
+    "envalid": "^8.1.0",
+    "ioredis": "^5.8.1",
+    "jose": "^6.0.13",
+    "knex": "^3.1.0",
+    "multer": "^2.0.2",
+    "nestjs-i18n": "^10.5.1",
+    "nestjs-pino": "^4.4.1",
+    "pg": "^8.13.1",
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.1.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "uuid": "^11.0.4"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.7",
+    "@types/pg": "^8.11.10",
+    "@types/supertest": "^6.0.2",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "globals": "^16.0.0",
+    "jest": "^30.0.0",
+    "prettier": "^3.4.2",
+    "source-map-support": "^0.5.21",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testMatch": [
+      "<rootDir>/src/**/__tests__/**/*.spec.ts",
+      "<rootDir>/test/integration/**/*.spec.ts",
+      "<rootDir>/test/e2e/**/*.e2e-spec.ts"
+    ],
+    "transform": {
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "useESM": true
+        }
+      ]
+    },
+    "collectCoverageFrom": [
+      "src/**/*.(t|j)s",
+      "!src/**/__tests__/**",
+      "!src/**/__mocks__/**",
+      "!src/**/*.spec.ts",
+      "!src/**/*.d.ts"
+    ],
+    "coverageDirectory": "coverage",
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/",
+      "/__mocks__/"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(.pnpm/jose@|jose))"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "preset": "ts-jest/presets/default-esm"
+  }
+}

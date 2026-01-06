@@ -1,0 +1,38 @@
+{
+  "file": {
+    "file_path": {
+      "is_string": "File path must be a string",
+      "not_empty": "File path is required",
+      "length": "File path must be between 1 and 500 characters"
+    },
+    "original_name": {
+      "is_string": "Original filename must be a string",
+      "not_empty": "Original filename is required",
+      "length": "Original filename must be between 1 and 255 characters"
+    },
+    "mime_type": {
+      "is_string": "MIME type must be a string",
+      "not_empty": "MIME type is required",
+      "length": "MIME type must be between 1 and 100 characters"
+    },
+    "file_size": {
+      "is_number": "File size must be a number",
+      "min": "File size must be at least 1 byte"
+    },
+    "file_type": {
+      "is_string": "File type must be a string",
+      "not_empty": "File type is required",
+      "length": "File type must be between 1 and 50 characters"
+    },
+    "extension": {
+      "is_string": "File extension must be a string",
+      "not_empty": "File extension is required",
+      "length": "File extension must be between 1 and 10 characters"
+    },
+    "not_found": "File with ID {{id}} not found",
+    "size_too_large": "File size is too large. Maximum allowed size is {{max}}",
+    "invalid_type": "Invalid file type. Allowed types: {{types}}",
+    "upload_failed": "File upload failed",
+    "delete_failed": "File deletion failed"
+  }
+}

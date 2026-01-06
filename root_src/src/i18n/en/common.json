@@ -1,0 +1,48 @@
+{
+  "welcome": "Welcome to our platform",
+  "success": {
+    "default": "Success",
+    "request_successful": "Request successful",
+    "resource_created": "Resource created successfully",
+    "request_accepted": "Request accepted",
+    "no_content": "No content"
+  },
+  "error": "An error occurred",
+  "notFound": "Resource not found",
+  "unauthorized": "Access denied",
+  "forbidden": "Access forbidden",
+  "listed": "Data retrieved successfully",
+  "created": "Data created successfully",
+  "updated": "Data updated successfully",
+  "deleted": "Data deleted successfully",
+  "validation": {
+    "failed": "Validation failed",
+    "required": "{{property}} is required",
+    "string": "{{property}} must be a string",
+    "number": "{{property}} must be a valid number",
+    "numeric": "{{property}} must be a number",
+    "integer": "{{property}} must be an integer",
+    "min": "{{property}} must be at least {{min}}",
+    "max": "{{property}} must not exceed {{max}}",
+    "length": "{{property}} must be between {{min}} and {{max}} characters",
+    "maxLength": "{{property}} cannot exceed {{max}} characters",
+    "minLength": "{{property}} must be at least {{min}} characters",
+    "email": "{{property}} must be a valid email address",
+    "url": "{{property}} must be a valid URL",
+    "date": "{{property}} must be a valid date",
+    "boolean": "{{property}} must be a boolean value",
+    "array": "{{property}} must be an array",
+    "enum": "{{property}} must be one of: {{validValues}}",
+    "invalid": "Invalid input",
+    "tooShort": "Input too short",
+    "tooLong": "Input too long"
+  },
+  "jwt": {
+    "expired": "JWT token has expired",
+    "invalid": "Invalid JWT token",
+    "audienceMismatch": "JWT audience mismatch",
+    "issuerMismatch": "JWT issuer mismatch",
+    "noMatchingKey": "No matching key found in JWKS",
+    "jwksServerError": "Authentication server temporarily unavailable. Please try again later."
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "common": {
+    "validation": {
+      "required": "{{field}} is required",
+      "invalid": "{{field}} is invalid",
+      "negative_number": "{{field}} must be non-negative",
+      "empty_string": "{{field}} cannot be empty",
+      "min_length": "{{field}} must be at least {{min}} characters",
+      "max_length": "{{field}} cannot exceed {{max}} characters",
+      "invalid_format": "{{field}} has invalid format",
+      "out_of_range": "{{field}} is out of valid range"
+    },
+    "not_found": "{{entityName}} not found",
+    "not_found_by_id": "{{entityName}} with id {{id}} not found",
+    "already_exists": "{{entityName}} already exists",
+    "duplicate": "Duplicate {{entityName}} found",
+    "insufficient_quantity": "Insufficient {{field}}. Available: {{available}}, Requested: {{requested}}",
+    "operation_not_allowed": "This operation is not allowed",
+    "invalid_state_transition": "Invalid state transition from {{from}} to {{to}}"
+  },
+  "products": {
+    "validation": {
+      "name_required": "Product name is required and cannot be empty",
+      "name_empty": "Product name cannot be empty",
+      "price_negative": "Price must be non-negative",
+      "stock_negative": "Stock quantity must be non-negative",
+      "discount_invalid": "Discount must be between 0 and 100 percent"
+    },
+    "insufficient_stock": "Insufficient stock. Available: {{available}}, Requested: {{requested}}",
+    "not_found": "Product not found",
+    "restock_quantity_invalid": "Restock quantity must be non-negative",
+    "sell_quantity_invalid": "Sale quantity must be non-negative"
+  },
+  "orders": {
+    "validation": {
+      "items_required": "Order must have at least one item",
+      "total_mismatch": "Total amount mismatch. Expected: {{expected}}, Got: {{actual}}"
+    },
+    "cannot_confirm": "Cannot confirm order in {{status}} status",
+    "cannot_cancel": "Cannot cancel delivered order",
+    "already_delivered": "Order is already delivered",
+    "not_found": "Order not found"
+  },
+  "bookings": {
+    "validation": {
+      "date_invalid": "End date must be after start date",
+      "past_date": "Cannot book in the past",
+      "duration_too_short": "Booking must be at least {{minHours}} hour(s)"
+    },
+    "overlap_detected": "Booking overlaps with {{count}} existing booking(s)",
+    "cannot_cancel": "Can only cancel pending or confirmed bookings",
+    "too_late_to_cancel": "Cannot cancel within {{hours}} hours of start time",
+    "not_found": "Booking not found"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "file": {
+    "file_path": {
+      "is_string": "Path file harus berupa string",
+      "not_empty": "Path file wajib diisi",
+      "length": "Path file harus antara 1 hingga 500 karakter"
+    },
+    "original_name": {
+      "is_string": "Nama file asli harus berupa string",
+      "not_empty": "Nama file asli wajib diisi",
+      "length": "Nama file asli harus antara 1 hingga 255 karakter"
+    },
+    "mime_type": {
+      "is_string": "Tipe MIME harus berupa string",
+      "not_empty": "Tipe MIME wajib diisi",
+      "length": "Tipe MIME harus antara 1 hingga 100 karakter"
+    },
+    "file_size": {
+      "is_number": "Ukuran file harus berupa angka",
+      "min": "Ukuran file minimal 1 byte"
+    },
+    "file_type": {
+      "is_string": "Tipe file harus berupa string",
+      "not_empty": "Tipe file wajib diisi",
+      "length": "Tipe file harus antara 1 hingga 50 karakter"
+    },
+    "extension": {
+      "is_string": "Ekstensi file harus berupa string",
+      "not_empty": "Ekstensi file wajib diisi",
+      "length": "Ekstensi file harus antara 1 hingga 10 karakter"
+    },
+    "not_found": "File dengan ID {{id}} tidak ditemukan",
+    "size_too_large": "Ukuran file terlalu besar. Ukuran maksimal yang diizinkan adalah {{max}}",
+    "invalid_type": "Tipe file tidak valid. Tipe yang diizinkan: {{types}}",
+    "upload_failed": "Upload file gagal",
+    "delete_failed": "Penghapusan file gagal"
+  }
+}

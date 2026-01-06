@@ -1,0 +1,65 @@
+version: "3"
+services:
+  # Local PostgreSQL for development (NODE_ENV=local)
+  postgresql:
+    image: postgres:15-alpine
+    platform: linux/amd64
+    container_name: nest-app-postgresql
+    environment:
+      POSTGRES_USER: ${LOCAL_DB_USER:-nest_user}
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:-nest_password}
+      POSTGRES_DB: ${LOCAL_DB_NAME:-nest_app}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${LOCAL_DB_USER:-nest_user} -d ${LOCAL_DB_NAME:-nest_app}",
+        ]
+      timeout: 5s
+      interval: 15s
+      retries: 10
+
+  nest-starter-api:
+    build:
+      context: ./root_src
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: nest-app-api
+    working_dir: /var/www/app
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./root_src:/var/www/app
+      - ./files:/var/www/files
+      - pnpm_store:/root/.local/share/pnpm/store
+      - node_modules_cache:/var/www/app/node_modules
+    command: sh -c "pnpm install && pnpm run start:dev"
+    restart: always
+    env_file:
+      - ./root_src/.env
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.nest-api.rule=Host(`my.upnvj-api.local`)"
+      - "traefik.http.services.nest-api.loadbalancer.server.port=3004"
+
+volumes:
+  postgresql_data:
+  pnpm_store:
+  node_modules_cache:
+
+networks:
+  db:
+    external: true

@@ -1,0 +1,73 @@
+{
+  "title": "Products",
+  "validation": {
+    "name": {
+      "required": "Product name is required",
+      "string": "Product name must be a text value",
+      "length": "Product name must be between 1 and 255 characters"
+    },
+    "description": {
+      "string": "Description must be a text value",
+      "maxLength": "Description cannot exceed 1000 characters"
+    },
+    "price": {
+      "required": "Price is required",
+      "number": "Price must be a valid number",
+      "min": "Price must be greater than or equal to 1"
+    },
+    "stock_quantity": {
+      "required": "Stock quantity is required",
+      "number": "Stock quantity must be a valid number",
+      "min": "Stock quantity must be greater than or equal to 0"
+    },
+    "category": {
+      "string": "Category must be a text value",
+      "maxLength": "Category cannot exceed 100 characters"
+    }
+  },
+  "created": "Product created successfully",
+  "updated": "Product updated successfully",
+  "deleted": "Product deleted successfully",
+  "listed": "Products retrieved successfully",
+  "found": "Product found successfully",
+  "errors": {
+    "notFound": "Product not found",
+    "notFoundDetail": "Product with ID {{id}} not found",
+    "nameExists": "Product name already exists",
+    "invalidPrice": "Invalid price format",
+    "outOfStock": "Product is out of stock",
+    "searchTermRequired": "Search term is required",
+    "searchTermRequiredDetail": "Please provide a valid search term",
+    "discountPercentRequired": "Discount percent is required",
+    "discountPercentRequiredDetail": "Please provide a discount percentage value",
+    "invalidDiscountPercent": "Invalid discount percent",
+    "invalidDiscountPercentDetail": "Discount percent must be between 0 and 100",
+    "stockDeltaRequired": "Stock delta is required",
+    "stockDeltaRequiredDetail": "Please provide a stock adjustment value (delta)",
+    "invalidStockDelta": "Invalid stock delta",
+    "invalidStockDeltaDetail": "Stock delta must be a valid number",
+    "restockQuantityRequired": "Restock quantity is required",
+    "restockQuantityRequiredDetail": "Please provide a quantity to restock",
+    "invalidRestockQuantity": "Invalid restock quantity",
+    "invalidRestockQuantityDetail": "Restock quantity must be a positive number",
+    "sellQuantityRequired": "Sell quantity is required",
+    "sellQuantityRequiredDetail": "Please provide a quantity to sell",
+    "invalidSellQuantity": "Invalid sell quantity",
+    "invalidSellQuantityDetail": "Sell quantity must be a positive number",
+    "updatesArrayRequired": "Updates array is required",
+    "updatesArrayRequiredDetail": "Please provide an array of stock updates",
+    "updatesArrayEmpty": "Updates array cannot be empty",
+    "updatesArrayEmptyDetail": "Please provide at least one stock update",
+    "invalidUpdateItem": "Invalid update item",
+    "invalidUpdateItemDetail": "Update item at index {{index}} must have 'id' and 'stock_quantity'",
+    "invalidStockQuantity": "Invalid stock quantity",
+    "invalidStockQuantityDetail": "Stock quantity at index {{index}} must be a non-negative number"
+  },
+  "fields": {
+    "name": "Product Name",
+    "description": "Description",
+    "price": "Price",
+    "stock": "Stock Quantity",
+    "category": "Category"
+  }
+}

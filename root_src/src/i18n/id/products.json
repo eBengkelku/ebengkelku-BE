@@ -1,0 +1,73 @@
+{
+  "title": "Produk",
+  "validation": {
+    "name": {
+      "required": "Nama produk wajib diisi",
+      "string": "Nama produk harus berupa teks",
+      "length": "Nama produk harus antara 1 hingga 255 karakter"
+    },
+    "description": {
+      "string": "Deskripsi harus berupa teks",
+      "maxLength": "Deskripsi tidak boleh lebih dari 1000 karakter"
+    },
+    "price": {
+      "required": "Harga wajib diisi",
+      "number": "Harga harus berupa angka yang valid",
+      "min": "Harga harus lebih besar atau sama dengan 1"
+    },
+    "stock_quantity": {
+      "required": "Jumlah stok wajib diisi",
+      "number": "Jumlah stok harus berupa angka yang valid",
+      "min": "Jumlah stok harus lebih besar atau sama dengan 0"
+    },
+    "category": {
+      "string": "Kategori harus berupa teks",
+      "maxLength": "Kategori tidak boleh lebih dari 100 karakter"
+    }
+  },
+  "created": "Produk berhasil dibuat",
+  "updated": "Produk berhasil diperbarui",
+  "deleted": "Produk berhasil dihapus",
+  "listed": "Produk berhasil diambil",
+  "found": "Produk berhasil ditemukan",
+  "errors": {
+    "notFound": "Produk tidak ditemukan",
+    "notFoundDetail": "Produk dengan ID {{id}} tidak ditemukan",
+    "nameExists": "Nama produk sudah ada",
+    "invalidPrice": "Format harga tidak valid",
+    "outOfStock": "Produk habis",
+    "searchTermRequired": "Kata kunci pencarian wajib diisi",
+    "searchTermRequiredDetail": "Silakan masukkan kata kunci pencarian yang valid",
+    "discountPercentRequired": "Persentase diskon wajib diisi",
+    "discountPercentRequiredDetail": "Silakan masukkan nilai persentase diskon",
+    "invalidDiscountPercent": "Persentase diskon tidak valid",
+    "invalidDiscountPercentDetail": "Persentase diskon harus antara 0 hingga 100",
+    "stockDeltaRequired": "Perubahan stok wajib diisi",
+    "stockDeltaRequiredDetail": "Silakan masukkan nilai perubahan stok (delta)",
+    "invalidStockDelta": "Perubahan stok tidak valid",
+    "invalidStockDeltaDetail": "Perubahan stok harus berupa angka yang valid",
+    "restockQuantityRequired": "Jumlah restock wajib diisi",
+    "restockQuantityRequiredDetail": "Silakan masukkan jumlah restock",
+    "invalidRestockQuantity": "Jumlah restock tidak valid",
+    "invalidRestockQuantityDetail": "Jumlah restock harus berupa angka positif",
+    "sellQuantityRequired": "Jumlah penjualan wajib diisi",
+    "sellQuantityRequiredDetail": "Silakan masukkan jumlah penjualan",
+    "invalidSellQuantity": "Jumlah penjualan tidak valid",
+    "invalidSellQuantityDetail": "Jumlah penjualan harus berupa angka positif",
+    "updatesArrayRequired": "Array pembaruan wajib diisi",
+    "updatesArrayRequiredDetail": "Silakan berikan array pembaruan stok",
+    "updatesArrayEmpty": "Array pembaruan tidak boleh kosong",
+    "updatesArrayEmptyDetail": "Silakan berikan setidaknya satu pembaruan stok",
+    "invalidUpdateItem": "Item pembaruan tidak valid",
+    "invalidUpdateItemDetail": "Item pembaruan pada index {{index}} harus memiliki 'id' dan 'stock_quantity'",
+    "invalidStockQuantity": "Jumlah stok tidak valid",
+    "invalidStockQuantityDetail": "Jumlah stok pada index {{index}} harus berupa angka non-negatif"
+  },
+  "fields": {
+    "name": "Nama Produk",
+    "description": "Deskripsi",
+    "price": "Harga",
+    "stock": "Jumlah Stok",
+    "category": "Kategori"
+  }
+}

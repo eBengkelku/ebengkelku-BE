@@ -1,0 +1,55 @@
+{
+  "common": {
+    "validation": {
+      "required": "{{field}} wajib diisi",
+      "invalid": "{{field}} tidak valid",
+      "negative_number": "{{field}} harus tidak negatif",
+      "empty_string": "{{field}} tidak boleh kosong",
+      "min_length": "{{field}} minimal {{min}} karakter",
+      "max_length": "{{field}} maksimal {{max}} karakter",
+      "invalid_format": "Format {{field}} tidak valid",
+      "out_of_range": "{{field}} di luar rentang yang valid"
+    },
+    "not_found": "{{entityName}} tidak ditemukan",
+    "not_found_by_id": "{{entityName}} dengan id {{id}} tidak ditemukan",
+    "already_exists": "{{entityName}} sudah ada",
+    "duplicate": "{{entityName}} duplikat ditemukan",
+    "insufficient_quantity": "{{field}} tidak mencukupi. Tersedia: {{available}}, Diminta: {{requested}}",
+    "operation_not_allowed": "Operasi ini tidak diizinkan",
+    "invalid_state_transition": "Transisi status tidak valid dari {{from}} ke {{to}}"
+  },
+  "products": {
+    "validation": {
+      "name_required": "Nama produk wajib diisi dan tidak boleh kosong",
+      "name_empty": "Nama produk tidak boleh kosong",
+      "price_negative": "Harga harus tidak negatif",
+      "stock_negative": "Jumlah stok harus tidak negatif",
+      "discount_invalid": "Diskon harus antara 0 dan 100 persen"
+    },
+    "insufficient_stock": "Stok tidak mencukupi. Tersedia: {{available}}, Diminta: {{requested}}",
+    "not_found": "Produk tidak ditemukan",
+    "restock_quantity_invalid": "Jumlah restock harus tidak negatif",
+    "sell_quantity_invalid": "Jumlah penjualan harus tidak negatif"
+  },
+  "orders": {
+    "validation": {
+      "items_required": "Pesanan harus memiliki minimal satu item",
+      "total_mismatch": "Total tidak sesuai. Diharapkan: {{expected}}, Diterima: {{actual}}"
+    },
+    "cannot_confirm": "Tidak dapat mengkonfirmasi pesanan dengan status {{status}}",
+    "cannot_cancel": "Tidak dapat membatalkan pesanan yang sudah dikirim",
+    "already_delivered": "Pesanan sudah dikirim",
+    "not_found": "Pesanan tidak ditemukan"
+  },
+  "bookings": {
+    "validation": {
+      "date_invalid": "Tanggal akhir harus setelah tanggal mulai",
+      "past_date": "Tidak dapat memesan di masa lalu",
+      "duration_too_short": "Pemesanan minimal {{minHours}} jam"
+    },
+    "overlap_detected": "Pemesanan bertabrakan dengan {{count}} pemesanan lain",
+    "cannot_cancel": "Hanya dapat membatalkan pemesanan yang pending atau terkonfirmasi",
+    "too_late_to_cancel": "Tidak dapat membatalkan dalam {{hours}} jam sebelum waktu mulai",
+    "not_found": "Pemesanan tidak ditemukan"
+  }
+}

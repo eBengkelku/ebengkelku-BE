@@ -1,0 +1,48 @@
+{
+  "welcome": "Selamat datang di platform kami",
+  "success": {
+    "default": "Berhasil",
+    "request_successful": "Permintaan berhasil",
+    "resource_created": "Sumber daya berhasil dibuat",
+    "request_accepted": "Permintaan diterima",
+    "no_content": "Tidak ada konten"
+  },
+  "error": "Terjadi kesalahan",
+  "notFound": "Sumber daya tidak ditemukan",
+  "unauthorized": "Akses tidak diizinkan",
+  "forbidden": "Akses dilarang",
+  "listed": "Data berhasil diambil",
+  "created": "Data berhasil dibuat",
+  "updated": "Data berhasil diperbarui",
+  "deleted": "Data berhasil dihapus",
+  "validation": {
+    "failed": "Validasi gagal",
+    "required": "{{property}} wajib diisi",
+    "string": "{{property}} harus berupa teks",
+    "number": "{{property}} harus berupa angka yang valid",
+    "numeric": "{{property}} harus berupa angka",
+    "integer": "{{property}} harus berupa bilangan bulat",
+    "min": "{{property}} minimal {{min}}",
+    "max": "{{property}} maksimal {{max}}",
+    "length": "{{property}} harus antara {{min}} dan {{max}} karakter",
+    "maxLength": "{{property}} tidak boleh melebihi {{max}} karakter",
+    "minLength": "{{property}} minimal {{min}} karakter",
+    "email": "{{property}} harus berupa alamat email yang valid",
+    "url": "{{property}} harus berupa URL yang valid",
+    "date": "{{property}} harus berupa tanggal yang valid",
+    "boolean": "{{property}} harus berupa nilai boolean",
+    "array": "{{property}} harus berupa array",
+    "enum": "{{property}} harus salah satu dari: {{validValues}}",
+    "invalid": "Input tidak valid",
+    "tooShort": "Input terlalu pendek",
+    "tooLong": "Input terlalu panjang"
+  },
+  "jwt": {
+    "expired": "Token JWT telah kedaluwarsa",
+    "invalid": "Token JWT tidak valid",
+    "audienceMismatch": "Audience JWT tidak cocok",
+    "issuerMismatch": "Issuer JWT tidak cocok",
+    "noMatchingKey": "Tidak ditemukan kunci yang cocok di JWKS",
+    "jwksServerError": "Server autentikasi sementara tidak tersedia. Silakan coba lagi nanti."
+  }
+}

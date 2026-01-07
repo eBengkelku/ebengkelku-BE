@@ -1155,7 +1155,20 @@ The authentication logic is implemented in `src/common/middleware/auth.middlewar
 
 ## Changelog
 
-### Version 3.0.2 (Latest) - Local JWKS Authentication Mode
+### Version 3.1.0 (Latest) - Migration Command Script
+
+**New Features:**
+
+- 🛠️ **Migration Generator Command**: Added `pnpm run db:migrate:create:table` to generate Knex migration files
+  - Interactive prompt for table name input
+  - Automatic input normalization (converts to lowercase)
+  - Validation rules (only lowercase letters and underscores allowed)
+  - Re-prompt on invalid input instead of exiting
+- ✅ **Comprehensive Unit Tests**: Added 57 test cases for migration script
+
+---
+
+### Version 3.0.2 - Local JWKS Authentication Mode
 
 **New Features:**
 

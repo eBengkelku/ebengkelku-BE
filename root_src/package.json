@@ -29,7 +29,8 @@
     "dev:remote": "NODE_ENV=development npm run start:dev",
     "db:migrate:dev": "NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js migrate:latest",
     "db:seed:dev": "NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js seed:run",
-    "db:reset:dev": "NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js migrate:rollback --all && NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js migrate:latest && NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js seed:run"
+    "db:reset:dev": "NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js migrate:rollback --all && NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js migrate:latest && NODE_ENV=development node -r ts-node/register -r tsconfig-paths/register node_modules/knex/bin/cli.js seed:run",
+    "db:migrate:create:table": "node scripts/create-migration.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
@@ -94,6 +95,7 @@
     "rootDir": ".",
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.spec.ts",
+      "<rootDir>/scripts/__tests__/**/*.spec.js",
       "<rootDir>/test/integration/**/*.spec.ts",
       "<rootDir>/test/e2e/**/*.e2e-spec.ts"
     ],

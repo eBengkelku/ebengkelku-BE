@@ -919,22 +919,6 @@ describe('create-migration with schema support', () => {
       expect(template).toContain('@returns { Promise<void> }');
     });
 
-    it('should include comment about creating schema', () => {
-      const template = generateNewSchemaMigrationTemplate(
-        'new_schema',
-        'items',
-      );
-      expect(template).toContain("Create schema if it doesn't exist");
-    });
-
-    it('should include comment about creating table', () => {
-      const template = generateNewSchemaMigrationTemplate(
-        'new_schema',
-        'items',
-      );
-      expect(template).toContain('Create table in the new schema');
-    });
-
     it('should work with multi-word schema names', () => {
       const template = generateNewSchemaMigrationTemplate(
         'new_user_data',

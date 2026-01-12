@@ -35,7 +35,7 @@ const SYSTEM_SCHEMAS = [
 function loadEnvConfig() {
   const config = {
     host: process.env.DEV_DB_HOST,
-    port: parseInt(process.env.DEV_DB_PORT || '5432', 10),
+    port: Number.parseInt(process.env.DEV_DB_PORT || '5432', 10),
     user: process.env.DEV_DB_USER,
     password: process.env.DEV_DB_PASSWORD,
     database: process.env.DEV_DB_NAME,
@@ -129,9 +129,9 @@ function promptForSchemaSelection(schemas) {
 
     const askQuestion = () => {
       rl.question('Enter your choice (number): ', (answer) => {
-        const choice = parseInt(answer.trim(), 10);
+        const choice = Number.parseInt(answer.trim(), 10);
 
-        if (isNaN(choice) || choice < 1 || choice > schemas.length + 1) {
+        if (Number.isNaN(choice) || choice < 1 || choice > schemas.length + 1) {
           console.log(
             `\n❌ Invalid choice. Please enter a number between 1 and ${schemas.length + 1}\n`,
           );
@@ -395,6 +395,80 @@ function createMigrationFile(schemaName, tableName, isNewSchema = false) {
 }
 
 /**
+ * Prompts user for a new schema name with validation loop
+ * @returns {Promise<string>} Validated and normalized schema name
+ */
+async function promptAndValidateNewSchemaName() {
+  let normalizedSchemaName;
+  let isSchemaValid = false;
+
+  while (!isSchemaValid) {
+    const rawSchemaInput = await promptForNewSchemaName();
+    normalizedSchemaName = normalizeSchemaName(rawSchemaInput);
+    const schemaValidation = validateSchemaName(normalizedSchemaName);
+
+    if (schemaValidation.valid) {
+      isSchemaValid = true;
+    } else {
+      console.error(`\n❌ Error: ${schemaValidation.error}`);
+      console.log(
+        'Valid schema name examples: inventory, user_data, sales_reports\n',
+      );
+    }
+  }
+
+  return normalizedSchemaName;
+}
+
+/**
+ * Prompts user for a table name with validation loop
+ * @returns {Promise<string>} Validated and normalized table name
+ */
+async function promptAndValidateTableName() {
+  let tableName;
+  let isTableValid = false;
+
+  while (!isTableValid) {
+    const rawTableInput = await promptForTableName();
+    tableName = normalizeTableName(rawTableInput);
+    const tableValidation = validateTableName(tableName);
+
+    if (tableValidation.valid) {
+      isTableValid = true;
+    } else {
+      console.error(`\n❌ Error: ${tableValidation.error}`);
+      console.log(
+        'Valid table name examples: users, user_profiles, order_items\n',
+      );
+    }
+  }
+
+  return tableName;
+}
+
+/**
+ * Handles schema selection logic
+ * @param {string[]} schemas - Available schemas from database
+ * @returns {Promise<{ schemaName: string, isNewSchema: boolean }>} Selected schema info
+ */
+async function handleSchemaSelection(schemas) {
+  if (schemas.length === 0) {
+    console.log('⚠️  No schemas found. Will create new schema.\n');
+    const schemaName = await promptAndValidateNewSchemaName();
+    return { schemaName, isNewSchema: true };
+  }
+
+  const schemaSelection = await promptForSchemaSelection(schemas);
+
+  if (schemaSelection.isNew) {
+    const schemaName = await promptAndValidateNewSchemaName();
+    return { schemaName, isNewSchema: true };
+  }
+
+  return { schemaName: schemaSelection.name, isNewSchema: false };
+}
+
+/**
  * Main entry point
  */
 async function main() {
@@ -414,85 +488,12 @@ async function main() {
     // Fetch available schemas
     const schemas = await fetchSchemas(client);
 
-    if (schemas.length === 0) {
-      console.log('⚠️  No schemas found. Will create new schema.\n');
-    }
-
     // Schema selection
-    let schemaName;
-    let isNewSchema = false;
-
-    if (schemas.length > 0) {
-      const schemaSelection = await promptForSchemaSelection(schemas);
-
-      if (schemaSelection.isNew) {
-        isNewSchema = true;
-        let normalizedSchemaName;
-        let isSchemaValid = false;
-
-        while (!isSchemaValid) {
-          const rawSchemaInput = await promptForNewSchemaName();
-          normalizedSchemaName = normalizeSchemaName(rawSchemaInput);
-          const schemaValidation = validateSchemaName(normalizedSchemaName);
-
-          if (!schemaValidation.valid) {
-            console.error(`\n❌ Error: ${schemaValidation.error}`);
-            console.log(
-              'Valid schema name examples: inventory, user_data, sales_reports\n',
-            );
-          } else {
-            isSchemaValid = true;
-          }
-        }
-
-        schemaName = normalizedSchemaName;
-      } else {
-        schemaName = schemaSelection.name;
-      }
-    } else {
-      // No schemas found, must create new
-      isNewSchema = true;
-      let normalizedSchemaName;
-      let isSchemaValid = false;
-
-      while (!isSchemaValid) {
-        const rawSchemaInput = await promptForNewSchemaName();
-        normalizedSchemaName = normalizeSchemaName(rawSchemaInput);
-        const schemaValidation = validateSchemaName(normalizedSchemaName);
-
-        if (!schemaValidation.valid) {
-          console.error(`\n❌ Error: ${schemaValidation.error}`);
-          console.log(
-            'Valid schema name examples: inventory, user_data, sales_reports\n',
-          );
-        } else {
-          isSchemaValid = true;
-        }
-      }
-
-      schemaName = normalizedSchemaName;
-    }
-
+    const { schemaName, isNewSchema } = await handleSchemaSelection(schemas);
     console.log(`\n✅ Selected schema: ${schemaName}\n`);
 
     // Table name input
-    let tableName;
-    let isTableValid = false;
-
-    while (!isTableValid) {
-      const rawTableInput = await promptForTableName();
-      tableName = normalizeTableName(rawTableInput);
-      const tableValidation = validateTableName(tableName);
-
-      if (!tableValidation.valid) {
-        console.error(`\n❌ Error: ${tableValidation.error}`);
-        console.log(
-          'Valid table name examples: users, user_profiles, order_items\n',
-        );
-      } else {
-        isTableValid = true;
-      }
-    }
+    const tableName = await promptAndValidateTableName();
 
     // Create migration file
     createMigrationFile(schemaName, tableName, isNewSchema);
@@ -523,12 +524,16 @@ module.exports = {
   promptForTableName,
   promptForSchemaSelection,
   promptForNewSchemaName,
+  promptAndValidateNewSchemaName,
+  promptAndValidateTableName,
+  handleSchemaSelection,
   MIGRATIONS_DIR,
   SYSTEM_SCHEMAS,
 };
 
 // Only run main when executed directly (not when required as module)
 if (require.main === module) {
+  // NOSONAR: Top-level await not supported in CommonJS modules
   main().catch((error) => {
     console.error('❌ Unexpected error:', error.message);
     process.exit(1);

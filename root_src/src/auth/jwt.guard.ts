@@ -21,7 +21,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly i18n: I18nService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService<AppConfig>,
-    private reflector: Reflector,
+    private readonly reflector: Reflector,
   ) {}
 
   /**
@@ -59,7 +59,7 @@ export class JwtAuthGuard implements CanActivate {
     const lang = (req.headers['x-lang'] as string) || 'en';
 
     // Check if Authorization header exists
-    if (!auth || !auth.startsWith('Bearer ')) {
+    if (!auth?.startsWith('Bearer ')) {
       throw new UnauthorizedException(
         this.i18n.t('auth.errors.noToken', { lang }),
       );

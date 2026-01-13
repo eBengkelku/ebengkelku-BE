@@ -5,10 +5,13 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
 import { AuthService } from './auth.service';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '@/common/decorators/public.decorator';
+import { AppConfig, NodeEnv } from '@/config';
+import { getDevUser, DEV_MODE_BYPASS_MESSAGE } from './dev-user.config';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -17,8 +20,18 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly i18n: I18nService,
     private readonly authService: AuthService,
+    private readonly configService: ConfigService<AppConfig>,
     private reflector: Reflector,
   ) {}
+
+  /**
+   * Checks if the application is running in development mode
+   * @returns true if NODE_ENV is 'local' or 'development'
+   */
+  private isDevelopmentMode(): boolean {
+    const nodeEnv = this.configService.get<NodeEnv>('nodeEnv');
+    return nodeEnv === NodeEnv.Local || nodeEnv === NodeEnv.Development;
+  }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -28,7 +41,20 @@ export class JwtAuthGuard implements CanActivate {
     if (isPublic) {
       return true;
     }
+
     const req = ctx.switchToHttp().getRequest();
+
+    // Development mode bypass: skip JWT verification in local/development environments
+    if (this.isDevelopmentMode()) {
+      this.logger.warn(DEV_MODE_BYPASS_MESSAGE);
+      req.user = getDevUser();
+      req.auth_metrics = {
+        verify_duration_ms: 0,
+        dev_mode_bypass: true,
+      };
+      return true;
+    }
+
     const auth = req.headers['authorization'];
     const lang = (req.headers['x-lang'] as string) || 'en';
 

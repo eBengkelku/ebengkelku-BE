@@ -182,9 +182,46 @@ The application will be available at `http://localhost:3004`
 
 ## Recent Updates & New Features
 
-### 🆕 **File Upload System (Latest)**
+### 🗄️ **Schema-Based Migration Generator (Latest)**
 
-A comprehensive file upload system has been implemented with the following features:
+The `db:migrate:create:table` script now supports PostgreSQL schema-based architecture:
+
+- **Interactive Schema Selection**: Choose from existing database schemas or create new ones
+- **Database Connection**: Automatically connects to PostgreSQL and fetches available schemas
+- **Schema Creation Support**: Generates migrations with `createSchemaIfNotExists` for new schemas
+- **Knex.js Best Practices**: Uses `withSchema()` method for proper schema-qualified table operations
+- **Modular Architecture**: Script refactored into focused modules (`db.js`, `validators.js`, `prompts.js`, `templates.js`)
+
+**Usage:**
+
+```bash
+pnpm run db:migrate:create:table
+```
+
+**Example Output:**
+
+```
+🔧 Knex Migration File Generator
+
+📡 Connecting to database...
+✅ Connected to database
+
+Choose the schema you want to use:
+
+  1. public
+  2. inventory
+  3. Create new schema
+
+Enter your choice (number): 2
+Enter table name: products
+
+✅ Migration file created successfully!
+📁 Path: src/database/migrations/20260112201530_create_inventory_products_table.js
+```
+
+---
+
+### 🆕 **File Upload System**
 
 #### **Files Domain**
 
@@ -346,20 +383,20 @@ Add your domain to the `AUTO_CRUD_MODELS` array in `src/common/modules/auto-crud
 ```typescript
 export const AUTO_CRUD_MODELS: AutoCrudOptions[] = [
   {
-    entityName: 'Product',
-    tableName: 'products',
+    entityName: "Product",
+    tableName: "products",
     dtoClass: CreateProductDto,
     serviceClass: ProductService, // Optional: Custom service with business logic
     controllerClass: ProductController, // Optional: Custom controller
-    descColumns: ['name', 'description'],
-    fillable: ['name', 'description', 'price', 'category', 'stock_quantity'],
+    descColumns: ["name", "description"],
+    fillable: ["name", "description", "price", "category", "stock_quantity"],
     softDeletes: true,
     rules: {
-      name: 'required|string|max:255',
-      price: 'required|numeric|min:1',
-      description: 'nullable|string',
-      category: 'nullable|string|max:100',
-      stock_quantity: 'required|integer|min:0',
+      name: "required|string|max:255",
+      price: "required|numeric|min:1",
+      description: "nullable|string",
+      category: "nullable|string|max:100",
+      stock_quantity: "required|integer|min:0",
     },
   },
   // Add more domains here...
@@ -373,15 +410,15 @@ Define validation rules with internationalization support:
 ```typescript
 // src/domains/products/dto/create-product.dto.ts
 export class CreateProductDto {
-  @IsNotEmpty({ message: 'products.validation.name.required' })
-  @IsString({ message: 'products.validation.name.string' })
-  @Length(1, 255, { message: 'products.validation.name.length' })
+  @IsNotEmpty({ message: "products.validation.name.required" })
+  @IsString({ message: "products.validation.name.string" })
+  @Length(1, 255, { message: "products.validation.name.length" })
   name: string;
 
-  @IsNotEmpty({ message: 'products.validation.price.required' })
+  @IsNotEmpty({ message: "products.validation.price.required" })
   @Transform(({ value }) => parseFloat(value))
-  @IsNumber({}, { message: 'products.validation.price.number' })
-  @Min(1, { message: 'products.validation.price.min' })
+  @IsNumber({}, { message: "products.validation.price.number" })
+  @Min(1, { message: "products.validation.price.min" })
   price: number;
 
   // ... other fields
@@ -399,20 +436,20 @@ export class ProductService extends BaseKnexService {
   // 🎯 CUSTOM BUSINESS METHODS beyond basic CRUD
 
   async findByCategory(category: string, filters: any = {}) {
-    const qb = this.queryBuilder().where('category', 'LIKE', `%${category}%`);
+    const qb = this.queryBuilder().where("category", "LIKE", `%${category}%`);
 
-    if (filters.minPrice) qb.where('price', '>=', filters.minPrice);
-    if (filters.maxPrice) qb.where('price', '<=', filters.maxPrice);
-    if (filters.inStock) qb.where('stock_quantity', '>', 0);
+    if (filters.minPrice) qb.where("price", ">=", filters.minPrice);
+    if (filters.maxPrice) qb.where("price", "<=", filters.maxPrice);
+    if (filters.inStock) qb.where("stock_quantity", ">", 0);
 
-    return qb.select('*');
+    return qb.select("*");
   }
 
   async getLowStockProducts(threshold: number = 10) {
     return this.queryBuilder()
-      .where('stock_quantity', '<=', threshold)
-      .where('stock_quantity', '>', 0)
-      .select('*');
+      .where("stock_quantity", "<=", threshold)
+      .where("stock_quantity", ">", 0)
+      .select("*");
   }
 
   async bulkUpdateStock(updates: Array<{ id: number; quantity: number }>) {
@@ -420,7 +457,7 @@ export class ProductService extends BaseKnexService {
     try {
       for (const update of updates) {
         await trx(this.tableName)
-          .where('id', update.id)
+          .where("id", update.id)
           .update({ stock_quantity: update.quantity });
       }
       await trx.commit();
@@ -439,7 +476,7 @@ Add custom endpoints beyond standard CRUD:
 
 ```typescript
 // src/domains/products/product.controller.ts
-@Controller('v1/products')
+@Controller("v1/products")
 export class ProductController extends BaseKnexController {
   constructor(service: ProductService) {
     super(service);
@@ -454,19 +491,19 @@ export class ProductController extends BaseKnexController {
 
   // 🚀 CUSTOM ENDPOINTS - Your business logic
 
-  @Get('category/:category')
-  async getByCategory(@Param('category') category: string) {
+  @Get("category/:category")
+  async getByCategory(@Param("category") category: string) {
     return this.service.findByCategory(category);
   }
 
-  @Get('low-stock')
-  async getLowStock(@Query('threshold') threshold?: number) {
+  @Get("low-stock")
+  async getLowStock(@Query("threshold") threshold?: number) {
     return (this.service as ProductService).getLowStockProducts(threshold);
   }
 
-  @Post('bulk-stock-update')
+  @Post("bulk-stock-update")
   async bulkUpdateStock(
-    @Body() updates: Array<{ id: number; quantity: number }>,
+    @Body() updates: Array<{ id: number; quantity: number }>
   ) {
     return (this.service as ProductService).bulkUpdateStock(updates);
   }

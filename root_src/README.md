@@ -182,9 +182,46 @@ The application will be available at `http://localhost:3004`
 
 ## Recent Updates & New Features
 
-### 🆕 **File Upload System (Latest)**
+### 🗄️ **Schema-Based Migration Generator (Latest)**
 
-A comprehensive file upload system has been implemented with the following features:
+The `db:migrate:create:table` script now supports PostgreSQL schema-based architecture:
+
+- **Interactive Schema Selection**: Choose from existing database schemas or create new ones
+- **Database Connection**: Automatically connects to PostgreSQL and fetches available schemas
+- **Schema Creation Support**: Generates migrations with `createSchemaIfNotExists` for new schemas
+- **Knex.js Best Practices**: Uses `withSchema()` method for proper schema-qualified table operations
+- **Modular Architecture**: Script refactored into focused modules (`db.js`, `validators.js`, `prompts.js`, `templates.js`)
+
+**Usage:**
+
+```bash
+pnpm run db:migrate:create:table
+```
+
+**Example Output:**
+
+```
+🔧 Knex Migration File Generator
+
+📡 Connecting to database...
+✅ Connected to database
+
+Choose the schema you want to use:
+
+  1. public
+  2. inventory
+  3. Create new schema
+
+Enter your choice (number): 2
+Enter table name: products
+
+✅ Migration file created successfully!
+📁 Path: src/database/migrations/20260112201530_create_inventory_products_table.js
+```
+
+---
+
+### 🆕 **File Upload System**
 
 #### **Files Domain**
 

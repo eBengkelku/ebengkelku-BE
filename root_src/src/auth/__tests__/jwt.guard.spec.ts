@@ -6,13 +6,11 @@ import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '../jwt.guard';
 import { AuthService, AccessUser } from '../auth.service';
 import { IS_PUBLIC_KEY } from '@/common/decorators/public.decorator';
-import { AppConfig, NodeEnv } from '@/config';
+import { NodeEnv } from '@/config';
 import { getDevUser, DEV_MODE_BYPASS_MESSAGE } from '../dev-user.config';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
-  let authService: jest.Mocked<AuthService>;
-  let configService: jest.Mocked<ConfigService<AppConfig>>;
   let reflector: jest.Mocked<Reflector>;
   let i18nService: jest.Mocked<I18nService>;
 
@@ -45,6 +43,10 @@ describe('JwtAuthGuard', () => {
   const mockConfigService = {
     get: jest.fn(),
   };
+
+  // Helper function to create delayed mock (extracted to reduce nesting depth)
+  const delay = (ms: number): Promise<void> =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   let mockRequest: any;
   let mockExecutionContext: ExecutionContext;
@@ -99,10 +101,8 @@ describe('JwtAuthGuard', () => {
     }).compile();
 
     guard = module.get<JwtAuthGuard>(JwtAuthGuard);
-    authService = module.get(AuthService);
     reflector = module.get(Reflector);
     i18nService = module.get(I18nService);
-    configService = module.get(ConfigService);
   });
 
   describe('Basic functionality', () => {
@@ -338,13 +338,11 @@ describe('JwtAuthGuard', () => {
         'x-lang': 'en',
       };
 
-      // Simulate some processing time
-      mockAuthService.verifyAccessToken.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            setTimeout(() => resolve(mockAccessUser), 50);
-          }),
-      );
+      // Simulate some processing time using extracted delay helper
+      mockAuthService.verifyAccessToken.mockImplementation(async () => {
+        await delay(50);
+        return mockAccessUser;
+      });
 
       await guard.canActivate(mockExecutionContext);
 

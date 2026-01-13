@@ -3,6 +3,7 @@ import {
   IsString,
   IsOptional,
   IsNumber,
+  IsUUID,
   Length,
   Min,
 } from 'class-validator';
@@ -76,6 +77,6 @@ export class CreateProductDto {
     format: 'uuid',
   })
   @IsOptional()
-  @IsString({ message: 'products.validation.category_id.string' })
+  @IsUUID(4, { message: 'products.validation.category_id.uuid' })
   category_id?: string;
 }

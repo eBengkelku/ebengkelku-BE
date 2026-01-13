@@ -674,7 +674,7 @@ export class ProductService {
    * Finds a product by ID with file information
    *
    * @param {string} id - Product ID
-   * @returns {Promise<any>} Product with file info
+   * @returns {Promise<any>} Product with file info and tags
    *
    * @example
    * ```typescript
@@ -698,7 +698,15 @@ export class ProductService {
       })
       .first();
 
-    return result || null;
+    if (!result) {
+      return null;
+    }
+
+    // Load tags relation (required by task: "Query Product bisa menampilkan Category dan list Tags-nya")
+    const tags = await this.loadProductTags(id);
+    result.tags = tags;
+
+    return result;
   }
 
   /**
@@ -784,6 +792,11 @@ export class ProductService {
       .limit(limit)
       .offset(offset)
       .orderBy('products.created_at', 'desc');
+
+    // Load tags for each product (required by task: "Query Product bisa menampilkan Category dan list Tags-nya")
+    for (const product of data) {
+      product.tags = await this.loadProductTags(product.id);
+    }
 
     return {
       data,

@@ -1,0 +1,35 @@
+{
+  "title": "Tags",
+  "validation": {
+    "name": {
+      "required": "Tag name is required",
+      "string": "Tag name must be a string",
+      "maxLength": "Tag name cannot exceed 20 characters",
+      "tooLong": "Tag name cannot exceed 20 characters"
+    },
+    "color": {
+      "required": "Tag color is required",
+      "string": "Tag color must be a string",
+      "invalid": "Tag color format is invalid",
+      "format": "Tag color must be a valid hexadecimal color code (e.g., #FF0000 or #F00)"
+    }
+  },
+  "created": "Tag created successfully",
+  "updated": "Tag updated successfully",
+  "deleted": "Tag deleted successfully",
+  "listed": "Tags retrieved successfully",
+  "found": "Tag found successfully",
+  "errors": {
+    "notFound": "Tag not found",
+    "notFoundDetail": "Tag with ID {{id}} not found",
+    "nameExists": "Tag name already exists",
+    "nameRequired": "Tag name is required",
+    "nameTooLong": "Tag name cannot exceed 20 characters",
+    "colorInvalid": "Tag color format is invalid",
+    "colorFormat": "Tag color must be a valid hexadecimal color code (e.g., #FF0000 or #F00)"
+  },
+  "fields": {
+    "name": "Tag Name",
+    "color": "Color"
+  }
+}

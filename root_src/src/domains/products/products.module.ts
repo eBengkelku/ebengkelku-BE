@@ -5,6 +5,7 @@ import { ProductRepository } from './repository/product.repository';
 import { DatabaseModule } from '../../database/database.module';
 import { FilesModule } from '../files/files.module';
 import { AuthModule } from '../../auth/auth.module';
+import { ClassifiersModule } from '../classifiers/classifiers.module';
 
 /**
  * Products Module
@@ -29,6 +30,7 @@ import { AuthModule } from '../../auth/auth.module';
     DatabaseModule, // Provides DatabaseService for Knex access
     FilesModule, // File handling functionality
     AuthModule, // Authentication and authorization
+    ClassifiersModule, // Provides CategoryService and TagService for product relations
   ],
   providers: [
     ProductRepository, // Domain repository for data access

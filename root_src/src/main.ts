@@ -45,6 +45,8 @@ async function bootstrap() {
       'JWT-auth',
     )
     .addTag('products', 'Product management endpoints')
+    .addTag('categories', 'Category management endpoints')
+    .addTag('tags', 'Tag management endpoints')
     .addTag('Auth', 'Authentication endpoints')
     .addServer('http://localhost:3004', 'Development server')
     .addServer('http://my.upnvj-api.local', 'Local Domain server')

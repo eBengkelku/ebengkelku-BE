@@ -94,6 +94,10 @@ export class CreateProductDto {
   category?: string;
 
   @IsOptional()
+  @IsUUID(4, { message: 'Category ID must be a valid UUID' })
+  category_id?: string;
+
+  @IsOptional()
   @IsUUID(4, { message: 'File ID must be a valid UUID' })
   file_id?: string;
 }
@@ -122,6 +126,10 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsUUID(4, { message: 'Category ID must be a valid UUID' })
+  category_id?: string;
 
   @IsOptional()
   @IsUUID(4, { message: 'File ID must be a valid UUID' })

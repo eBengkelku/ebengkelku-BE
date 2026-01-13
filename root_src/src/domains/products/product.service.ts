@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductRepository } from './repository/product.repository';
 import { ProductModel } from './models/product.model';
 import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Knex } from 'knex';
 import { DatabaseService } from '../../database/database.service';
+import { CategoryService } from '../classifiers/services/category.service';
+import { TagService } from '../classifiers/services/tag.service';
 import type { Express } from 'express';
 
 /**
@@ -57,6 +59,8 @@ export class ProductService {
   constructor(
     private readonly repository: ProductRepository,
     private readonly databaseService: DatabaseService,
+    private readonly categoryService: CategoryService,
+    private readonly tagService: TagService,
   ) {}
 
   // ============================================================================
@@ -85,6 +89,11 @@ export class ProductService {
    * ```
    */
   async create(dto: CreateProductDto) {
+    // Validate category_id if provided
+    if (dto.category_id) {
+      await this.categoryService.findOne(dto.category_id);
+    }
+
     // Create domain model (validates business rules)
     const product = ProductModel.create({
       id: uuidv4(),
@@ -93,14 +102,15 @@ export class ProductService {
       stock: dto.stock_quantity,
       description: dto.description,
       category: dto.category,
+      categoryId: dto.category_id,
       fileId: dto.file_id,
     });
 
     // Persist to database
     await this.repository.save(product);
 
-    // Return entity (for API response)
-    return product.toEntity();
+    // Return entity with relations loaded
+    return this.findById(product.getId());
   }
 
   /**
@@ -117,7 +127,24 @@ export class ProductService {
    */
   async findById(id: string) {
     const product = await this.repository.findByIdOrThrow(id);
-    return product.toEntity();
+    const entity = product.toEntity();
+
+    // Load category relation if category_id exists
+    if (entity.category_id) {
+      try {
+        const category = await this.categoryService.findOne(entity.category_id);
+        // Category data is already in entity, but we can add it to response if needed
+      } catch (error) {
+        // Category not found, but don't fail the request
+        entity.category_id = undefined;
+      }
+    }
+
+    // Load tags relation
+    const tags = await this.loadProductTags(id);
+    entity.tags = tags;
+
+    return entity;
   }
 
   /**
@@ -135,8 +162,15 @@ export class ProductService {
    */
   async findAll(pagination: { page: number; limit: number }) {
     const result = await this.repository.findAll(pagination);
+    const entities = result.data.map((product) => product.toEntity());
+
+    // Load tags for all products
+    for (const entity of entities) {
+      entity.tags = await this.loadProductTags(entity.id);
+    }
+
     return {
-      data: result.data.map((product) => product.toEntity()),
+      data: entities,
       total: result.total,
     };
   }
@@ -166,6 +200,11 @@ export class ProductService {
   async update(id: string, dto: UpdateProductDto) {
     const product = await this.repository.findByIdOrThrow(id);
 
+    // Validate category_id if provided
+    if (dto.category_id) {
+      await this.categoryService.findOne(dto.category_id);
+    }
+
     // Business logic in model
     product.update({
       name: dto.name,
@@ -173,11 +212,12 @@ export class ProductService {
       stock: dto.stock_quantity,
       description: dto.description,
       category: dto.category,
+      categoryId: dto.category_id,
       fileId: dto.file_id,
     });
 
     await this.repository.save(product);
-    return product.toEntity();
+    return this.findById(id);
   }
 
   /**
@@ -754,5 +794,78 @@ export class ProductService {
         last_page: Math.ceil(total / limit),
       },
     };
+  }
+
+  // ============================================================================
+  // TAG MANAGEMENT METHODS
+  // ============================================================================
+
+  /**
+   * Loads tags for a product
+   *
+   * @private
+   * @param {string} productId - Product ID
+   * @returns {Promise<Array<{id: string; name: string; color: string}>>} Array of tags
+   */
+  private async loadProductTags(
+    productId: string,
+  ): Promise<Array<{ id: string; name: string; color: string }>> {
+    const tagRows = await this.knex('product_tags')
+      .where('product_id', productId)
+      .join('tags', 'product_tags.tag_id', 'tags.id')
+      .whereNull('tags.deleted_at')
+      .select('tags.id', 'tags.name', 'tags.color');
+
+    return tagRows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      color: row.color,
+    }));
+  }
+
+  /**
+   * Attaches tags to a product (sync operation)
+   *
+   * Replaces all existing tags with the provided tag IDs.
+   *
+   * @param {string} productId - Product ID
+   * @param {string[]} tagIds - Array of tag IDs to attach
+   * @returns {Promise<any>} Updated product with tags loaded
+   * @throws {NotFoundException} If product or any tag not found
+   *
+   * @example
+   * ```typescript
+   * const product = await service.updateProductTags('uuid-123', [
+   *   'tag-uuid-1',
+   *   'tag-uuid-2',
+   * ]);
+   * ```
+   */
+  async updateProductTags(productId: string, tagIds: string[]) {
+    // Validate product exists
+    await this.repository.findByIdOrThrow(productId);
+
+    // Validate all tags exist
+    for (const tagId of tagIds) {
+      await this.tagService.findOne(tagId);
+    }
+
+    // Use transaction for atomic operation
+    await this.knex.transaction(async (trx) => {
+      // Remove all existing tags
+      await trx('product_tags').where('product_id', productId).del();
+
+      // Insert new tags
+      if (tagIds.length > 0) {
+        const insertData = tagIds.map((tagId) => ({
+          product_id: productId,
+          tag_id: tagId,
+        }));
+        await trx('product_tags').insert(insertData);
+      }
+    });
+
+    // Return product with tags loaded
+    return this.findById(productId);
   }
 }

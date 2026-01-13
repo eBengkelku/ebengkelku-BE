@@ -61,10 +61,18 @@ export interface IProduct {
   stock_quantity: number;
 
   /**
-   * Product category (optional)
+   * Product category (optional, legacy field)
    * @type {string | undefined}
+   * @deprecated Use category_id instead
    */
   category?: string;
+
+  /**
+   * Category ID (UUID, optional)
+   * References the categories table
+   * @type {string | undefined}
+   */
+  category_id?: string;
 
   /**
    * Associated file/image ID (UUID, optional)
@@ -72,6 +80,12 @@ export interface IProduct {
    * @type {string | undefined}
    */
   file_id?: string;
+
+  /**
+   * Product tags (loaded via relation, not stored in products table)
+   * @type {Array<{id: string; name: string; color: string}> | undefined}
+   */
+  tags?: Array<{ id: string; name: string; color: string }>;
 
   /**
    * Record creation timestamp

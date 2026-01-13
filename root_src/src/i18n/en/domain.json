@@ -51,5 +51,26 @@
     "cannot_cancel": "Can only cancel pending or confirmed bookings",
     "too_late_to_cancel": "Cannot cancel within {{hours}} hours of start time",
     "not_found": "Booking not found"
+  },
+  "categories": {
+    "validation": {
+      "name_required": "Category name is required and cannot be empty",
+      "name_empty": "Category name cannot be empty",
+      "slug_invalid": "Category slug format is invalid",
+      "slug_format": "Category slug must be lowercase alphanumeric with hyphens only"
+    },
+    "not_found": "Category not found",
+    "name_exists": "Category name already exists",
+    "slug_exists": "Category slug already exists"
+  },
+  "tags": {
+    "validation": {
+      "name_required": "Tag name is required and cannot be empty",
+      "name_too_long": "Tag name cannot exceed 20 characters",
+      "color_invalid": "Tag color format is invalid",
+      "color_format": "Tag color must be a valid hexadecimal color code (e.g., #FF0000 or #F00)"
+    },
+    "not_found": "Tag not found",
+    "name_exists": "Tag name already exists"
   }
 }

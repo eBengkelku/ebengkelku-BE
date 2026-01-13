@@ -72,6 +72,7 @@ export class ProductModel extends BaseDomainModel<IProduct> {
     private stockQuantity: number,
     private description?: string,
     private category?: string,
+    private categoryId?: string,
     private fileId?: string,
     private createdAt: Date = new Date(),
     private updatedAt: Date = new Date(),
@@ -121,6 +122,7 @@ export class ProductModel extends BaseDomainModel<IProduct> {
     stock: number;
     description?: string;
     category?: string;
+    categoryId?: string;
     fileId?: string;
     createdBy?: string;
   }): ProductModel {
@@ -156,6 +158,7 @@ export class ProductModel extends BaseDomainModel<IProduct> {
       data.stock,
       data.description?.trim(),
       data.category?.trim(),
+      data.categoryId,
       data.fileId,
       now,
       now,
@@ -189,6 +192,7 @@ export class ProductModel extends BaseDomainModel<IProduct> {
       data.stock_quantity,
       data.description,
       data.category,
+      data.category_id,
       data.file_id,
       data.created_at,
       data.updated_at,
@@ -234,6 +238,7 @@ export class ProductModel extends BaseDomainModel<IProduct> {
     stock?: number;
     description?: string;
     category?: string;
+    categoryId?: string;
     fileId?: string;
     updatedBy?: string;
   }): void {
@@ -274,11 +279,12 @@ export class ProductModel extends BaseDomainModel<IProduct> {
     if (data.description !== undefined) {
       this.description = data.description?.trim();
     }
-
     if (data.category !== undefined) {
       this.category = data.category?.trim();
     }
-
+    if (data.categoryId !== undefined) {
+      this.categoryId = data.categoryId;
+    }
     if (data.fileId !== undefined) {
       this.fileId = data.fileId;
     }
@@ -568,6 +574,7 @@ export class ProductModel extends BaseDomainModel<IProduct> {
       price: this.price,
       stock_quantity: this.stockQuantity,
       category: this.category,
+      category_id: this.categoryId,
       file_id: this.fileId,
       created_at: this.createdAt,
       updated_at: this.updatedAt,
@@ -620,11 +627,19 @@ export class ProductModel extends BaseDomainModel<IProduct> {
   }
 
   /**
-   * Gets the product category
+   * Gets the product category (legacy)
    * @returns {string | undefined} Category name
    */
   getCategory(): string | undefined {
     return this.category;
+  }
+
+  /**
+   * Gets the category ID
+   * @returns {string | undefined} Category ID
+   */
+  getCategoryId(): string | undefined {
+    return this.categoryId;
   }
 
   /**

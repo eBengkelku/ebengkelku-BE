@@ -1,0 +1,41 @@
+{
+  "title": "Categories",
+  "validation": {
+    "name": {
+      "required": "Category name is required",
+      "string": "Category name must be a string",
+      "maxLength": "Category name cannot exceed 255 characters"
+    },
+    "slug": {
+      "required": "Category slug is required",
+      "string": "Category slug must be a string",
+      "maxLength": "Category slug cannot exceed 255 characters",
+      "invalid": "Category slug format is invalid",
+      "format": "Category slug must be lowercase alphanumeric with hyphens only"
+    },
+    "description": {
+      "string": "Description must be a string",
+      "maxLength": "Description cannot exceed 1000 characters"
+    }
+  },
+  "created": "Category created successfully",
+  "updated": "Category updated successfully",
+  "deleted": "Category deleted successfully",
+  "listed": "Categories retrieved successfully",
+  "found": "Category found successfully",
+  "errors": {
+    "notFound": "Category not found",
+    "notFoundDetail": "Category with ID {{id}} not found",
+    "nameExists": "Category name already exists",
+    "slugExists": "Category slug already exists",
+    "nameRequired": "Category name is required",
+    "nameEmpty": "Category name cannot be empty",
+    "slugInvalid": "Category slug format is invalid",
+    "slugFormat": "Category slug must be lowercase alphanumeric with hyphens only"
+  },
+  "fields": {
+    "name": "Category Name",
+    "slug": "Slug",
+    "description": "Description"
+  }
+}

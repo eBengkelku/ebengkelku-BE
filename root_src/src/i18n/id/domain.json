@@ -51,5 +51,26 @@
     "cannot_cancel": "Hanya dapat membatalkan pemesanan yang pending atau terkonfirmasi",
     "too_late_to_cancel": "Tidak dapat membatalkan dalam {{hours}} jam sebelum waktu mulai",
     "not_found": "Pemesanan tidak ditemukan"
+  },
+  "categories": {
+    "validation": {
+      "name_required": "Nama kategori wajib diisi dan tidak boleh kosong",
+      "name_empty": "Nama kategori tidak boleh kosong",
+      "slug_invalid": "Format slug kategori tidak valid",
+      "slug_format": "Slug kategori harus huruf kecil, alfanumerik dengan tanda hubung saja"
+    },
+    "not_found": "Kategori tidak ditemukan",
+    "name_exists": "Nama kategori sudah ada",
+    "slug_exists": "Slug kategori sudah ada"
+  },
+  "tags": {
+    "validation": {
+      "name_required": "Nama tag wajib diisi dan tidak boleh kosong",
+      "name_too_long": "Nama tag tidak boleh lebih dari 20 karakter",
+      "color_invalid": "Format warna tag tidak valid",
+      "color_format": "Warna tag harus berupa kode warna heksadesimal yang valid (contoh: #FF0000 atau #F00)"
+    },
+    "not_found": "Tag tidak ditemukan",
+    "name_exists": "Nama tag sudah ada"
   }
 }

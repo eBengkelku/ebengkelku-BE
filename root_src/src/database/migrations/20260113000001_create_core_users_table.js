@@ -2,7 +2,9 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function (knex) {
+exports.up = async function (knex) {
+  await knex.schema.createSchemaIfNotExists('core');
+
   return knex.schema
     .raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
     .then(() => {

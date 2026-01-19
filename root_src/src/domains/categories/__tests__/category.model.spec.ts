@@ -1,7 +1,7 @@
-import { CategoryModel } from '../category.model';
-import { ICategory } from '../../interfaces/category.interface';
-import { DomainValidationException } from '../../../../common/domain';
-import { CategoryErrorCodes } from '../../constants';
+import { CategoryModel } from '../models/category.model';
+import { ICategory } from '../interfaces/category.interface';
+import { DomainValidationException } from '../../../common/domain';
+import { CategoryErrorCodes } from '../constants/category-error-codes';
 
 describe('CategoryModel', () => {
   const validCategoryId = '123e4567-e89b-12d3-a456-426614174000';

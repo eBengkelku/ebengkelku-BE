@@ -2,14 +2,16 @@
 
 ## Overview
 
-Complete API documentation for Categories and Tags management endpoints. Both domains use Rich Domain Models with automatic CRUD operations via `BaseKnexController`, providing standardized REST endpoints with pagination, search, and i18n support.
+Complete API documentation for Categories and Tags management endpoints. Both domains use **Rich Domain Model Pattern** with custom controllers and repositories, providing standardized REST endpoints with pagination and i18n support.
 
 ## TL;DR
 
 - **Categories**: Product classification with auto-generated slugs, name/description management
 - **Tags**: Product labeling with hex color codes, max 20 character names
-- **Auto CRUD**: All standard endpoints (GET, POST, PUT, DELETE) auto-generated
+- **Custom Controllers**: Custom implementation (NOT using `BaseKnexController`)
+- **Repository Pattern**: Data access through `CategoryRepository` and `TagRepository`
 - **Relationships**: Many-to-One (Product → Category), Many-to-Many (Product ↔ Tag)
+- **Error Handling**: Unique constraint violations return 409 Conflict, delete validates existence (404 if not found)
 - **Swagger UI**: Available at `http://localhost:3004/api-docs` (tags: `categories`, `tags`)
 
 ---
@@ -26,15 +28,10 @@ Complete API documentation for Categories and Tags management endpoints. Both do
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/v1/categories` | List categories with pagination |
-| GET | `/v1/categories/:id` | Get category by ID |
-| POST | `/v1/categories` | Create new category |
-| PUT | `/v1/categories/:id` | Update category |
-| DELETE | `/v1/categories/:id` | Soft delete category |
-| POST | `/v1/categories/search` | Advanced search with filters |
-| GET | `/v1/categories/combo` | Get categories for dropdown |
-| GET | `/v1/categories/combo/:keyword` | Search categories for dropdown |
-| POST | `/v1/categories/combo` | Search categories (POST) |
-| GET | `/v1/categories/rules` | Get validation rules |
+| GET | `/v1/categories/:id` | Get category by ID (404 if not found) |
+| POST | `/v1/categories` | Create new category (409 if duplicate slug/name) |
+| PUT | `/v1/categories/:id` | Update category (404 if not found, 409 if conflict) |
+| DELETE | `/v1/categories/:id` | Soft delete category (404 if not found) |
 
 ### Request/Response Examples
 
@@ -125,27 +122,6 @@ x-lang: en
 
 **Note:** Slug is auto-regenerated when name changes.
 
-#### Search Categories
-
-**Request:**
-```http
-POST /v1/categories/search
-Content-Type: application/json
-Authorization: Bearer <token>
-x-lang: en
-
-{
-  "filters": [
-    ["name", "like", "%electronics%"]
-  ],
-  "sort": [["created_at", "desc"]],
-  "pagination": {
-    "page": 1,
-    "limit": 10
-  }
-}
-```
-
 ---
 
 ## Tags API
@@ -160,15 +136,10 @@ x-lang: en
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/v1/tags` | List tags with pagination |
-| GET | `/v1/tags/:id` | Get tag by ID |
-| POST | `/v1/tags` | Create new tag |
-| PUT | `/v1/tags/:id` | Update tag |
-| DELETE | `/v1/tags/:id` | Soft delete tag |
-| POST | `/v1/tags/search` | Advanced search with filters |
-| GET | `/v1/tags/combo` | Get tags for dropdown |
-| GET | `/v1/tags/combo/:keyword` | Search tags for dropdown |
-| POST | `/v1/tags/combo` | Search tags (POST) |
-| GET | `/v1/tags/rules` | Get validation rules |
+| GET | `/v1/tags/:id` | Get tag by ID (404 if not found) |
+| POST | `/v1/tags` | Create new tag (409 if duplicate name) |
+| PUT | `/v1/tags/:id` | Update tag (404 if not found, 409 if conflict) |
+| DELETE | `/v1/tags/:id` | Soft delete tag (404 if not found) |
 
 ### Request/Response Examples
 
@@ -370,12 +341,35 @@ x-lang: en
 
 ### Not Found (404 Not Found)
 
+**When:** Category/Tag not found (get, update, delete)
+
 ```json
 {
   "success": false,
   "statusCode": 404,
-  "message": "Category not found",
-  "data": null
+  "message": "Category with id 'uuid-123' not found",
+  "data": null,
+  "errors": {
+    "code": "NOT_FOUND",
+    "message": "domain.categories.not_found"
+  }
+}
+```
+
+### Conflict (409 Conflict)
+
+**When:** Unique constraint violation (duplicate name/slug)
+
+```json
+{
+  "success": false,
+  "statusCode": 409,
+  "message": "Category with slug 'electronics' already exists",
+  "data": null,
+  "errors": {
+    "code": "CONFLICT",
+    "message": "domain.categories.slug_exists"
+  }
 }
 ```
 
@@ -441,8 +435,8 @@ Interactive API documentation available at:
 
 ## Related Documentation
 
+- [Categories & Tags Domain Implementation Guide](./categories-tags-domain-implementation-guide.md)
 - [Domain Model Pattern Guide](./architecture-domain-model-pattern-documentation.md)
-- [Auto CRUD Pattern Guide](./architecture-auto-crud-pattern-guide.md)
 - [API Pagination Documentation](./api-pagination-complete-documentation.md)
 - [Swagger Integration Guide](./api-swagger-integration-guide.md)
 - [Testing Guide](../../TESTING_GUIDE.md)
@@ -450,5 +444,31 @@ Interactive API documentation available at:
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2025-01-13
+---
+
+## Architecture Notes
+
+### Domain Separation
+
+Categories and Tags are now **separate domains**:
+- `domains/categories/` - Category domain with its own module, repository, service, controller
+- `domains/tags/` - Tag domain with its own module, repository, service, controller
+
+### Rich Domain Model Pattern
+
+Both domains follow the Rich Domain Model Pattern:
+- **Controller** → **Service** → **Repository** → **Model** → **Database**
+- Services do NOT extend `BaseKnexService`
+- Controllers do NOT extend `BaseKnexController`
+- All database access goes through Repository layer
+
+### Error Handling
+
+- **Unique Constraint Violations**: Caught in repository, converted to `DomainConflictException` (409 Conflict)
+- **Delete Validation**: Service validates existence before delete (404 if not found)
+- **Type Validation**: DTO validation errors return appropriate error codes (`VALIDATION_STRING`, `VALIDATION_LENGTH`, etc.)
+
+---
+
+**Version**: 2.0.0  
+**Last Updated**: 2025-01-19

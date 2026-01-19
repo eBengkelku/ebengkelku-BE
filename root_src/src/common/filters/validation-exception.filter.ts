@@ -193,7 +193,11 @@ export class ValidationExceptionFilter implements ExceptionFilter {
 
     errors.forEach((error: any) => {
       const constraints = error.constraints || {};
-      const firstConstraintKey = Object.keys(constraints)[0];
+      // Prioritize isString error if it exists (for type validation)
+      const constraintKeys = Object.keys(constraints);
+      const firstConstraintKey = constraintKeys.includes('isString')
+        ? 'isString'
+        : constraintKeys[0];
       const firstConstraintValue = constraints[firstConstraintKey];
 
       // Get original message (usually in English)

@@ -1,44 +1,51 @@
 /**
- * Tag Entity Interface
+ * Category Entity Interface
  *
- * Defines the database schema structure for the tags table.
+ * Defines the database schema structure for the categories table.
  * This interface represents the data structure as stored in the database,
  * using snake_case naming convention.
  *
- * @interface ITag
+ * @interface ICategory
  * @version 1.0.0
  * @since 2025-01-13
  *
  * @example
  * ```typescript
- * const tag: ITag = {
+ * const category: ICategory = {
  *   id: 'uuid-123',
- *   name: 'Hot Item',
- *   color: '#FF0000',
+ *   name: 'Electronics',
+ *   slug: 'electronics',
+ *   description: 'Electronic items and gadgets',
  *   created_at: new Date(),
  *   updated_at: new Date(),
  *   deleted_at: undefined,
  * };
  * ```
  */
-export interface ITag {
+export interface ICategory {
   /**
-   * Unique tag identifier (UUID)
+   * Unique category identifier (UUID)
    * @type {string}
    */
   id: string;
 
   /**
-   * Tag name (unique, max 20 characters)
+   * Category name (unique)
    * @type {string}
    */
   name: string;
 
   /**
-   * Hex color code (e.g., #FF0000)
+   * URL-friendly slug (unique, lowercase, no spaces)
    * @type {string}
    */
-  color: string;
+  slug: string;
+
+  /**
+   * Category description (optional)
+   * @type {string | undefined}
+   */
+  description?: string;
 
   /**
    * Record creation timestamp
@@ -54,7 +61,7 @@ export interface ITag {
 
   /**
    * Soft delete timestamp (null if not deleted)
-   * @type {Date | undefined}
+   * @type {Date | null | undefined}
    */
-  deleted_at?: Date;
+  deleted_at?: Date | null;
 }

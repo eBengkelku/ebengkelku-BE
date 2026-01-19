@@ -5,8 +5,8 @@ import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Knex } from 'knex';
 import { DatabaseService } from '../../database/database.service';
-import { CategoryService } from '../classifiers/services/category.service';
-import { TagService } from '../classifiers/services/tag.service';
+import { CategoryService } from '../categories/category.service';
+import { TagService } from '../tags/tag.service';
 import type { Express } from 'express';
 
 /**

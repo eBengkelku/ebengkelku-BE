@@ -2,7 +2,7 @@ import {
   BaseDomainModel,
   DomainValidationException,
 } from '../../../common/domain';
-import { TagErrorCodes } from '../constants';
+import { TagErrorCodes } from '../constants/tag-error-codes';
 import { ITag } from '../interfaces/tag.interface';
 
 /**

@@ -2,7 +2,7 @@ import {
   BaseDomainModel,
   DomainValidationException,
 } from '../../../common/domain';
-import { CategoryErrorCodes } from '../constants';
+import { CategoryErrorCodes } from '../constants/category-error-codes';
 import { ICategory } from '../interfaces/category.interface';
 
 /**

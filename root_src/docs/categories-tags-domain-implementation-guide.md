@@ -1,15 +1,21 @@
-# Domain Classifiers Implementation Guide
+# Categories & Tags Domain Implementation Guide
 
 ## Overview
 
-Step-by-step guide for implementing Categories and Tags domain using Rich Domain Models, Auto CRUD pattern, and i18n support. This guide covers the complete implementation from database migrations to API endpoints.
+Step-by-step guide for implementing Categories and Tags domain using **Rich Domain Model Pattern** with Repository layer. This guide covers the complete implementation from database migrations to API endpoints.
+
+**Note:** Categories and Tags are now **separate domains** (not combined under `classifiers`), each with its own module, repository, service, and controller.
 
 ## TL;DR
 
 - **Rich Domain Models**: `CategoryModel` and `TagModel` with business logic encapsulation
-- **Auto CRUD**: `BaseKnexService` provides standard CRUD operations automatically
+- **Repository Pattern**: `CategoryRepository` and `TagRepository` extend `BaseDomainRepository`
+- **Custom Services**: `CategoryService` and `TagService` (NOT extending `BaseKnexService`)
+- **Custom Controllers**: `CategoryController` and `TagController` (NOT extending `BaseKnexController`)
 - **Relationships**: Many-to-One (Product → Category), Many-to-Many (Product ↔ Tag)
 - **Validation**: Business rules enforced in domain models (slug format, hex color, name length)
+- **Error Handling**: Unique constraint violations return 409 Conflict
+- **Delete Validation**: Validates existence before delete (returns 404 if not found)
 - **i18n**: All messages localized (English/Indonesian)
 
 ---
@@ -24,18 +30,27 @@ Step-by-step guide for implementing Categories and Tags domain using Rich Domain
                        ▼
 ┌─────────────────────────────────────────────────────────┐
 │              CategoryController / TagController         │
-│              (BaseKnexController)                       │
-│              - Auto CRUD endpoints                      │
+│              (Custom Controller)                        │
+│              - Custom CRUD endpoints                    │
 │              - Swagger documentation                    │
 └──────────────────────┬──────────────────────────────────┘
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────┐
 │           CategoryService / TagService                  │
-│           (BaseKnexService)                             │
-│           - CRUD operations                             │
-│           - Pagination & Search                         │
+│           (Custom Service)                              │
+│           - Orchestrates business logic                 │
+│           - Uses Repository for data access             │
 │           - Uses Domain Models for validation           │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│     CategoryRepository / TagRepository                 │
+│     (Extends BaseDomainRepository)                      │
+│     - Handles database access                           │
+│     - Converts entities to domain models                │
+│     - Handles unique constraint violations              │
 └──────────────────────┬──────────────────────────────────┘
                        │
                        ▼
@@ -116,47 +131,68 @@ export interface ICategory {
 
 ---
 
-### Step 4: Services
+### Step 4: Repositories
 
 **Files:**
-- `services/category.service.ts`
-- `services/tag.service.ts`
+- `repository/category.repository.ts`
+- `repository/tag.repository.ts`
 
-**Extends:** `BaseKnexService<ICategory>` / `BaseKnexService<ITag>`
+**Extends:** `BaseDomainRepository<CategoryModel, ICategory>` / `BaseDomainRepository<TagModel, ITag>`
 
-**Overrides:**
-- `create()` - Uses domain model for validation
-- `update()` - Uses domain model for business rules
+**Key Features:**
+- Handles database access (insert, update, delete)
+- Converts database entities to domain models
+- Handles unique constraint violations (converts to DomainConflictException)
+- Implements soft delete logic
 
-**Auto-Provided Methods:**
+**Methods:**
+- `findById()` - Find by ID (returns null if not found)
+- `findByIdOrThrow()` - Find by ID (throws if not found)
 - `findAll()` - Paginated listing
-- `findOne()` - Get by ID
-- `search()` - Advanced search
-- `remove()` - Soft delete
-- `getCombo()` - Dropdown data
+- `save()` - Insert or update based on existence
+- `delete()` - Soft delete
 
 ---
 
-### Step 5: Controllers
+### Step 5: Services
 
 **Files:**
-- `controllers/category.controller.ts`
-- `controllers/tag.controller.ts`
+- `category.service.ts` (root level)
+- `tag.service.ts` (root level)
 
-**Extends:** `BaseKnexController<ICategory>` / `BaseKnexController<ITag>`
+**Pattern:** Custom service (NOT extending `BaseKnexService`)
 
-**Auto-Generated Endpoints:**
-- `GET /v1/categories` - List with pagination
-- `GET /v1/categories/:id` - Get by ID
-- `POST /v1/categories` - Create
-- `PUT /v1/categories/:id` - Update
-- `DELETE /v1/categories/:id` - Soft delete
-- `POST /v1/categories/search` - Advanced search
-- `GET /v1/categories/combo` - Dropdown data
+**Dependencies:**
+- Injects `CategoryRepository` / `TagRepository`
+- Injects `I18nService` for translations
+
+**Methods:**
+- `create()` - Creates domain model, validates, persists via repository
+- `findAll()` - Gets paginated list via repository
+- `findById()` - Gets single entity via repository
+- `update()` - Gets existing model, updates via domain methods, persists
+- `delete()` - Validates existence, then deletes via repository
 
 ---
 
-### Step 6: DTOs
+### Step 6: Controllers
+
+**Files:**
+- `category.controller.ts` (root level)
+- `tag.controller.ts` (root level)
+
+**Pattern:** Custom controller (NOT extending `BaseKnexController`)
+
+**Endpoints:**
+- `GET /v1/categories` - List with pagination
+- `GET /v1/categories/:id` - Get by ID (returns 404 if not found)
+- `POST /v1/categories` - Create
+- `PUT /v1/categories/:id` - Update (returns 404 if not found, 409 if conflict)
+- `DELETE /v1/categories/:id` - Soft delete (returns 404 if not found)
+
+---
+
+### Step 7: DTOs
 
 **Files:**
 - `dto/create-category.dto.ts`
@@ -171,7 +207,7 @@ export interface ICategory {
 
 ---
 
-### Step 7: i18n Files
+### Step 8: i18n Files
 
 **Files:**
 - `i18n/en/categories.json`
@@ -188,7 +224,7 @@ export interface ICategory {
 
 ---
 
-### Step 8: Product Integration
+### Step 9: Product Integration
 
 **Changes:**
 - `ProductModel`: Added `categoryId` property
@@ -200,23 +236,37 @@ export interface ICategory {
 
 ---
 
-### Step 9: Module Setup
+### Step 10: Module Setup
 
-**File:** `classifiers.module.ts`
+**Files:**
+- `categories.module.ts`
+- `tags.module.ts`
 
+**CategoriesModule:**
 ```typescript
 @Module({
   imports: [DatabaseModule, CommonModule, AuthModule],
-  providers: [CategoryService, TagService],
-  controllers: [CategoryController, TagController],
-  exports: [CategoryService, TagService],
+  providers: [CategoryService, CategoryRepository],
+  controllers: [CategoryController],
+  exports: [CategoryService, CategoryRepository],
 })
-export class ClassifiersModule {}
+export class CategoriesModule {}
+```
+
+**TagsModule:**
+```typescript
+@Module({
+  imports: [DatabaseModule, CommonModule, AuthModule],
+  providers: [TagService, TagRepository],
+  controllers: [TagController],
+  exports: [TagService, TagRepository],
+})
+export class TagsModule {}
 ```
 
 **Integration:**
-- Added to `AppModule` imports
-- Added to `ProductsModule` imports (for service injection)
+- Both modules added to `AppModule` imports
+- Both modules added to `ProductsModule` imports (for service injection)
 
 ---
 
@@ -243,16 +293,17 @@ export class ClassifiersModule {}
 ### Unit Tests
 
 **Model Tests:**
-- `models/__tests__/category.model.spec.ts`
-- `models/__tests__/tag.model.spec.ts`
+- `__tests__/category.model.spec.ts`
+- `__tests__/tag.model.spec.ts`
 
 **Service Tests:**
-- `services/__tests__/category.service.spec.ts`
-- `services/__tests__/tag.service.spec.ts`
+- `__tests__/category.service.spec.ts`
+- `__tests__/tag.service.spec.ts`
 
 **Run Tests:**
 ```bash
-pnpm test classifiers
+pnpm test categories
+pnpm test tags
 ```
 
 ---
@@ -311,16 +362,22 @@ const tag = TagModel.create({
 - Use domain models for all business logic
 - Validate data in domain models, not services
 - Use `create()` for new entities, `reconstitute()` for database data
-- Keep services thin - delegate to domain models
+- Keep services thin - delegate to domain models and repositories
+- Use repository for all database access (never direct Knex in service)
+- Handle unique constraint violations in repository
+- Validate existence before delete operations
 - Use i18n for all messages
 
 ### ❌ DON'T
 
 - Don't bypass domain models in services
 - Don't put business logic in controllers
+- Don't access database directly in services (use repository)
+- Don't use `BaseKnexService` or `BaseKnexController` for Category/Tag
 - Don't hardcode validation rules
 - Don't skip i18n for error messages
 - Don't use `new` directly - use factory methods
+- Don't let delete succeed silently if entity doesn't exist
 
 ---
 
@@ -328,11 +385,34 @@ const tag = TagModel.create({
 
 - [Categories & Tags API Documentation](./categories-tags-api-documentation.md)
 - [Domain Model Pattern Guide](./architecture-domain-model-pattern-documentation.md)
-- [Auto CRUD Pattern Guide](./architecture-auto-crud-pattern-guide.md)
 - [API Swagger Integration Guide](./api-swagger-integration-guide.md)
 - [Testing Guide](../../TESTING_GUIDE.md)
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2025-01-13
+---
+
+## Error Handling
+
+### Unique Constraint Violations
+
+When creating or updating with duplicate name/slug, the repository catches PostgreSQL error code `23505` and converts it to `DomainConflictException`:
+
+**Category:**
+- Duplicate slug → `409 Conflict` with `domain.categories.slug_exists`
+- Duplicate name → `409 Conflict` with `domain.categories.name_exists`
+
+**Tag:**
+- Duplicate name → `409 Conflict` with `domain.tags.name_exists`
+
+### Delete Validation
+
+Before deleting, the service validates that the entity exists:
+
+- If not found → `404 Not Found` with `domain.categories.not_found` or `domain.tags.not_found`
+- If found → Proceeds with soft delete → `200 OK`
+
+---
+
+**Version**: 2.0.0  
+**Last Updated**: 2025-01-19

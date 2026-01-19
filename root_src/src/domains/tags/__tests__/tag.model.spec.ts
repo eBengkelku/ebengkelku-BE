@@ -1,7 +1,7 @@
-import { TagModel } from '../tag.model';
-import { ITag } from '../../interfaces/tag.interface';
-import { DomainValidationException } from '../../../../common/domain';
-import { TagErrorCodes } from '../../constants';
+import { TagModel } from '../models/tag.model';
+import { ITag } from '../interfaces/tag.interface';
+import { DomainValidationException } from '../../../common/domain';
+import { TagErrorCodes } from '../constants/tag-error-codes';
 
 describe('TagModel', () => {
   const validTagId = '123e4567-e89b-12d3-a456-426614174000';

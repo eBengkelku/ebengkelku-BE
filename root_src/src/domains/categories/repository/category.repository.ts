@@ -3,7 +3,11 @@ import { BaseDomainRepository } from '../../../common/domain/base-domain.reposit
 import { DatabaseService } from '../../../database/database.service';
 import { CategoryModel } from '../models/category.model';
 import { ICategory } from '../interfaces/category.interface';
-import { DomainConflictException } from '../../../common/domain/exceptions/domain.exception';
+import {
+  DomainConflictException,
+  DomainNotFoundException,
+  DomainErrorCodesDefault,
+} from '../../../common/domain/exceptions';
 import { CategoryErrorCodes } from '../constants/category-error-codes';
 
 /**
@@ -221,6 +225,28 @@ export class CategoryRepository extends BaseDomainRepository<
     await this.knex(this.tableName)
       .where(this.config.primaryKey, id)
       .delete();
+  }
+
+  /**
+   * Deletes a category by ID and returns affected rows count
+   * Optimized version that performs delete and returns affected rows for validation
+   *
+   * @param {string | number} id - Category ID
+   * @returns {Promise<number>} Number of affected rows (0 if not found or already deleted)
+   */
+  async deleteById(id: string | number): Promise<number> {
+    if (this.config.softDelete) {
+      return await this.knex(this.tableName)
+        .where(this.config.primaryKey, id)
+        .whereNull(this.config.timestampColumns.deleted!) // Only delete if not already deleted
+        .update({
+          [this.config.timestampColumns.deleted!]: new Date(),
+        });
+    } else {
+      return await this.knex(this.tableName)
+        .where(this.config.primaryKey, id)
+        .delete();
+    }
   }
 
   /**

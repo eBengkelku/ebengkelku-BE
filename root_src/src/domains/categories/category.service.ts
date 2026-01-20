@@ -6,6 +6,10 @@ import { CategoryModel } from './models/category.model';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ICategory } from './interfaces/category.interface';
+import {
+  DomainNotFoundException,
+  DomainErrorCodesDefault,
+} from '../../common/domain/exceptions';
 
 /**
  * Category Service
@@ -116,7 +120,7 @@ export class CategoryService {
    * @param {Object} pagination - Pagination parameters
    * @param {number} pagination.page - Page number (1-based)
    * @param {number} pagination.limit - Records per page
-   * @returns {Promise<{data: ICategory[], total: number}>} Paginated categories
+   * @returns {Promise<{data: ICategory[], meta: {current_page: number, per_page: number, total: number, last_page: number}}>} Paginated categories
    *
    * @example
    * ```typescript
@@ -125,14 +129,25 @@ export class CategoryService {
    */
   async findAll(pagination: { page: number; limit: number }): Promise<{
     data: ICategory[];
-    total: number;
+    meta: {
+      current_page: number;
+      per_page: number;
+      total: number;
+      last_page: number;
+    };
   }> {
+    const { page = 1, limit = 10 } = pagination;
     const result = await this.repository.findAll(pagination);
     const entities = result.data.map((category) => category.toEntity());
 
     return {
       data: entities,
-      total: result.total,
+      meta: {
+        current_page: page,
+        per_page: limit,
+        total: result.total,
+        last_page: Math.ceil(result.total / limit),
+      },
     };
   }
 
@@ -174,14 +189,15 @@ export class CategoryService {
     // Persist changes via repository
     await this.repository.save(category);
 
-    // Return updated entity
-    return this.findById(id);
+    // Return updated entity directly from memory (no extra DB query)
+    return category.toEntity();
   }
 
   /**
    * Deletes a category (soft delete)
    *
-   * Validates that the category exists before attempting to delete it.
+   * Optimized version that checks affected rows from delete operation
+   * instead of separate findById query for validation.
    *
    * @param {string} id - Category ID
    * @returns {Promise<void>}
@@ -193,9 +209,15 @@ export class CategoryService {
    * ```
    */
   async delete(id: string): Promise<void> {
-    // Validate category exists before deleting
-    await this.repository.findByIdOrThrow(id);
-    await this.repository.delete(id);
+    // Delete directly and check affected rows (single query optimization)
+    const affectedRows = await this.repository.deleteById(id);
+
+    if (affectedRows === 0) {
+      throw new DomainNotFoundException(
+        DomainErrorCodesDefault.COMMON_NOT_FOUND_BY_ID,
+        { entityName: 'Category', id },
+      );
+    }
   }
 
   /**

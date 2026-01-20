@@ -6,6 +6,7 @@ import { CategoryModel } from '../models/category.model';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { ICategory } from '../interfaces/category.interface';
+import { DomainNotFoundException } from '../../../common/domain/exceptions';
 
 describe('CategoryService', () => {
   let service: CategoryService;
@@ -32,7 +33,7 @@ describe('CategoryService', () => {
         data: [categoryModel],
         total: 1,
       }),
-      delete: jest.fn().mockResolvedValue(undefined),
+      deleteById: jest.fn().mockResolvedValue(1), // Return affected rows
     };
 
     const i18nMock: Partial<jest.Mocked<I18nService>> = {
@@ -98,11 +99,15 @@ describe('CategoryService', () => {
   });
 
   describe('findAll', () => {
-    it('should return paginated categories', async () => {
+    it('should return paginated categories with meta', async () => {
       const result = await service.findAll({ page: 1, limit: 10 });
 
       expect(repository.findAll).toHaveBeenCalledWith({ page: 1, limit: 10 });
-      expect(result.total).toBe(1);
+      expect(result.meta).toBeDefined();
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.current_page).toBe(1);
+      expect(result.meta.per_page).toBe(10);
+      expect(result.meta.last_page).toBe(1);
       expect(result.data[0].id).toBe(categoryEntity.id);
     });
   });
@@ -126,10 +131,19 @@ describe('CategoryService', () => {
   });
 
   describe('delete', () => {
-    it('should delete a category', async () => {
+    it('should delete a category using deleteById', async () => {
       await service.delete(categoryEntity.id);
 
-      expect(repository.delete).toHaveBeenCalledWith(categoryEntity.id);
+      expect(repository.deleteById).toHaveBeenCalledWith(categoryEntity.id);
+    });
+
+    it('should throw DomainNotFoundException if category not found', async () => {
+      (repository.deleteById as jest.Mock).mockResolvedValue(0);
+
+      await expect(service.delete(categoryEntity.id)).rejects.toThrow(
+        DomainNotFoundException,
+      );
+      expect(repository.deleteById).toHaveBeenCalledWith(categoryEntity.id);
     });
   });
 });

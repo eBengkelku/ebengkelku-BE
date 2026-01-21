@@ -3,6 +3,7 @@ import {
   IsString,
   IsOptional,
   IsNumber,
+  IsUUID,
   Length,
   Min,
 } from 'class-validator';
@@ -59,12 +60,23 @@ export class CreateProductDto {
   stock_quantity: number;
 
   @ApiPropertyOptional({
-    description: 'Product category',
+    description: 'Product category (legacy field)',
     example: 'Electronics',
     maxLength: 100,
+    deprecated: true,
   })
   @IsOptional()
   @IsString({ message: 'products.validation.category.string' })
   @Length(0, 100, { message: 'products.validation.category.maxLength' })
   category?: string;
+
+  @ApiPropertyOptional({
+    description: 'Category ID (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: 'string',
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID(4, { message: 'products.validation.category_id.uuid' })
+  category_id?: string;
 }

@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateProductTagsDto } from './dto/update-product-tags.dto';
 import { ProductService } from './product.service';
 import { FilterFormDataInterceptor } from '../../common/interceptors/filter-form-data.interceptor';
 import { ResponseMessage } from '../../common/decorators/response-message.decorator';
@@ -509,5 +510,26 @@ export class ProductController {
     }
 
     return this.productService.bulkUpdateStock(updates);
+  }
+
+  /**
+   * Update product tags (attach/detach)
+   *
+   * Syncs tags for a product. Replaces all existing tags with the provided tag IDs.
+   *
+   * @param {string} id - Product ID
+   * @param {UpdateProductTagsDto} dto - Tag IDs to attach
+   * @returns {Promise<any>} Updated product with tags loaded
+   */
+  @Post(':id/tags')
+  @ResponseMessage('products.tags.updated')
+  @ApiOperation({ summary: 'Update product tags' })
+  @ApiResponse({ status: 200, description: 'Product tags updated successfully' })
+  @ApiResponse({ status: 404, description: 'Product or tag not found' })
+  async updateProductTags(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductTagsDto,
+  ) {
+    return this.productService.updateProductTags(id, dto.tag_ids);
   }
 }

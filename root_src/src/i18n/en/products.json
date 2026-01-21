@@ -23,6 +23,10 @@
     "category": {
       "string": "Category must be a text value",
       "maxLength": "Category cannot exceed 100 characters"
+    },
+    "category_id": {
+      "string": "Category ID must be a string",
+      "uuid": "Category ID must be a valid UUID format"
     }
   },
   "created": "Product created successfully",

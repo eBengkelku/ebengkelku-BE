@@ -1,0 +1,35 @@
+{
+  "title": "Tag",
+  "validation": {
+    "name": {
+      "required": "Nama tag wajib diisi",
+      "string": "Nama tag harus berupa teks",
+      "maxLength": "Nama tag tidak boleh lebih dari 20 karakter",
+      "tooLong": "Nama tag tidak boleh lebih dari 20 karakter"
+    },
+    "color": {
+      "required": "Warna tag wajib diisi",
+      "string": "Warna tag harus berupa teks",
+      "invalid": "Format warna tag tidak valid",
+      "format": "Warna tag harus berupa kode warna heksadesimal yang valid (contoh: #FF0000 atau #F00)"
+    }
+  },
+  "created": "Tag berhasil dibuat",
+  "updated": "Tag berhasil diperbarui",
+  "deleted": "Tag berhasil dihapus",
+  "listed": "Tag berhasil diambil",
+  "found": "Tag berhasil ditemukan",
+  "errors": {
+    "notFound": "Tag tidak ditemukan",
+    "notFoundDetail": "Tag dengan ID {{id}} tidak ditemukan",
+    "nameExists": "Nama tag sudah ada",
+    "nameRequired": "Nama tag wajib diisi",
+    "nameTooLong": "Nama tag tidak boleh lebih dari 20 karakter",
+    "colorInvalid": "Format warna tag tidak valid",
+    "colorFormat": "Warna tag harus berupa kode warna heksadesimal yang valid (contoh: #FF0000 atau #F00)"
+  },
+  "fields": {
+    "name": "Nama Tag",
+    "color": "Warna"
+  }
+}

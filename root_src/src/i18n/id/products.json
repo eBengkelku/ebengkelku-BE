@@ -23,6 +23,10 @@
     "category": {
       "string": "Kategori harus berupa teks",
       "maxLength": "Kategori tidak boleh lebih dari 100 karakter"
+    },
+    "category_id": {
+      "string": "ID Kategori harus berupa string",
+      "uuid": "ID Kategori harus berupa format UUID yang valid"
     }
   },
   "created": "Produk berhasil dibuat",

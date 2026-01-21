@@ -17,6 +17,8 @@ import { generateAllCrudModules } from './common/modules/auto-crud.module';
 // Custom modules for file handling
 import { FilesModule } from './domains/files/files.module';
 import { ProductsModule } from './domains/products/products.module';
+import { CategoriesModule } from './domains/categories/categories.module';
+import { TagsModule } from './domains/tags/tags.module';
 
 // Middleware
 import { LoggerModule } from 'nestjs-pino';
@@ -76,6 +78,8 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     CommonModule,
     AuthModule,
     FilesModule,
+    CategoriesModule, // Category management
+    TagsModule, // Tag management
     ProductsModule,
     // Auto-CRUD system extends manual modules
     ...generateAllCrudModules(),

@@ -1,0 +1,41 @@
+{
+  "title": "Kategori",
+  "validation": {
+    "name": {
+      "required": "Nama kategori wajib diisi",
+      "string": "Nama kategori harus berupa teks",
+      "maxLength": "Nama kategori tidak boleh lebih dari 255 karakter"
+    },
+    "slug": {
+      "required": "Slug kategori wajib diisi",
+      "string": "Slug kategori harus berupa teks",
+      "maxLength": "Slug kategori tidak boleh lebih dari 255 karakter",
+      "invalid": "Format slug kategori tidak valid",
+      "format": "Slug kategori harus huruf kecil, alfanumerik dengan tanda hubung saja"
+    },
+    "description": {
+      "string": "Deskripsi harus berupa teks",
+      "maxLength": "Deskripsi tidak boleh lebih dari 1000 karakter"
+    }
+  },
+  "created": "Kategori berhasil dibuat",
+  "updated": "Kategori berhasil diperbarui",
+  "deleted": "Kategori berhasil dihapus",
+  "listed": "Kategori berhasil diambil",
+  "found": "Kategori berhasil ditemukan",
+  "errors": {
+    "notFound": "Kategori tidak ditemukan",
+    "notFoundDetail": "Kategori dengan ID {{id}} tidak ditemukan",
+    "nameExists": "Nama kategori sudah ada",
+    "slugExists": "Slug kategori sudah ada",
+    "nameRequired": "Nama kategori wajib diisi",
+    "nameEmpty": "Nama kategori tidak boleh kosong",
+    "slugInvalid": "Format slug kategori tidak valid",
+    "slugFormat": "Slug kategori harus huruf kecil, alfanumerik dengan tanda hubung saja"
+  },
+  "fields": {
+    "name": "Nama Kategori",
+    "slug": "Slug",
+    "description": "Deskripsi"
+  }
+}

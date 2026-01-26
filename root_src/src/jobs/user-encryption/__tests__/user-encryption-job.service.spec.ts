@@ -20,6 +20,12 @@ import {
 } from '../interfaces/encryption.interfaces';
 import { ENV_VARS, BATCH_CONFIG } from '../constants/encryption.constants';
 
+// Type for transaction callback
+type TransactionCallback = (trx: {
+  where: jest.Mock;
+  update: jest.Mock;
+}) => Promise<void>;
+
 // Mock logger
 const mockLogger = {
   info: jest.fn(),
@@ -160,7 +166,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -188,7 +194,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce(mockUsers)
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -216,7 +222,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -243,7 +249,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -320,7 +326,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce(mockUsers2)
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -383,7 +389,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -427,7 +433,7 @@ describe('UserEncryptionJobService', () => {
       ];
 
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -449,7 +455,7 @@ describe('UserEncryptionJobService', () => {
       ];
 
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -606,7 +612,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce(mockUsers)
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -760,7 +766,7 @@ describe('UserEncryptionJobService', () => {
       ];
 
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -826,7 +832,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -852,7 +858,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -878,7 +884,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -909,7 +915,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce(mockUsers)
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -952,7 +958,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce(mockUsers2)
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -979,7 +985,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce([mockUser])
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -1021,7 +1027,7 @@ describe('UserEncryptionJobService', () => {
       });
 
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -1046,7 +1052,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce(mockUsers)
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),
@@ -1074,7 +1080,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValueOnce(mockUsers2)
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
-        async (callback: Function) => {
+        async (callback: TransactionCallback) => {
           await callback({
             where: jest.fn().mockReturnThis(),
             update: jest.fn().mockResolvedValue(1),

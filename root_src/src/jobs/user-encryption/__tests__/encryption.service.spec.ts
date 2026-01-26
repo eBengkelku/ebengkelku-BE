@@ -13,7 +13,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { PinoLogger } from 'nestjs-pino';
+import { getLoggerToken } from 'nestjs-pino';
 import { EncryptionService } from '../services/encryption.service';
 import {
   ENCRYPTION_ALGORITHMS,
@@ -111,7 +111,7 @@ describe('EncryptionService', () => {
           },
         },
         {
-          provide: PinoLogger,
+          provide: getLoggerToken(EncryptionService.name),
           useValue: mockLogger,
         },
       ],
@@ -446,7 +446,7 @@ describe('EncryptionService', () => {
               },
             },
             {
-              provide: PinoLogger,
+              provide: getLoggerToken(EncryptionService.name),
               useValue: mockLogger,
             },
           ],
@@ -583,7 +583,7 @@ describe('EncryptionService', () => {
               },
             },
             {
-              provide: PinoLogger,
+              provide: getLoggerToken(EncryptionService.name),
               useValue: mockLogger,
             },
           ],
@@ -651,7 +651,7 @@ describe('EncryptionService', () => {
               },
             },
             {
-              provide: PinoLogger,
+              provide: getLoggerToken(EncryptionService.name),
               useValue: mockLogger,
             },
           ],
@@ -705,7 +705,7 @@ describe('EncryptionService', () => {
             },
           },
           {
-            provide: PinoLogger,
+            provide: getLoggerToken(EncryptionService.name),
             useValue: mockLogger,
           },
         ],
@@ -740,7 +740,7 @@ describe('EncryptionService', () => {
             },
           },
           {
-            provide: PinoLogger,
+            provide: getLoggerToken(EncryptionService.name),
             useValue: mockLogger,
           },
         ],
@@ -774,7 +774,7 @@ describe('EncryptionService', () => {
             },
           },
           {
-            provide: PinoLogger,
+            provide: getLoggerToken(EncryptionService.name),
             useValue: mockLogger,
           },
         ],
@@ -808,7 +808,7 @@ describe('EncryptionService', () => {
             },
           },
           {
-            provide: PinoLogger,
+            provide: getLoggerToken(EncryptionService.name),
             useValue: mockLogger,
           },
         ],
@@ -857,7 +857,7 @@ describe('EncryptionService', () => {
               },
             },
             {
-              provide: PinoLogger,
+              provide: getLoggerToken(EncryptionService.name),
               useValue: mockLogger,
             },
           ],
@@ -911,7 +911,7 @@ describe('EncryptionService', () => {
               },
             },
             {
-              provide: PinoLogger,
+              provide: getLoggerToken(EncryptionService.name),
               useValue: mockLogger,
             },
           ],

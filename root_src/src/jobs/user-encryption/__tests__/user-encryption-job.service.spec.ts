@@ -10,7 +10,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { PinoLogger } from 'nestjs-pino';
+import { getLoggerToken } from 'nestjs-pino';
 import { UserEncryptionJobService } from '../services/user-encryption-job.service';
 import { EncryptionService } from '../services/encryption.service';
 import { DatabaseService } from '../../../database/database.service';
@@ -20,11 +20,24 @@ import {
 } from '../interfaces/encryption.interfaces';
 import { ENV_VARS, BATCH_CONFIG } from '../constants/encryption.constants';
 
-// Type for transaction callback
-type TransactionCallback = (trx: {
-  where: jest.Mock;
-  update: jest.Mock;
-}) => Promise<void>;
+// Type for transaction callback - trx is a callable function that returns a query builder
+type MockTrx = jest.Mock & {
+  (tableName: string): {
+    where: jest.Mock;
+    update: jest.Mock;
+  };
+};
+type TransactionCallback = (trx: MockTrx) => Promise<void>;
+
+// Helper to create a mock trx function
+const createMockTrx = (): MockTrx => {
+  const trxQueryBuilder = {
+    where: jest.fn().mockReturnThis(),
+    update: jest.fn().mockResolvedValue(1),
+  };
+  const trx = jest.fn().mockReturnValue(trxQueryBuilder) as MockTrx;
+  return trx;
+};
 
 // Mock logger
 const mockLogger = {
@@ -116,7 +129,7 @@ describe('UserEncryptionJobService', () => {
           },
         },
         {
-          provide: PinoLogger,
+          provide: getLoggerToken(UserEncryptionJobService.name),
           useValue: mockLogger,
         },
         {
@@ -167,10 +180,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -195,10 +205,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -223,10 +230,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -250,10 +254,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -327,10 +328,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -353,7 +351,22 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should log job completion message', async () => {
-      queryBuilder.first.mockResolvedValue({ count: 0 });
+      const mockUser: IUserPiiData = {
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+62812345678',
+      };
+
+      queryBuilder.first.mockResolvedValue({ count: 1 });
+      queryBuilder.offset
+        .mockResolvedValueOnce([mockUser])
+        .mockResolvedValue([]);
+      queryBuilder.transaction.mockImplementation(
+        async (callback: TransactionCallback) => {
+          await callback(createMockTrx());
+        },
+      );
 
       await service.executeJob();
 
@@ -390,10 +403,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -434,10 +444,7 @@ describe('UserEncryptionJobService', () => {
 
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -456,10 +463,7 @@ describe('UserEncryptionJobService', () => {
 
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -613,10 +617,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -767,10 +768,7 @@ describe('UserEncryptionJobService', () => {
 
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -833,10 +831,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -859,10 +854,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -885,10 +877,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -916,10 +905,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -959,10 +945,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -986,10 +969,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -1028,10 +1008,7 @@ describe('UserEncryptionJobService', () => {
 
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -1053,10 +1030,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -1081,10 +1055,7 @@ describe('UserEncryptionJobService', () => {
         .mockResolvedValue([]);
       queryBuilder.transaction.mockImplementation(
         async (callback: TransactionCallback) => {
-          await callback({
-            where: jest.fn().mockReturnThis(),
-            update: jest.fn().mockResolvedValue(1),
-          });
+          await callback(createMockTrx());
         },
       );
 
@@ -1119,7 +1090,7 @@ describe('UserEncryptionJobService', () => {
             },
           },
           {
-            provide: PinoLogger,
+            provide: getLoggerToken(UserEncryptionJobService.name),
             useValue: mockLogger,
           },
           {

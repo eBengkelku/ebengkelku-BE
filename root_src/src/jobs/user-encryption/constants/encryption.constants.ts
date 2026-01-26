@@ -34,6 +34,25 @@ export const KEY_CONFIG = {
 } as const;
 
 /**
+ * Serialization format constants
+ * Format: encryptedKey.iv.tag.ciphertext
+ */
+export const SERIALIZATION = {
+  /** Delimiter for serialized encrypted string */
+  DELIMITER: '.',
+  /** Number of parts in serialized string */
+  PARTS_COUNT: 4,
+  /** Index for encrypted key in serialized parts */
+  INDEX_ENCRYPTED_KEY: 0,
+  /** Index for IV in serialized parts */
+  INDEX_IV: 1,
+  /** Index for auth tag in serialized parts */
+  INDEX_TAG: 2,
+  /** Index for ciphertext in serialized parts */
+  INDEX_CIPHERTEXT: 3,
+} as const;
+
+/**
  * File path constants
  */
 export const FILE_PATHS = {

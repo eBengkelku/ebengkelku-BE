@@ -1062,4 +1062,300 @@ describe('EncryptionService', () => {
       expect(decrypted).toBe(plaintext);
     });
   });
+
+  /**
+   * Test suite for serialize/deserialize methods
+   * These methods convert IEncryptedData to/from string format
+   */
+  describe('Positive Test Cases - serialize()', () => {
+    beforeEach(async () => {
+      await service.onModuleInit();
+    });
+
+    it('should serialize encrypted data to dot-delimited string', () => {
+      const encryptedData = service.encrypt('test');
+      const serialized = service.serialize(encryptedData);
+
+      expect(typeof serialized).toBe('string');
+      expect(serialized.split('.')).toHaveLength(4);
+    });
+
+    it('should produce base64 components in serialized string', () => {
+      const encryptedData = service.encrypt('test');
+      const serialized = service.serialize(encryptedData);
+      const parts = serialized.split('.');
+
+      // Each part should be valid base64
+      parts.forEach((part) => {
+        expect(() => Buffer.from(part, 'base64')).not.toThrow();
+      });
+    });
+
+    it('should serialize complex data correctly', () => {
+      const plaintext = 'Complex data: 日本語 🚀 <script>alert(1)</script>';
+      const encryptedData = service.encrypt(plaintext);
+      const serialized = service.serialize(encryptedData);
+
+      expect(serialized).not.toContain('{');
+      expect(serialized).not.toContain('}');
+      expect(serialized.split('.').length).toBe(4);
+    });
+  });
+
+  describe('Positive Test Cases - deserialize()', () => {
+    beforeEach(async () => {
+      await service.onModuleInit();
+    });
+
+    it('should deserialize string back to IEncryptedData', () => {
+      const encryptedData = service.encrypt('test');
+      const serialized = service.serialize(encryptedData);
+      const deserialized = service.deserialize(serialized);
+
+      expect(deserialized).toHaveProperty('encryptedKey');
+      expect(deserialized).toHaveProperty('iv');
+      expect(deserialized).toHaveProperty('tag');
+      expect(deserialized).toHaveProperty('ciphertext');
+    });
+
+    it('should round-trip serialize/deserialize correctly', () => {
+      const plaintext = 'Round trip test';
+      const original = service.encrypt(plaintext);
+      const serialized = service.serialize(original);
+      const deserialized = service.deserialize(serialized);
+
+      expect(deserialized.encryptedKey).toBe(original.encryptedKey);
+      expect(deserialized.iv).toBe(original.iv);
+      expect(deserialized.tag).toBe(original.tag);
+      expect(deserialized.ciphertext).toBe(original.ciphertext);
+    });
+
+    it('should deserialize and decrypt successfully', () => {
+      const plaintext = 'Deserialize and decrypt';
+      const encrypted = service.encrypt(plaintext);
+      const serialized = service.serialize(encrypted);
+      const deserialized = service.deserialize(serialized);
+      const decrypted = service.decrypt(deserialized);
+
+      expect(decrypted).toBe(plaintext);
+    });
+  });
+
+  describe('Negative Test Cases - deserialize()', () => {
+    it('should throw error for invalid format (missing parts)', () => {
+      expect(() => service.deserialize('only.three.parts')).toThrow();
+    });
+
+    it('should throw error for empty string', () => {
+      expect(() => service.deserialize('')).toThrow();
+    });
+
+    it('should throw error for null input', () => {
+      expect(() => service.deserialize(null as unknown as string)).toThrow();
+    });
+
+    it('should throw error for undefined input', () => {
+      expect(() =>
+        service.deserialize(undefined as unknown as string),
+      ).toThrow();
+    });
+  });
+
+  /**
+   * Test suite for encryptToString/decryptFromString methods
+   * These are convenience methods for direct string-to-string encryption
+   */
+  describe('Positive Test Cases - encryptToString()', () => {
+    beforeEach(async () => {
+      await service.onModuleInit();
+    });
+
+    it('should encrypt to string format directly', () => {
+      const encrypted = service.encryptToString('test');
+
+      expect(typeof encrypted).toBe('string');
+      expect(encrypted.split('.')).toHaveLength(4);
+    });
+
+    it('should encrypt email to string format', () => {
+      const encrypted = service.encryptToString('user@example.com');
+
+      expect(typeof encrypted).toBe('string');
+      expect(encrypted).not.toContain('@');
+    });
+
+    it('should encrypt phone number to string format', () => {
+      const encrypted = service.encryptToString('+6281234567890');
+
+      expect(typeof encrypted).toBe('string');
+      expect(encrypted).not.toContain('+62');
+    });
+
+    it('should encrypt Indonesian name to string format', () => {
+      const name = 'Muhammad Rizky Wijaya';
+      const encrypted = service.encryptToString(name);
+
+      expect(typeof encrypted).toBe('string');
+      expect(encrypted).not.toContain('Muhammad');
+    });
+
+    it('should produce unique output for same input', () => {
+      const plaintext = 'same input';
+      const encrypted1 = service.encryptToString(plaintext);
+      const encrypted2 = service.encryptToString(plaintext);
+
+      expect(encrypted1).not.toBe(encrypted2);
+    });
+  });
+
+  describe('Positive Test Cases - decryptFromString()', () => {
+    beforeEach(async () => {
+      await service.onModuleInit();
+    });
+
+    it('should decrypt from string format directly', () => {
+      const plaintext = 'test';
+      const encrypted = service.encryptToString(plaintext);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it('should decrypt email correctly', () => {
+      const email = 'user@example.com';
+      const encrypted = service.encryptToString(email);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(email);
+    });
+
+    it('should decrypt phone number correctly', () => {
+      const phone = '+6281234567890';
+      const encrypted = service.encryptToString(phone);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(phone);
+    });
+
+    it('should decrypt Indonesian name correctly', () => {
+      const name = 'Siti Nurhaliza';
+      const encrypted = service.encryptToString(name);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(name);
+    });
+
+    it('should handle round-trip encryption/decryption for all PII fields', () => {
+      const testData = {
+        name: 'Ahmad Prasetyo',
+        email: 'ahmad.prasetyo@example.com',
+        phone: '+6281234567890',
+        provider: 'google',
+        provider_id: '123456789012345678901',
+      };
+
+      Object.entries(testData).forEach(([_field, value]) => {
+        const encrypted = service.encryptToString(value);
+        const decrypted = service.decryptFromString(encrypted);
+        expect(decrypted).toBe(value);
+      });
+    });
+  });
+
+  describe('Negative Test Cases - encryptToString()', () => {
+    beforeEach(async () => {
+      await service.onModuleInit();
+    });
+
+    it('should throw error for empty string', () => {
+      expect(() => service.encryptToString('')).toThrow();
+    });
+
+    it('should throw error for null input', () => {
+      expect(() =>
+        service.encryptToString(null as unknown as string),
+      ).toThrow();
+    });
+
+    it('should throw error for undefined input', () => {
+      expect(() =>
+        service.encryptToString(undefined as unknown as string),
+      ).toThrow();
+    });
+  });
+
+  describe('Negative Test Cases - decryptFromString()', () => {
+    beforeEach(async () => {
+      await service.onModuleInit();
+    });
+
+    it('should throw error for invalid format', () => {
+      expect(() => service.decryptFromString('invalid-string')).toThrow();
+    });
+
+    it('should throw error for corrupted data', () => {
+      const encrypted = service.encryptToString('test');
+      const parts = encrypted.split('.');
+      parts[0] = 'corrupted';
+      const corrupted = parts.join('.');
+
+      expect(() => service.decryptFromString(corrupted)).toThrow();
+    });
+
+    it('should throw error for empty string', () => {
+      expect(() => service.decryptFromString('')).toThrow();
+    });
+
+    it('should throw error for null input', () => {
+      expect(() =>
+        service.decryptFromString(null as unknown as string),
+      ).toThrow();
+    });
+  });
+
+  describe('Edge Cases - String Format Encryption', () => {
+    beforeEach(async () => {
+      await service.onModuleInit();
+    });
+
+    it('should handle Unicode characters in string encryption', () => {
+      const unicode = '日本語テスト 🎉🚀';
+      const encrypted = service.encryptToString(unicode);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(unicode);
+    });
+
+    it('should handle very long strings', () => {
+      const longString = 'A'.repeat(10000);
+      const encrypted = service.encryptToString(longString);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(longString);
+    });
+
+    it('should handle strings with special characters', () => {
+      const special = 'Hello, World! @#$%^&*()_+-=[]{}|;\':",./<>?';
+      const encrypted = service.encryptToString(special);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(special);
+    });
+
+    it('should handle SQL injection strings', () => {
+      const sql = "'; DROP TABLE users; --";
+      const encrypted = service.encryptToString(sql);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(sql);
+    });
+
+    it('should handle XSS attack strings', () => {
+      const xss = '<script>alert("XSS")</script>';
+      const encrypted = service.encryptToString(xss);
+      const decrypted = service.decryptFromString(encrypted);
+
+      expect(decrypted).toBe(xss);
+    });
+  });
 });

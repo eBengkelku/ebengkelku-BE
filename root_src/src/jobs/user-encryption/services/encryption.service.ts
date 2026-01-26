@@ -32,6 +32,7 @@ import {
   SERVICE_NAMES,
   OPERATIONS,
   ENV_VARS,
+  SERIALIZATION,
 } from '../constants/encryption.constants';
 
 /**
@@ -381,5 +382,82 @@ export class EncryptionService implements IEncryptionService, OnModuleInit {
       operation: OPERATIONS.LOAD_KEYS,
       message: LOG_MESSAGES.KEYS_LOADED,
     });
+  }
+
+  /**
+   * Serializes encrypted data to a single string
+   *
+   * Format: encryptedKey.iv.tag.ciphertext
+   * All components are base64 encoded and joined with dots
+   *
+   * @param data - Encrypted data structure
+   * @returns Serialized string suitable for database storage
+   */
+  serialize(data: IEncryptedData): string {
+    if (!data?.ciphertext || !data?.iv || !data?.tag || !data?.encryptedKey) {
+      throw new Error('Invalid encrypted data structure for serialization');
+    }
+
+    return [data.encryptedKey, data.iv, data.tag, data.ciphertext].join(
+      SERIALIZATION.DELIMITER,
+    );
+  }
+
+  /**
+   * Deserializes a string back to encrypted data structure
+   *
+   * Parses format: encryptedKey.iv.tag.ciphertext
+   *
+   * @param serialized - Serialized string from database
+   * @returns Encrypted data structure for decryption
+   * @throws Error if format is invalid
+   */
+  deserialize(serialized: string): IEncryptedData {
+    if (!serialized || typeof serialized !== 'string') {
+      throw new Error('Invalid serialized data: expected non-empty string');
+    }
+
+    const parts = serialized.split(SERIALIZATION.DELIMITER);
+
+    if (parts.length !== SERIALIZATION.PARTS_COUNT) {
+      throw new Error(
+        `Invalid serialized format: expected ${SERIALIZATION.PARTS_COUNT} parts, got ${parts.length}`,
+      );
+    }
+
+    return {
+      encryptedKey: parts[SERIALIZATION.INDEX_ENCRYPTED_KEY],
+      iv: parts[SERIALIZATION.INDEX_IV],
+      tag: parts[SERIALIZATION.INDEX_TAG],
+      ciphertext: parts[SERIALIZATION.INDEX_CIPHERTEXT],
+      algorithm: ENCRYPTION_ALGORITHMS.AES,
+      encryptedAt: '', // Not stored in serialized format
+    };
+  }
+
+  /**
+   * Encrypts plaintext and returns a serialized string for database storage
+   *
+   * Convenience method that combines encrypt() and serialize()
+   *
+   * @param plaintext - Data to encrypt
+   * @returns Serialized encrypted string (format: encryptedKey.iv.tag.ciphertext)
+   */
+  encryptToString(plaintext: string): string {
+    const encrypted = this.encrypt(plaintext);
+    return this.serialize(encrypted);
+  }
+
+  /**
+   * Decrypts a serialized encrypted string back to plaintext
+   *
+   * Convenience method that combines deserialize() and decrypt()
+   *
+   * @param serialized - Serialized encrypted string from database
+   * @returns Original plaintext
+   */
+  decryptFromString(serialized: string): string {
+    const encryptedData = this.deserialize(serialized);
+    return this.decrypt(encryptedData);
   }
 }

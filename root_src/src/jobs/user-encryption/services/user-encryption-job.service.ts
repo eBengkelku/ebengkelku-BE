@@ -22,7 +22,6 @@ import {
   IBatchResult,
   IUserPiiData,
   IUserEncryptionResult,
-  IEncryptedData,
   IEncryptionJobConfig,
 } from '../interfaces/encryption.interfaces';
 import {
@@ -457,15 +456,23 @@ export class UserEncryptionJobService implements IUserEncryptionJobService {
     const startTime = Date.now();
 
     try {
-      // Encrypt each PII field
+      // Encrypt each PII field to string format (encryptedKey.iv.tag.ciphertext)
       const encryptedName = user.name
-        ? this.encryptionService.encrypt(user.name)
+        ? this.encryptionService.encryptToString(user.name)
         : null;
 
-      const encryptedEmail = this.encryptionService.encrypt(user.email);
+      const encryptedEmail = this.encryptionService.encryptToString(user.email);
 
       const encryptedPhone = user.phone
-        ? this.encryptionService.encrypt(user.phone)
+        ? this.encryptionService.encryptToString(user.phone)
+        : null;
+
+      const encryptedProvider = user.provider
+        ? this.encryptionService.encryptToString(user.provider)
+        : null;
+
+      const encryptedProviderId = user.provider_id
+        ? this.encryptionService.encryptToString(user.provider_id)
         : null;
 
       // Update database (skip if dry-run)
@@ -475,6 +482,8 @@ export class UserEncryptionJobService implements IUserEncryptionJobService {
           encryptedName,
           encryptedEmail,
           encryptedPhone,
+          encryptedProvider,
+          encryptedProviderId,
         );
       }
 
@@ -492,6 +501,8 @@ export class UserEncryptionJobService implements IUserEncryptionJobService {
         encryptedName,
         encryptedEmail,
         encryptedPhone,
+        encryptedProvider,
+        encryptedProviderId,
         durationMs: Date.now() - startTime,
       };
     } catch (error) {
@@ -518,32 +529,36 @@ export class UserEncryptionJobService implements IUserEncryptionJobService {
 
   /**
    * Updates user record with encrypted data in a transaction
+   * Encrypts directly into original columns (name, email, phone, provider, provider_id)
    *
    * @param userId - User ID
-   * @param encryptedName - Encrypted name
-   * @param encryptedEmail - Encrypted email
-   * @param encryptedPhone - Encrypted phone
+   * @param encryptedName - Encrypted name string
+   * @param encryptedEmail - Encrypted email string
+   * @param encryptedPhone - Encrypted phone string
+   * @param encryptedProvider - Encrypted provider string
+   * @param encryptedProviderId - Encrypted provider_id string
    */
   private async updateUserEncryptedData(
     userId: number,
-    encryptedName: IEncryptedData | null,
-    encryptedEmail: IEncryptedData,
-    encryptedPhone: IEncryptedData | null,
+    encryptedName: string | null,
+    encryptedEmail: string,
+    encryptedPhone: string | null,
+    encryptedProvider: string | null,
+    encryptedProviderId: string | null,
   ): Promise<void> {
     const knex = this.databaseService.getKnex();
 
     await knex.transaction(async (trx) => {
-      await trx(DATABASE.FULL_TABLE)
-        .where('id', userId)
-        .update({
-          encrypted_name: encryptedName ? JSON.stringify(encryptedName) : null,
-          encrypted_email: JSON.stringify(encryptedEmail),
-          encrypted_phone: encryptedPhone
-            ? JSON.stringify(encryptedPhone)
-            : null,
-          is_encrypted: true,
-          updated_at: knex.fn.now(),
-        });
+      await trx(DATABASE.FULL_TABLE).where('id', userId).update({
+        // Encrypt directly into original columns
+        name: encryptedName,
+        email: encryptedEmail,
+        phone: encryptedPhone,
+        provider: encryptedProvider,
+        provider_id: encryptedProviderId,
+        is_encrypted: true,
+        updated_at: knex.fn.now(),
+      });
     });
 
     this.logger.debug({
@@ -585,7 +600,7 @@ export class UserEncryptionJobService implements IUserEncryptionJobService {
     const knex = this.databaseService.getKnex();
 
     const users = await knex(DATABASE.FULL_TABLE)
-      .select('id', 'name', 'email', 'phone')
+      .select('id', 'name', 'email', 'phone', 'provider', 'provider_id')
       .where('is_encrypted', false)
       .orWhereNull('is_encrypted')
       .orderBy('id', 'asc')
@@ -597,6 +612,8 @@ export class UserEncryptionJobService implements IUserEncryptionJobService {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      provider: user.provider,
+      provider_id: user.provider_id,
     }));
   }
 

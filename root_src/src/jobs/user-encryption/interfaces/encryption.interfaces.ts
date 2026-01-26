@@ -8,7 +8,8 @@
  */
 
 /**
- * Encrypted data structure for storing encrypted values with metadata
+ * Encrypted data structure for internal processing
+ * Contains all components needed for decryption
  */
 export interface IEncryptedData {
   /** Base64 encoded encrypted data */
@@ -26,35 +27,37 @@ export interface IEncryptedData {
 }
 
 /**
+ * Serialized encrypted string format
+ * Format: encryptedKey.iv.tag.ciphertext (dot-separated base64 values)
+ * This is what gets stored in the database columns
+ */
+export type SerializedEncryptedString = string;
+
+/**
  * User record from core.users table
+ * After migration, PII fields store encrypted strings directly
  */
 export interface IUserRecord {
   /** Primary key */
   id: number;
   /** Public UUID */
   public_id: string;
-  /** User full name (PII) */
+  /** User full name (PII) - stores encrypted string when is_encrypted=true */
   name: string | null;
-  /** User email address (PII) */
+  /** User email address (PII) - stores encrypted string when is_encrypted=true */
   email: string;
-  /** User phone number (PII) */
+  /** User phone number (PII) - stores encrypted string when is_encrypted=true */
   phone: string | null;
   /** Hashed password */
   password: string | null;
   /** Profile image URL */
   image: string | null;
-  /** OAuth provider */
+  /** OAuth provider - stores encrypted string when is_encrypted=true */
   provider: string | null;
-  /** OAuth provider ID */
+  /** OAuth provider ID - stores encrypted string when is_encrypted=true */
   provider_id: string | null;
   /** Whether user data is encrypted */
   is_encrypted: boolean;
-  /** Encrypted name data */
-  encrypted_name: string | null;
-  /** Encrypted email data */
-  encrypted_email: string | null;
-  /** Encrypted phone data */
-  encrypted_phone: string | null;
   /** Created timestamp */
   created_at: Date;
   /** Updated timestamp */
@@ -73,6 +76,10 @@ export interface IUserPiiData {
   email: string;
   /** User phone number */
   phone: string | null;
+  /** OAuth provider */
+  provider: string | null;
+  /** OAuth provider ID */
+  provider_id: string | null;
 }
 
 /**
@@ -85,12 +92,16 @@ export interface IUserEncryptionResult {
   success: boolean;
   /** Error message if encryption failed */
   error?: string;
-  /** Encrypted name data */
-  encryptedName?: IEncryptedData | null;
-  /** Encrypted email data */
-  encryptedEmail?: IEncryptedData | null;
-  /** Encrypted phone data */
-  encryptedPhone?: IEncryptedData | null;
+  /** Encrypted name (serialized string format) */
+  encryptedName?: string | null;
+  /** Encrypted email (serialized string format) */
+  encryptedEmail?: string | null;
+  /** Encrypted phone (serialized string format) */
+  encryptedPhone?: string | null;
+  /** Encrypted provider (serialized string format) */
+  encryptedProvider?: string | null;
+  /** Encrypted provider_id (serialized string format) */
+  encryptedProviderId?: string | null;
   /** Duration of encryption in milliseconds */
   durationMs: number;
 }
@@ -174,9 +185,17 @@ export interface IEncryptionService {
   /**
    * Encrypts a plaintext string using hybrid RSA+AES encryption
    * @param plaintext - Data to encrypt
-   * @returns Encrypted data structure
+   * @returns Encrypted data structure (internal format)
    */
   encrypt(plaintext: string): IEncryptedData;
+
+  /**
+   * Encrypts and serializes plaintext to a single string
+   * Format: encryptedKey.iv.tag.ciphertext
+   * @param plaintext - Data to encrypt
+   * @returns Serialized encrypted string for database storage
+   */
+  encryptToString(plaintext: string): string;
 
   /**
    * Decrypts encrypted data back to plaintext
@@ -186,10 +205,31 @@ export interface IEncryptionService {
   decrypt(encryptedData: IEncryptedData): string;
 
   /**
+   * Decrypts a serialized encrypted string back to plaintext
+   * @param serialized - Serialized encrypted string (from database)
+   * @returns Original plaintext
+   */
+  decryptFromString(serialized: string): string;
+
+  /**
    * Validates the encryption keys are properly loaded
    * @returns True if keys are valid
    */
   validateKeys(): boolean;
+
+  /**
+   * Serializes encrypted data to a single string
+   * @param data - Encrypted data structure
+   * @returns Serialized string
+   */
+  serialize(data: IEncryptedData): string;
+
+  /**
+   * Deserializes a string back to encrypted data structure
+   * @param serialized - Serialized string
+   * @returns Encrypted data structure
+   */
+  deserialize(serialized: string): IEncryptedData;
 }
 
 /**

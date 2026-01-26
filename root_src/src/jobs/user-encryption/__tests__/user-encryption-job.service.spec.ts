@@ -39,6 +39,23 @@ const createMockTrx = (): MockTrx => {
   return trx;
 };
 
+// Helper to create mock user data with all required fields
+const createMockUser = (
+  id: number,
+  name: string | null = 'Test User',
+  email: string = 'test@example.com',
+  phone: string | null = '+62812345678',
+  provider: string | null = null,
+  providerId: string | null = null,
+): IUserPiiData => ({
+  id,
+  name,
+  email,
+  phone,
+  provider,
+  provider_id: providerId,
+});
+
 // Mock logger
 const mockLogger = {
   info: jest.fn(),
@@ -59,13 +76,20 @@ const createMockEncryptedData = (): IEncryptedData => ({
   encryptedAt: new Date().toISOString(),
 });
 
-// Mock encryption service
+// Mock encrypted string (serialized format: encryptedKey.iv.tag.ciphertext)
+const MOCK_ENCRYPTED_STRING = 'mockEncryptedKey.mockIv.mockTag.mockCiphertext';
+
+// Mock encryption service with new methods
 const createMockEncryptionService = () => ({
   isReady: jest.fn().mockReturnValue(true),
   initializeKeys: jest.fn().mockResolvedValue(undefined),
   validateKeys: jest.fn().mockReturnValue(true),
   encrypt: jest.fn().mockReturnValue(createMockEncryptedData()),
   decrypt: jest.fn().mockReturnValue('decrypted'),
+  encryptToString: jest.fn().mockReturnValue(MOCK_ENCRYPTED_STRING),
+  decryptFromString: jest.fn().mockReturnValue('decrypted'),
+  serialize: jest.fn().mockReturnValue(MOCK_ENCRYPTED_STRING),
+  deserialize: jest.fn().mockReturnValue(createMockEncryptedData()),
 });
 
 // Mock Knex query builder
@@ -167,12 +191,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should execute job successfully with one pending user', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -194,9 +218,9 @@ describe('UserEncryptionJobService', () => {
 
     it('should execute job successfully with multiple users', async () => {
       const mockUsers: IUserPiiData[] = [
-        { id: 1, name: 'User 1', email: 'user1@example.com', phone: '+621' },
-        { id: 2, name: 'User 2', email: 'user2@example.com', phone: '+622' },
-        { id: 3, name: 'User 3', email: 'user3@example.com', phone: '+623' },
+        createMockUser(1, 'User 1', 'user1@example.com', '+621'),
+        createMockUser(2, 'User 2', 'user2@example.com', '+622'),
+        createMockUser(3, 'User 3', 'user3@example.com', '+623'),
       ];
 
       queryBuilder.first.mockResolvedValue({ count: 3 });
@@ -217,12 +241,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should execute job with user having null name', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: null,
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        null,
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -241,12 +265,7 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should execute job with user having null phone', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: null,
-      };
+      const mockUser = createMockUser(1, 'John Doe', 'john@example.com', null);
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -304,22 +323,23 @@ describe('UserEncryptionJobService', () => {
 
     it('should process users in batches', async () => {
       // Create 150 users to test batching (batch size is 100)
-      const mockUsers1: IUserPiiData[] = Array.from(
-        { length: 100 },
-        (_, i) => ({
-          id: i + 1,
-          name: `User ${i + 1}`,
-          email: `user${i + 1}@example.com`,
-          phone: `+62${i}`,
-        }),
+      const mockUsers1: IUserPiiData[] = Array.from({ length: 100 }, (_, i) =>
+        createMockUser(
+          i + 1,
+          `User ${i + 1}`,
+          `user${i + 1}@example.com`,
+          `+62${i}`,
+        ),
       );
 
-      const mockUsers2: IUserPiiData[] = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 101,
-        name: `User ${i + 101}`,
-        email: `user${i + 101}@example.com`,
-        phone: `+62${i + 100}`,
-      }));
+      const mockUsers2: IUserPiiData[] = Array.from({ length: 50 }, (_, i) =>
+        createMockUser(
+          i + 101,
+          `User ${i + 101}`,
+          `user${i + 101}@example.com`,
+          `+62${i + 100}`,
+        ),
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 150 });
       queryBuilder.offset
@@ -351,12 +371,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should log job completion message', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -390,12 +410,14 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should call encryption service for each PII field', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+        'google',
+        'gid123',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -409,12 +431,18 @@ describe('UserEncryptionJobService', () => {
 
       await service.executeJob();
 
-      // Should encrypt name, email, and phone
-      expect(encryptionService.encrypt).toHaveBeenCalledWith('John Doe');
-      expect(encryptionService.encrypt).toHaveBeenCalledWith(
+      // Should encrypt name, email, phone, provider, and provider_id
+      expect(encryptionService.encryptToString).toHaveBeenCalledWith(
+        'John Doe',
+      );
+      expect(encryptionService.encryptToString).toHaveBeenCalledWith(
         'john@example.com',
       );
-      expect(encryptionService.encrypt).toHaveBeenCalledWith('+62812345678');
+      expect(encryptionService.encryptToString).toHaveBeenCalledWith(
+        '+62812345678',
+      );
+      expect(encryptionService.encryptToString).toHaveBeenCalledWith('google');
+      expect(encryptionService.encryptToString).toHaveBeenCalledWith('gid123');
     });
 
     it('should validate keys before processing', async () => {
@@ -438,8 +466,8 @@ describe('UserEncryptionJobService', () => {
   describe('Positive Test Cases - encryptBatch()', () => {
     it('should encrypt batch of users successfully', async () => {
       const users: IUserPiiData[] = [
-        { id: 1, name: 'User 1', email: 'user1@example.com', phone: '+621' },
-        { id: 2, name: 'User 2', email: 'user2@example.com', phone: '+622' },
+        createMockUser(1, 'User 1', 'user1@example.com', '+621'),
+        createMockUser(2, 'User 2', 'user2@example.com', '+622'),
       ];
 
       queryBuilder.transaction.mockImplementation(
@@ -458,7 +486,7 @@ describe('UserEncryptionJobService', () => {
 
     it('should return correct batch duration', async () => {
       const users: IUserPiiData[] = [
-        { id: 1, name: 'User 1', email: 'user1@example.com', phone: '+621' },
+        createMockUser(1, 'User 1', 'user1@example.com', '+621'),
       ];
 
       queryBuilder.transaction.mockImplementation(
@@ -572,16 +600,16 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should return failed status when encryption service throws', async () => {
-      encryptionService.encrypt.mockImplementation(() => {
+      encryptionService.encryptToString.mockImplementation(() => {
         throw new Error('Encryption failed');
       });
 
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -597,18 +625,18 @@ describe('UserEncryptionJobService', () => {
 
     it('should return partial status when some encryptions fail', async () => {
       let callCount = 0;
-      encryptionService.encrypt.mockImplementation(() => {
+      encryptionService.encryptToString.mockImplementation(() => {
         callCount++;
-        if (callCount > 3) {
-          // First user succeeds (3 fields), second fails
+        if (callCount > 5) {
+          // First user succeeds (5 fields), second fails
           throw new Error('Encryption failed');
         }
-        return createMockEncryptedData();
+        return MOCK_ENCRYPTED_STRING;
       });
 
       const mockUsers: IUserPiiData[] = [
-        { id: 1, name: 'User 1', email: 'user1@example.com', phone: '+621' },
-        { id: 2, name: 'User 2', email: 'user2@example.com', phone: '+622' },
+        createMockUser(1, 'User 1', 'user1@example.com', '+621'),
+        createMockUser(2, 'User 2', 'user2@example.com', '+622'),
       ];
 
       queryBuilder.first.mockResolvedValue({ count: 2 });
@@ -637,12 +665,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should handle database transaction error', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -658,16 +686,16 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should record failure details correctly', async () => {
-      encryptionService.encrypt.mockImplementation(() => {
+      encryptionService.encryptToString.mockImplementation(() => {
         throw new Error('Specific encryption error');
       });
 
-      const mockUser: IUserPiiData = {
-        id: 99,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        99,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -700,16 +728,16 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should not log PII data in errors', async () => {
-      encryptionService.encrypt.mockImplementation(() => {
+      encryptionService.encryptToString.mockImplementation(() => {
         throw new Error('Encryption failed');
       });
 
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Secret Name',
-        email: 'secret@email.com',
-        phone: '+62SecretPhone',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Secret Name',
+        'secret@email.com',
+        '+62SecretPhone',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -735,12 +763,12 @@ describe('UserEncryptionJobService', () => {
 
   describe('Negative Test Cases - encryptBatch()', () => {
     it('should track failures in batch result', async () => {
-      encryptionService.encrypt.mockImplementation(() => {
+      encryptionService.encryptToString.mockImplementation(() => {
         throw new Error('Batch encryption failed');
       });
 
       const users: IUserPiiData[] = [
-        { id: 1, name: 'User 1', email: 'user1@example.com', phone: '+621' },
+        createMockUser(1, 'User 1', 'user1@example.com', '+621'),
       ];
 
       const result = await service.encryptBatch(users);
@@ -751,19 +779,27 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should continue processing after individual failure', async () => {
-      let callCount = 0;
-      encryptionService.encrypt.mockImplementation(() => {
-        callCount++;
-        if (callCount <= 3) {
-          // First user fails (3 fields)
+      // Track which user we're processing by counting encryption calls
+      // User 1: fails all 3 retry attempts (name is first field encrypted)
+      // User 2: succeeds on first attempt
+      let encryptionAttempts = 0;
+
+      // Each user has up to 5 fields to encrypt (name, email, phone, provider, provider_id)
+      // User 1 will fail on first field (name) for all 3 retries = 3 calls
+      // User 2 will succeed all fields = 5 calls (but we count from 4th call)
+      encryptionService.encryptToString.mockImplementation((value: string) => {
+        encryptionAttempts++;
+        // First 3 calls are user 1's retries (fails on name each time)
+        if (encryptionAttempts <= 3) {
           throw new Error('First user failed');
         }
-        return createMockEncryptedData();
+        // Calls 4+ are for user 2
+        return MOCK_ENCRYPTED_STRING;
       });
 
       const users: IUserPiiData[] = [
-        { id: 1, name: 'User 1', email: 'user1@example.com', phone: '+621' },
-        { id: 2, name: 'User 2', email: 'user2@example.com', phone: '+622' },
+        createMockUser(1, 'User 1', 'user1@example.com', '+621'),
+        createMockUser(2, 'User 2', 'user2@example.com', '+622'),
       ];
 
       queryBuilder.transaction.mockImplementation(
@@ -776,7 +812,7 @@ describe('UserEncryptionJobService', () => {
 
       expect(result.failureCount).toBe(1);
       expect(result.successCount).toBe(1);
-    });
+    }, 15000); // Increase timeout due to retry delays
   });
 
   describe('Negative Test Cases - handleCron()', () => {
@@ -818,12 +854,12 @@ describe('UserEncryptionJobService', () => {
 
   describe('Edge Cases', () => {
     it('should handle user with very long name', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'A'.repeat(1000),
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'A'.repeat(1000),
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -841,12 +877,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should handle user with special characters in email', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John',
-        email: "test+special'chars@example.com",
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John',
+        "test+special'chars@example.com",
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -864,12 +900,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should handle user with international phone number', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John',
-        email: 'john@example.com',
-        phone: '+1-555-123-4567',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John',
+        'john@example.com',
+        '+1-555-123-4567',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -889,12 +925,13 @@ describe('UserEncryptionJobService', () => {
     it('should handle exactly batch size users', async () => {
       const mockUsers: IUserPiiData[] = Array.from(
         { length: BATCH_CONFIG.DEFAULT_BATCH_SIZE },
-        (_, i) => ({
-          id: i + 1,
-          name: `User ${i + 1}`,
-          email: `user${i + 1}@example.com`,
-          phone: `+62${i}`,
-        }),
+        (_, i) =>
+          createMockUser(
+            i + 1,
+            `User ${i + 1}`,
+            `user${i + 1}@example.com`,
+            `+62${i}`,
+          ),
       );
 
       queryBuilder.first.mockResolvedValue({
@@ -921,21 +958,22 @@ describe('UserEncryptionJobService', () => {
 
       const mockUsers1: IUserPiiData[] = Array.from(
         { length: batchSize },
-        (_, i) => ({
-          id: i + 1,
-          name: `User ${i + 1}`,
-          email: `user${i + 1}@example.com`,
-          phone: `+62${i}`,
-        }),
+        (_, i) =>
+          createMockUser(
+            i + 1,
+            `User ${i + 1}`,
+            `user${i + 1}@example.com`,
+            `+62${i}`,
+          ),
       );
 
       const mockUsers2: IUserPiiData[] = [
-        {
-          id: batchSize + 1,
-          name: `User ${batchSize + 1}`,
-          email: `user${batchSize + 1}@example.com`,
-          phone: `+62${batchSize}`,
-        },
+        createMockUser(
+          batchSize + 1,
+          `User ${batchSize + 1}`,
+          `user${batchSize + 1}@example.com`,
+          `+62${batchSize}`,
+        ),
       ];
 
       queryBuilder.first.mockResolvedValue({ count: totalUsers });
@@ -956,12 +994,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should handle user with Unicode name', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'Test Name',
-        email: 'test@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'Test Name',
+        'test@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -986,12 +1024,13 @@ describe('UserEncryptionJobService', () => {
       for (let i = 0; i < totalUsers; i += batchSize) {
         const batch = Array.from(
           { length: Math.min(batchSize, totalUsers - i) },
-          (_, j) => ({
-            id: i + j + 1,
-            name: `User ${i + j + 1}`,
-            email: `user${i + j + 1}@example.com`,
-            phone: `+62${i + j}`,
-          }),
+          (_, j) =>
+            createMockUser(
+              i + j + 1,
+              `User ${i + j + 1}`,
+              `user${i + j + 1}@example.com`,
+              `+62${i + j}`,
+            ),
         );
         batches.push(batch);
       }
@@ -1020,8 +1059,8 @@ describe('UserEncryptionJobService', () => {
 
     it('should handle all users having null optional fields', async () => {
       const mockUsers: IUserPiiData[] = [
-        { id: 1, name: null, email: 'user1@example.com', phone: null },
-        { id: 2, name: null, email: 'user2@example.com', phone: null },
+        createMockUser(1, null, 'user1@example.com', null),
+        createMockUser(2, null, 'user2@example.com', null),
       ];
 
       queryBuilder.first.mockResolvedValue({ count: 2 });
@@ -1042,10 +1081,10 @@ describe('UserEncryptionJobService', () => {
 
     it('should respect batch delay configuration', async () => {
       const mockUsers1: IUserPiiData[] = [
-        { id: 1, name: 'User 1', email: 'user1@example.com', phone: '+621' },
+        createMockUser(1, 'User 1', 'user1@example.com', '+621'),
       ];
       const mockUsers2: IUserPiiData[] = [
-        { id: 2, name: 'User 2', email: 'user2@example.com', phone: '+622' },
+        createMockUser(2, 'User 2', 'user2@example.com', '+622'),
       ];
 
       queryBuilder.first.mockResolvedValue({ count: 2 });
@@ -1111,12 +1150,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should not update database in dry run mode', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -1133,12 +1172,7 @@ describe('UserEncryptionJobService', () => {
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
         .mockResolvedValueOnce([
-          {
-            id: 1,
-            name: 'Test',
-            email: 'test@example.com',
-            phone: '+621',
-          },
+          createMockUser(1, 'Test', 'test@example.com', '+621'),
         ])
         .mockResolvedValue([]);
 
@@ -1152,12 +1186,12 @@ describe('UserEncryptionJobService', () => {
     });
 
     it('should still encrypt data in dry run mode', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset
@@ -1166,16 +1200,16 @@ describe('UserEncryptionJobService', () => {
 
       await service.executeJob();
 
-      expect(encryptionService.encrypt).toHaveBeenCalled();
+      expect(encryptionService.encryptToString).toHaveBeenCalled();
     });
 
     it('should return success status in dry run mode', async () => {
-      const mockUser: IUserPiiData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+62812345678',
-      };
+      const mockUser = createMockUser(
+        1,
+        'John Doe',
+        'john@example.com',
+        '+62812345678',
+      );
 
       queryBuilder.first.mockResolvedValue({ count: 1 });
       queryBuilder.offset

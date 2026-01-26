@@ -182,7 +182,49 @@ The application will be available at `http://localhost:3004`
 
 ## Recent Updates & New Features
 
-### 🗄️ **Schema-Based Migration Generator (Latest)**
+### User PII Encryption System (Latest)
+
+Automatic encryption of Personally Identifiable Information (PII) for compliance with Indonesia's Personal Data Protection Law (UU PDP).
+
+**Features:**
+
+- Hybrid Encryption: RSA-4096 + AES-256-GCM for secure data protection
+- Batch Processing: Cron job encrypts users in configurable batches
+- Serialized Format: Encrypted data stored as dot-delimited Base64 string
+- Protected Fields: name, email, phone, provider, provider_id
+- Retry Logic: Automatic retry on encryption failures
+- Dry Run Mode: Test encryption without database changes
+
+**Protected Fields:**
+
+| Field       | Type | Required |
+| ----------- | ---- | -------- |
+| name        | text | No       |
+| email       | text | Yes      |
+| phone       | text | No       |
+| provider    | text | No       |
+| provider_id | text | No       |
+
+**Configuration:**
+
+```env
+ENCRYPTION_PUBLIC_KEY_PATH=config/jwks/public-key.json
+ENCRYPTION_PRIVATE_KEY_PATH=config/jwks/private-key.json
+ENCRYPTION_KEY_PASSPHRASE=your-passphrase
+ENCRYPTION_CRON_SCHEDULE=0 2 * * *
+ENCRYPTION_BATCH_SIZE=100
+```
+
+**Documentation:**
+
+- Overview: `docs/security-user-pii-encryption-overview.md`
+- Full Documentation: `docs/security-user-pii-encryption-documentation.md`
+- Setup Guide: `docs/security-user-pii-encryption-guide.md`
+- Code Examples: `docs/security-user-pii-encryption-examples.md`
+
+---
+
+### Schema-Based Migration Generator
 
 The `db:migrate:create:table` script now supports PostgreSQL schema-based architecture:
 

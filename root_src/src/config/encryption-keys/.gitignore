@@ -1,0 +1,7 @@
+# Ignore private key - NEVER commit this
+private-key.json
+public-key.json
+
+# Keep public key and README
+!README.md
+!.gitignore

@@ -6,7 +6,14 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'dist/**', 'node_modules/**', 'build/**'],
+    ignores: [
+      'eslint.config.mjs',
+      'dist/**',
+      'node_modules/**',
+      'build/**',
+      'scripts/**',
+      'src/database/migrations/**',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

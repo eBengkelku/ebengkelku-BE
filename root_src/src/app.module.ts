@@ -20,6 +20,9 @@ import { ProductsModule } from './domains/products/products.module';
 import { CategoriesModule } from './domains/categories/categories.module';
 import { TagsModule } from './domains/tags/tags.module';
 
+// Jobs
+import { UserEncryptionModule } from './jobs/user-encryption';
+
 // Middleware
 import { LoggerModule } from 'nestjs-pino';
 import { AuthMiddleware } from './common/middlewares/auth.middleware';
@@ -81,6 +84,8 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     CategoriesModule, // Category management
     TagsModule, // Tag management
     ProductsModule,
+    // Jobs
+    UserEncryptionModule, // PII encryption cron job
     // Auto-CRUD system extends manual modules
     ...generateAllCrudModules(),
   ],

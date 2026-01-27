@@ -44,5 +44,14 @@
     "issuerMismatch": "JWT issuer mismatch",
     "noMatchingKey": "No matching key found in JWKS",
     "jwksServerError": "Authentication server temporarily unavailable. Please try again later."
+  },
+  "encryption": {
+    "keysMissing": "Encryption key files not found. Run 'pnpm run generate:encryption-keys' to generate them.",
+    "publicKeyMissing": "Public encryption key file not found.",
+    "privateKeyMissing": "Private encryption key file not found.",
+    "passphraseNotSet": "ENCRYPTION_KEY_PASSPHRASE environment variable is not set.",
+    "passphraseInvalid": "Invalid passphrase for encryption private key.",
+    "healthCheckFailed": "Encryption keys health check failed.",
+    "healthCheckPassed": "Encryption keys validated successfully."
   }
 }

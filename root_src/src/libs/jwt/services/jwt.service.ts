@@ -2,7 +2,7 @@
  * JWT Service
  *
  * Service for generating JWT access tokens.
- * Uses RS256 algorithm with JWKS signing key.
+ * Uses RS256 algorithm with encryption private key.
  *
  * @module Libs/JWT/Services
  * @version 1.0.0
@@ -12,10 +12,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
-import { SignJWT, importJWK } from 'jose';
+import { SignJWT } from 'jose';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as crypto from 'node:crypto';
 
 import { JwtRepository } from './jwt.repository';
 import {
@@ -32,10 +33,12 @@ import {
   JWT_DEFAULT_EXPIRATION_MS,
   JWT_ENV_VARS,
   JWT_DEFAULT_JTI_PREFIX,
-  JWT_DEFAULT_JWKS_PATH,
-  JWT_SIGNING_KEY_ID,
   UUID_V4_REGEX,
 } from '../constants/jwt.constants';
+
+/** Default path for private key file */
+const DEFAULT_PRIVATE_KEY_PATH =
+  './src/config/encryption-keys/private-key.json';
 
 /**
  * JWT Generation Service
@@ -45,9 +48,10 @@ import {
 @Injectable()
 export class JwtService implements IJwtService, OnModuleInit {
   private readonly logger = new Logger(JwtService.name);
-  private signingKey: Awaited<ReturnType<typeof importJWK>> | null = null;
-  private expirationMs: number;
-  private jwksPath: string;
+  private signingKey: crypto.KeyObject | null = null;
+  private readonly expirationMs: number;
+  private readonly privateKeyPath: string;
+  private readonly passphrase: string;
 
   constructor(
     private readonly repository: JwtRepository,
@@ -58,9 +62,11 @@ export class JwtService implements IJwtService, OnModuleInit {
     this.expirationMs =
       this.configService.get<number>(JWT_ENV_VARS.EXPIRED_TIME) ??
       JWT_DEFAULT_EXPIRATION_MS;
-    this.jwksPath =
-      this.configService.get<string>(JWT_ENV_VARS.SIGNING_KEY_PATH) ??
-      JWT_DEFAULT_JWKS_PATH;
+    this.privateKeyPath =
+      this.configService.get<string>('JWT_PRIVATE_KEY_PATH') ??
+      DEFAULT_PRIVATE_KEY_PATH;
+    this.passphrase =
+      this.configService.get<string>('ENCRYPTION_KEY_PASSPHRASE') ?? '';
 
     this.logger.log(
       `JwtService configured with expiration: ${this.expirationMs}ms`,
@@ -182,7 +188,6 @@ export class JwtService implements IJwtService, OnModuleInit {
         .setProtectedHeader({
           alg: JWT_ALGORITHM,
           typ: 'JWT',
-          kid: JWT_SIGNING_KEY_ID,
         })
         .setIssuedAt(payload.iat)
         .setExpirationTime(payload.exp)
@@ -198,26 +203,27 @@ export class JwtService implements IJwtService, OnModuleInit {
   }
 
   /**
-   * Load private key for signing from JWKS
+   * Load private key for signing from encryption keys
    */
   private async loadSigningKey(): Promise<void> {
     try {
-      // Try multiple paths for JWKS file
-      const jwksPaths = [
-        this.jwksPath,
-        path.join(process.cwd(), this.jwksPath),
-        path.join(process.cwd(), 'config/jwks/jwks.json'),
-        './config/jwks/jwks.json',
+      // Try multiple paths for private key file
+      const keyPaths = [
+        this.privateKeyPath,
+        path.join(process.cwd(), this.privateKeyPath),
+        path.join(process.cwd(), 'src/config/encryption-keys/private-key.json'),
+        './src/config/encryption-keys/private-key.json',
       ];
 
-      let jwksData: { keys: unknown[] } | null = null;
+      let keyFileContent: string | null = null;
+      let usedPath: string = '';
 
-      for (const jwksPath of jwksPaths) {
+      for (const keyPath of keyPaths) {
         try {
-          if (fs.existsSync(jwksPath)) {
-            const fileContent = fs.readFileSync(jwksPath, 'utf8');
-            jwksData = JSON.parse(fileContent);
-            this.logger.log(`Loaded JWKS from: ${jwksPath}`);
+          if (fs.existsSync(keyPath)) {
+            keyFileContent = fs.readFileSync(keyPath, 'utf8');
+            usedPath = keyPath;
+            this.logger.log(`Found private key file at: ${keyPath}`);
             break;
           }
         } catch {
@@ -225,29 +231,32 @@ export class JwtService implements IJwtService, OnModuleInit {
         }
       }
 
-      if (!jwksData || !jwksData.keys) {
-        throw new Error('JWKS file not found or invalid');
+      if (!keyFileContent) {
+        throw new Error('Private key file not found');
       }
 
-      // Find the signing key (RS256 with use: 'sig')
-      const signingKeyData = jwksData.keys.find(
-        (key: any) =>
-          key.alg === JWT_ALGORITHM &&
-          key.use === 'sig' &&
-          key.kid === JWT_SIGNING_KEY_ID,
-      );
+      // Parse the key file
+      const keyData = JSON.parse(keyFileContent);
+      const encryptedPem = keyData.PRIVATE_KEY_MY_KEY;
 
-      if (!signingKeyData) {
+      if (!encryptedPem) {
+        throw new Error('Private key PEM not found in key file');
+      }
+
+      // Decrypt the private key using passphrase
+      if (!this.passphrase) {
         throw new Error(
-          `Signing key with kid ${JWT_SIGNING_KEY_ID} not found in JWKS`,
+          'ENCRYPTION_KEY_PASSPHRASE not configured - required for JWT signing',
         );
       }
 
-      // Import the key for signing (need private key components for signing)
-      // Since JWKS contains public key only, we need to load the private key separately
-      // For now, we'll use the public key data and note that a separate private key file is needed
-      this.signingKey = await importJWK(signingKeyData as any, JWT_ALGORITHM);
-      this.logger.log('JWT signing key loaded successfully');
+      this.signingKey = crypto.createPrivateKey({
+        key: encryptedPem,
+        format: 'pem',
+        passphrase: this.passphrase,
+      });
+
+      this.logger.log(`JWT signing key loaded successfully from: ${usedPath}`);
     } catch (error) {
       this.logger.error(
         `Failed to load signing key: ${error.message}`,

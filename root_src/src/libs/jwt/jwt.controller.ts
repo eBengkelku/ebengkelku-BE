@@ -19,7 +19,7 @@ import {
 import { I18nService } from 'nestjs-i18n';
 
 import { JwtService } from './services/jwt.service';
-import { GenerateTokenDto, TokenResponseDto } from './dto';
+import { GenerateTokenDto } from './dto';
 import {
   JWT_DEFAULT_EXPIRATION_MS,
   JWT_ENV_VARS,
@@ -54,7 +54,7 @@ export class JwtController {
   @HttpCode(HttpStatus.OK)
   async generateToken(
     @Body() dto: GenerateTokenDto,
-  ): Promise<TokenResponseDto> {
+  ): Promise<{ accessToken: string; tokenType: string; expiresIn: number }> {
     this.logger.log(`Generating token for user: ${dto.publicId}`);
 
     const token = await this.jwtService.generateAccessToken(dto.publicId, {
@@ -64,9 +64,8 @@ export class JwtController {
 
     const expirationMs = dto.expiresInMs ?? this.expirationMs;
 
+    // Return just the data - interceptor will wrap with success/message
     return {
-      success: true,
-      message: this.i18n.t('jwt.success.tokenGenerated'),
       accessToken: token,
       tokenType: 'Bearer',
       expiresIn: Math.floor(expirationMs / 1000),

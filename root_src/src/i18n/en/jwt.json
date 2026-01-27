@@ -1,0 +1,15 @@
+{
+  "errors": {
+    "userNotFound": "User not found with the specified ID",
+    "roleNotFound": "User role not found",
+    "signingKeyNotFound": "JWT signing key not found",
+    "invalidPublicId": "Invalid public ID format",
+    "tokenGenerationFailed": "Failed to generate access token",
+    "serviceNotInitialized": "JWT service not initialized",
+    "databaseError": "Database error occurred",
+    "encryptionError": "Encryption service error"
+  },
+  "success": {
+    "tokenGenerated": "Access token generated successfully"
+  }
+}

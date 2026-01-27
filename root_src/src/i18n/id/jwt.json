@@ -1,0 +1,15 @@
+{
+  "errors": {
+    "userNotFound": "Pengguna tidak ditemukan dengan ID yang ditentukan",
+    "roleNotFound": "Peran pengguna tidak ditemukan",
+    "signingKeyNotFound": "Kunci penandatanganan JWT tidak ditemukan",
+    "invalidPublicId": "Format ID publik tidak valid",
+    "tokenGenerationFailed": "Gagal membuat token akses",
+    "serviceNotInitialized": "Layanan JWT belum diinisialisasi",
+    "databaseError": "Terjadi kesalahan database",
+    "encryptionError": "Kesalahan layanan enkripsi"
+  },
+  "success": {
+    "tokenGenerated": "Token akses berhasil dibuat"
+  }
+}

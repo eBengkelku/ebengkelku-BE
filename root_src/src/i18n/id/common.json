@@ -44,5 +44,14 @@
     "issuerMismatch": "Issuer JWT tidak cocok",
     "noMatchingKey": "Tidak ditemukan kunci yang cocok di JWKS",
     "jwksServerError": "Server autentikasi sementara tidak tersedia. Silakan coba lagi nanti."
+  },
+  "encryption": {
+    "keysMissing": "File kunci enkripsi tidak ditemukan. Jalankan 'pnpm run generate:encryption-keys' untuk membuatnya.",
+    "publicKeyMissing": "File kunci publik enkripsi tidak ditemukan.",
+    "privateKeyMissing": "File kunci privat enkripsi tidak ditemukan.",
+    "passphraseNotSet": "Variabel lingkungan ENCRYPTION_KEY_PASSPHRASE belum diatur.",
+    "passphraseInvalid": "Passphrase tidak valid untuk kunci privat enkripsi.",
+    "healthCheckFailed": "Pemeriksaan kesehatan kunci enkripsi gagal.",
+    "healthCheckPassed": "Kunci enkripsi berhasil divalidasi."
   }
 }

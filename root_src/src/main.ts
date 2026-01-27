@@ -3,8 +3,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { I18nValidationPipe } from 'nestjs-i18n';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
+import { validateEncryptionKeysHealth } from './common/health';
 
 async function bootstrap() {
+  // Validate encryption keys before application startup
+  // This will throw a fatal error if keys are missing or passphrase is incorrect
+  await validateEncryptionKeysHealth();
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     snapshot: true,

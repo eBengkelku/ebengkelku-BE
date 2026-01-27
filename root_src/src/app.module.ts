@@ -26,6 +26,9 @@ import { UserEncryptionModule } from './jobs/user-encryption';
 // Auth Registration
 import { CustomerRegistrationModule } from './domains/auth/register/customer/customer-registration.module';
 
+// JWT Utility
+import { JwtModule } from './libs/jwt/jwt.module';
+
 // Middleware
 import { LoggerModule } from 'nestjs-pino';
 import { AuthMiddleware } from './common/middlewares/auth.middleware';
@@ -91,6 +94,8 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     UserEncryptionModule, // PII encryption cron job
     // Auth Registration
     CustomerRegistrationModule, // Customer registration endpoint
+    // JWT Utility
+    JwtModule, // JWT token generation
     // Auto-CRUD system extends manual modules
     ...generateAllCrudModules(),
   ],

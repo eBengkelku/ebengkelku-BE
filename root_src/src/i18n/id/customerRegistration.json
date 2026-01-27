@@ -1,0 +1,38 @@
+{
+  "title": "Registrasi Pelanggan",
+  "validation": {
+    "name": {
+      "required": "Nama wajib diisi",
+      "string": "Nama harus berupa teks",
+      "length": "Nama harus antara 1 dan 255 karakter"
+    },
+    "email": {
+      "required": "Email wajib diisi",
+      "invalid": "Email harus berupa alamat email yang valid",
+      "length": "Email harus antara 1 dan 255 karakter"
+    },
+    "password": {
+      "required": "Kata sandi wajib diisi",
+      "string": "Kata sandi harus berupa teks",
+      "minLength": "Kata sandi minimal 8 karakter",
+      "complexity": "Kata sandi harus mengandung minimal satu huruf kecil, satu huruf besar, satu angka, dan satu karakter khusus (@$!%*?&)"
+    },
+    "phone": {
+      "string": "Nomor telepon harus berupa teks",
+      "length": "Nomor telepon harus antara 1 dan 50 karakter"
+    },
+    "image": {
+      "string": "Gambar harus berupa teks",
+      "length": "URL gambar harus antara 1 dan 500 karakter"
+    }
+  },
+  "success": "Pelanggan berhasil terdaftar",
+  "errors": {
+    "emailExists": "Alamat email sudah terdaftar",
+    "emailExistsDetail": "Email {{email}} sudah terkait dengan akun yang ada",
+    "roleNotFound": "Role pelanggan tidak ditemukan dalam sistem",
+    "registrationFailed": "Registrasi gagal. Silakan coba lagi",
+    "passwordHashFailed": "Gagal mengamankan kata sandi",
+    "encryptionFailed": "Gagal mengenkripsi data pengguna"
+  }
+}

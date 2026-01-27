@@ -43,7 +43,7 @@ export class CustomerRegistrationService {
     dto: CreateCustomerDto,
     lang?: string,
   ): Promise<IRegistrationResponse> {
-    this.logger.log(`Starting customer registration for email: ${dto.email}`);
+    this.logger.log('Customer registration request received');
 
     // 1. Validate email uniqueness
     await this.validateEmailUnique(dto.email, lang);
@@ -70,17 +70,17 @@ export class CustomerRegistrationService {
         trx,
       );
 
-      this.logger.log(`User created with ID: ${user.id}`);
+      this.logger.log('New customer account created successfully');
 
       // 6. Assign customer role
       await this.repository.assignRole(user.id, customerRole.id, trx);
 
-      this.logger.log(`Customer role assigned to user: ${user.id}`);
+      this.logger.log('Customer role assigned to new account');
 
       // 7. Commit transaction
       await trx.commit();
 
-      this.logger.log(`Registration completed for user: ${user.id}`);
+      this.logger.log('Customer registration completed successfully');
 
       // 8. Build response with roles
       const responseData: ICustomerWithRoles = {
@@ -124,7 +124,7 @@ export class CustomerRegistrationService {
     const existingUser = await this.repository.findByEmail(email);
 
     if (existingUser) {
-      this.logger.warn(`Email already exists: ${email}`);
+      this.logger.warn('Registration attempt with existing email address');
       throw new ConflictException({
         code: CustomerRegistrationErrorCodes.EMAIL_ALREADY_EXISTS,
         message: this.i18n.t('customerRegistration.errors.emailExists', {

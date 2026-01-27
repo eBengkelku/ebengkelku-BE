@@ -95,6 +95,9 @@ describe('CustomerRegistrationService', () => {
     // Reset mocks
     jest.clearAllMocks();
 
+    // Re-apply bcrypt mock after clearAllMocks
+    (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashedPasswordMock');
+
     // Default mock implementations
     repository.findByEmail.mockResolvedValue(null);
     repository.findRoleByKey.mockResolvedValue(mockCustomerRole);

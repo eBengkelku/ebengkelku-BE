@@ -1,0 +1,20 @@
+{
+  "title": "Login Pengguna",
+  "validation": {
+    "email": {
+      "required": "Email wajib diisi",
+      "invalid": "Email harus berformat email yang valid"
+    },
+    "password": {
+      "required": "Kata sandi wajib diisi",
+      "string": "Kata sandi harus berupa teks"
+    }
+  },
+  "success": "Login berhasil",
+  "errors": {
+    "invalidCredentials": "Kredensial tidak valid",
+    "emailNotVerified": "Verifikasi email diperlukan. Silakan verifikasi email Anda sebelum login",
+    "tokenGenerationFailed": "Gagal membuat token akses",
+    "decryptionFailed": "Gagal memproses data pengguna"
+  }
+}

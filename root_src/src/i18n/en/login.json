@@ -1,0 +1,20 @@
+{
+  "title": "User Login",
+  "validation": {
+    "email": {
+      "required": "Email is required",
+      "invalid": "Email must be a valid email address"
+    },
+    "password": {
+      "required": "Password is required",
+      "string": "Password must be a text value"
+    }
+  },
+  "success": "Login successful",
+  "errors": {
+    "invalidCredentials": "Invalid credentials",
+    "emailNotVerified": "Email verification required. Please verify your email before logging in",
+    "tokenGenerationFailed": "Failed to generate access token",
+    "decryptionFailed": "Failed to process user data"
+  }
+}

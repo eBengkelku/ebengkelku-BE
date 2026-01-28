@@ -29,11 +29,10 @@ export function getDevUser(): AccessUser {
 
   return {
     sub: 'dev-user-001',
-    preferred_username: 'developer',
+    name: 'developer',
     email: 'dev@ebengkelku.local',
-    realm_access: {
-      roles: ['admin', 'user'],
-    },
+    roles: 'admin,user',
+    permissions: ['read', 'write', 'delete', 'admin'],
     iat: now,
     exp: now + 86400, // 1 day expiration
   };

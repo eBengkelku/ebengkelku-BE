@@ -52,18 +52,20 @@ jest.mock('node:fs', () => ({
   existsSync: jest.fn().mockReturnValue(true),
   readFileSync: jest.fn().mockReturnValue(
     JSON.stringify({
-      keys: [
-        {
-          kid: 'fI7p53Efj55rAZME0gyDDEHqD8xtsOr5Nz_iEifEYFY',
-          kty: 'RSA',
-          alg: 'RS256',
-          use: 'sig',
-          n: 'test-n',
-          e: 'AQAB',
-        },
-      ],
+      PRIVATE_KEY_MY_KEY:
+        '-----BEGIN ENCRYPTED PRIVATE KEY-----\nMockPrivateKey\n-----END ENCRYPTED PRIVATE KEY-----',
+      generated_at: '2026-01-27T00:00:00.000Z',
     }),
   ),
+}));
+
+// Mock crypto.createPrivateKey to return a mock key object
+jest.mock('node:crypto', () => ({
+  ...jest.requireActual('node:crypto'),
+  createPrivateKey: jest.fn().mockReturnValue({
+    type: 'private',
+    asymmetricKeyType: 'rsa',
+  }),
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';

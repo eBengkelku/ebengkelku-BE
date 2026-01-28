@@ -42,8 +42,7 @@
     "invalid": "Invalid JWT token",
     "audienceMismatch": "JWT audience mismatch",
     "issuerMismatch": "JWT issuer mismatch",
-    "noMatchingKey": "No matching key found in JWKS",
-    "jwksServerError": "Authentication server temporarily unavailable. Please try again later."
+    "signatureInvalid": "JWT signature verification failed"
   },
   "encryption": {
     "keysMissing": "Encryption key files not found. Run 'pnpm run generate:encryption-keys' to generate them.",

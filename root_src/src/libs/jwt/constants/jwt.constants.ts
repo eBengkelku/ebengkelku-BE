@@ -29,26 +29,12 @@ export const JWT_DEFAULT_EXPIRATION_MS = 300000;
 export const JWT_ENV_VARS = {
   /** Expiration time in milliseconds */
   EXPIRED_TIME: 'JWT_EXPIRED_TIME',
-
-  /** Path to JWKS file with signing key */
-  SIGNING_KEY_PATH: 'JWT_SIGNING_KEY_PATH',
 } as const;
 
 /**
  * Default JTI prefix for generated tokens
  */
 export const JWT_DEFAULT_JTI_PREFIX = 'jwt';
-
-/**
- * JWKS key ID (kid) for signing key from existing JWKS
- * This matches the RS256 signing key in config/jwks/jwks.json
- */
-export const JWT_SIGNING_KEY_ID = 'fI7p53Efj55rAZME0gyDDEHqD8xtsOr5Nz_iEifEYFY';
-
-/**
- * Default JWKS file path
- */
-export const JWT_DEFAULT_JWKS_PATH = './config/jwks/jwks.json';
 
 /**
  * Database table names

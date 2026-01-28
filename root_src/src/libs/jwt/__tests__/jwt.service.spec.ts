@@ -116,8 +116,9 @@ describe('JwtService', () => {
   const mockConfigService = {
     get: jest.fn().mockImplementation((key: string) => {
       if (key === JWT_ENV_VARS.EXPIRED_TIME) return 300000;
-      if (key === JWT_ENV_VARS.SIGNING_KEY_PATH)
-        return './config/jwks/jwks.json';
+      if (key === 'JWT_PRIVATE_KEY_PATH')
+        return './src/config/encryption-keys/private-key.json';
+      if (key === 'ENCRYPTION_KEY_PASSPHRASE') return 'test-passphrase';
       return undefined;
     }),
   };

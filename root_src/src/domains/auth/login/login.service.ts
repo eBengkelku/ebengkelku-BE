@@ -72,14 +72,14 @@ export class LoginService {
   async login(dto: LoginDto, lang?: string): Promise<ILoginResponse> {
     const normalizedEmail = dto.email.toLowerCase().trim();
 
-    this.logger.log(`Login attempt for email: ${normalizedEmail}`);
+    this.logger.log('Login attempt received');
 
     // Step 1: Find user by email - repository returns UserModel
     const user = await this.repository.findByEmail(normalizedEmail);
 
     // Step 2: Check if user exists (generic error to prevent enumeration)
     if (!user) {
-      this.logger.warn(`Login failed: Email not found - ${normalizedEmail}`);
+      this.logger.warn('Login failed: User not found');
       throw new UnauthorizedException({
         code: LoginErrorCodes.INVALID_CREDENTIALS,
         message: this.i18n.t('login.errors.invalidCredentials', { lang }),
@@ -88,7 +88,7 @@ export class LoginService {
 
     // Step 3: Check if account is active using UserModel method (same generic error)
     if (!user.isActive()) {
-      this.logger.warn(`Login failed: Account deleted - ${normalizedEmail}`);
+      this.logger.warn('Login failed: Account inactive');
       throw new UnauthorizedException({
         code: LoginErrorCodes.INVALID_CREDENTIALS,
         message: this.i18n.t('login.errors.invalidCredentials', { lang }),
@@ -97,7 +97,7 @@ export class LoginService {
 
     // Step 4: Check if email is verified using UserModel method (specific error)
     if (!user.isEmailVerified()) {
-      this.logger.warn(`Login failed: Email not verified - ${normalizedEmail}`);
+      this.logger.warn('Login failed: Email not verified');
       throw new ForbiddenException({
         code: LoginErrorCodes.EMAIL_NOT_VERIFIED,
         message: this.i18n.t('login.errors.emailNotVerified', { lang }),
@@ -106,9 +106,7 @@ export class LoginService {
 
     // Step 5: Check if user has password auth using UserModel method (not OAuth-only user)
     if (!user.hasPasswordAuth()) {
-      this.logger.warn(
-        `Login failed: No password set (OAuth user) - ${normalizedEmail}`,
-      );
+      this.logger.warn('Login failed: No password authentication available');
       throw new UnauthorizedException({
         code: LoginErrorCodes.INVALID_CREDENTIALS,
         message: this.i18n.t('login.errors.invalidCredentials', { lang }),
@@ -119,7 +117,7 @@ export class LoginService {
     const isPasswordValid = await bcrypt.compare(dto.password, user.password!);
 
     if (!isPasswordValid) {
-      this.logger.warn(`Login failed: Invalid password - ${normalizedEmail}`);
+      this.logger.warn('Login failed: Invalid credentials');
       throw new UnauthorizedException({
         code: LoginErrorCodes.INVALID_CREDENTIALS,
         message: this.i18n.t('login.errors.invalidCredentials', { lang }),

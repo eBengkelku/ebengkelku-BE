@@ -25,6 +25,7 @@ import { UserEncryptionModule } from './jobs/user-encryption';
 
 // Auth Registration
 import { CustomerRegistrationModule } from './domains/auth/register/customer/customer-registration.module';
+import { LoginModule } from './domains/auth/login/login.module';
 
 // JWT Utility
 import { JwtModule } from './libs/jwt/jwt.module';
@@ -94,6 +95,7 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     UserEncryptionModule, // PII encryption cron job
     // Auth Registration
     CustomerRegistrationModule, // Customer registration endpoint
+    LoginModule, // User login endpoint
     // JWT Utility
     JwtModule, // JWT token generation
     // Auto-CRUD system extends manual modules

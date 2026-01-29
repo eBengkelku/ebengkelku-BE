@@ -1,0 +1,38 @@
+{
+  "title": "Owner Registration",
+  "validation": {
+    "name": {
+      "required": "Name is required",
+      "string": "Name must be a text value",
+      "length": "Name must be between 1 and 255 characters"
+    },
+    "email": {
+      "required": "Email is required",
+      "invalid": "Email must be a valid email address",
+      "length": "Email must be between 1 and 255 characters"
+    },
+    "password": {
+      "required": "Password is required",
+      "string": "Password must be a text value",
+      "minLength": "Password must be at least 8 characters",
+      "complexity": "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (@$!%*?&)"
+    },
+    "phone": {
+      "string": "Phone must be a text value",
+      "length": "Phone must be between 1 and 50 characters"
+    },
+    "image": {
+      "string": "Image must be a text value",
+      "length": "Image URL must be between 1 and 500 characters"
+    }
+  },
+  "success": "Workshop owner registered successfully",
+  "errors": {
+    "emailExists": "Email address is already registered",
+    "emailExistsDetail": "The email {{email}} is already associated with an existing account",
+    "roleNotFound": "Owner role not found in system",
+    "registrationFailed": "Registration failed. Please try again",
+    "passwordHashFailed": "Failed to secure password",
+    "encryptionFailed": "Failed to encrypt user data"
+  }
+}

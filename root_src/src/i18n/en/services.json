@@ -1,0 +1,47 @@
+{
+  "title": "Workshop Services",
+  "validation": {
+    "name": {
+      "required": "Service name is required",
+      "string": "Service name must be a text value",
+      "length": "Service name must be between 1 and 255 characters"
+    },
+    "description": {
+      "string": "Description must be a text value",
+      "maxLength": "Description cannot exceed 1000 characters"
+    },
+    "price": {
+      "required": "Price is required",
+      "number": "Price must be a valid number",
+      "min": "Price must be greater than or equal to 0"
+    },
+    "business_id": {
+      "required": "Business ID is required",
+      "string": "Business ID must be a string",
+      "uuid": "Business ID must be a valid UUID format"
+    }
+  },
+  "success": {
+    "listed": "Services retrieved successfully",
+    "found": "Service found successfully",
+    "created": "Service created successfully",
+    "batchCreated": "Services created successfully",
+    "updated": "Service updated successfully",
+    "deleted": "Service deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "batch": {
+      "tooLarge": "Batch size exceeds the maximum limit of {max}",
+      "duplicateNames": "Duplicate service names in request or database",
+      "nameAlreadyExists": "Services name '{names}' already exists"
+    },
+    "notFound": "Service not found",
+    "notFoundDetail": "Service with ID {id} not found",
+    "nameAlreadyExists": "Service name '{name}' already exists"
+  }
+}

@@ -47,7 +47,7 @@ export class ServiceModel extends BaseDomainModel<IService> {
       data.id,
       data.business_id,
       data.name.trim(),
-      data.description?.trim() ?? null,
+      data.description?.trim() || null,
       data.price,
       data.duration_minutes ?? null,
       data.daily_quota ?? null,

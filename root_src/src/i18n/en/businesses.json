@@ -40,7 +40,6 @@
   },
   "errors": {
     "ownerRequired": "Owner identity is required. Please provide a valid JWT.",
-    "devOwnerIdRequired": "Development mode: set DEV_OWNER_ID in .env to a valid core.users id (UUID) when using the dev user.",
     "notFound": "Business not found"
   }
 }

@@ -108,18 +108,4 @@ export class CreateBusinessDto {
   @ValidateNested({ each: true })
   @Type(() => BusinessHoursItemDto)
   business_hours?: BusinessHoursItemDto[];
-
-  @ApiPropertyOptional({
-    description: 'Business logo/profile image',
-    type: 'string',
-    format: 'binary',
-  })
-  image?: Express.Multer.File;
-
-  @ApiPropertyOptional({
-    description: 'Business cover/banner image',
-    type: 'string',
-    format: 'binary',
-  })
-  cover_image?: Express.Multer.File;
 }

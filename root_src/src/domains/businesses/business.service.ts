@@ -28,42 +28,14 @@ export class BusinessService {
     return this.databaseService.getKnex();
   }
 
-  /** UUID v4 regex (simple check so dev-user-001 is not treated as UUID). */
-  private static readonly UUID_REGEX =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
   /**
    * Resolve owner_id (core.users.id) from JWT sub (public_id).
    * Prevents spoofing: owner_id is never taken from request body.
-   * When sub is not a UUID (e.g. dev bypass with sub 'dev-user-001'), uses
-   * DEV_OWNER_ID from env in local/development so dev-user.config.ts can stay unchanged.
    */
   async resolveOwnerIdFromSub(sub: string): Promise<string> {
     if (!sub?.trim()) {
       throw new UnauthorizedException(
         this.i18n.t('businesses.errors.ownerRequired'),
-      );
-    }
-    const isDev =
-      process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development';
-    const devOwnerId = process.env.DEV_OWNER_ID?.trim();
-    const subIsNotUuid = !BusinessService.UUID_REGEX.test(sub);
-    if (isDev && subIsNotUuid) {
-      if (devOwnerId) {
-        // DEV_OWNER_ID may be configured as either core.users.id OR core.users.public_id.
-        // Prefer treating it as public_id when it matches a user record.
-        if (!BusinessService.UUID_REGEX.test(devOwnerId)) {
-          throw new UnauthorizedException(
-            this.i18n.t('businesses.errors.devOwnerIdRequired'),
-          );
-        }
-        const byPublicId = await this.repository.findUserIdByPublicId(devOwnerId);
-        if (byPublicId) return byPublicId;
-        // Fallback: assume it's already core.users.id
-        return devOwnerId;
-      }
-      throw new UnauthorizedException(
-        this.i18n.t('businesses.errors.devOwnerIdRequired'),
       );
     }
     const userId = await this.repository.findUserIdByPublicId(sub);
@@ -78,18 +50,15 @@ export class BusinessService {
   /**
    * Resolve id_creator for audit columns.
    * business.businesses.id_creator references core.users.public_id (UUID).
-   * - In normal flow, JWT sub is public_id (UUID) -> use it directly.
-   * - In dev-bypass (sub is not UUID), derive from ownerId (core.users.id).
+   * JWT sub is public_id (UUID) -> use it directly.
    */
-  async resolveCreatorPublicId(sub: string, ownerId: string): Promise<string> {
-    if (BusinessService.UUID_REGEX.test(sub)) return sub;
-    const publicId = await this.repository.findUserPublicIdById(ownerId);
-    if (!publicId) {
+  async resolveCreatorPublicId(sub: string): Promise<string> {
+    if (!sub?.trim()) {
       throw new UnauthorizedException(
         this.i18n.t('businesses.errors.ownerRequired'),
       );
     }
-    return publicId;
+    return sub;
   }
 
   /**

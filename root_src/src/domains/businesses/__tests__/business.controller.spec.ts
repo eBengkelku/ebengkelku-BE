@@ -111,7 +111,6 @@ describe('BusinessController', () => {
       );
       expect(mockBusinessService.resolveCreatorPublicId).toHaveBeenCalledWith(
         publicId,
-        ownerId,
       );
       expect(mockBusinessService.create).toHaveBeenCalledWith(
         validDto,

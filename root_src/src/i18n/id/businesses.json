@@ -40,7 +40,6 @@
   },
   "errors": {
     "ownerRequired": "Identitas pemilik wajib. Sertakan JWT yang valid.",
-    "devOwnerIdRequired": "Mode development: set DEV_OWNER_ID di .env ke id (UUID) user di core.users saat memakai dev user.",
     "notFound": "Bisnis tidak ditemukan"
   }
 }

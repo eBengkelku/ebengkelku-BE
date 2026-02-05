@@ -1,13 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '../jwt.guard';
 import { AuthService, AccessUser } from '../auth.service';
 import { IS_PUBLIC_KEY } from '@/common/decorators/public.decorator';
-import { NodeEnv } from '@/config';
-import { getDevUser, DEV_MODE_BYPASS_MESSAGE } from '../dev-user.config';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
@@ -18,8 +15,9 @@ describe('JwtAuthGuard', () => {
   const mockAccessUser: AccessUser = {
     sub: 'user-123',
     email: 'test@example.com',
-    preferred_username: 'testuser',
-    realm_access: { roles: ['user'] },
+    name: 'testuser',
+    roles: 'user',
+    permissions: ['read'],
   };
 
   const mockI18nService = {
@@ -40,11 +38,7 @@ describe('JwtAuthGuard', () => {
     verifyAccessToken: jest.fn(),
   };
 
-  const mockConfigService = {
-    get: jest.fn(),
-  };
-
-  // Helper function to create delayed mock (extracted to reduce nesting depth)
+  // Helper function to create delayed mock
   const delay = (ms: number): Promise<void> =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -93,10 +87,6 @@ describe('JwtAuthGuard', () => {
           provide: Reflector,
           useValue: mockReflector,
         },
-        {
-          provide: ConfigService,
-          useValue: mockConfigService,
-        },
       ],
     }).compile();
 
@@ -120,107 +110,18 @@ describe('JwtAuthGuard', () => {
         mockExecutionContext.getHandler(),
         mockExecutionContext.getClass(),
       ]);
-      // Should not check config or auth service
-      expect(mockConfigService.get).not.toHaveBeenCalled();
+      // Should not check auth service
       expect(mockAuthService.verifyAccessToken).not.toHaveBeenCalled();
     });
   });
 
-  describe('Development mode bypass', () => {
+  describe('JWT Authentication', () => {
     beforeEach(() => {
       // Non-public route
       mockReflector.getAllAndOverride.mockReturnValue(false);
     });
 
-    it('should bypass auth in local environment', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Local);
-
-      const result = await guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
-      expect(mockConfigService.get).toHaveBeenCalledWith('nodeEnv');
-      expect(mockAuthService.verifyAccessToken).not.toHaveBeenCalled();
-    });
-
-    it('should bypass auth in development environment', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Development);
-
-      const result = await guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
-      expect(mockConfigService.get).toHaveBeenCalledWith('nodeEnv');
-      expect(mockAuthService.verifyAccessToken).not.toHaveBeenCalled();
-    });
-
-    it('should attach dev user to request in local mode', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Local);
-
-      await guard.canActivate(mockExecutionContext);
-
-      expect(mockRequest.user).toBeDefined();
-      expect(mockRequest.user.sub).toBe('dev-user-001');
-      expect(mockRequest.user.preferred_username).toBe('developer');
-      expect(mockRequest.user.email).toBe('dev@ebengkelku.local');
-      expect(mockRequest.user.realm_access).toEqual({
-        roles: ['admin', 'user'],
-      });
-    });
-
-    it('should attach dev user to request in development mode', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Development);
-
-      await guard.canActivate(mockExecutionContext);
-
-      expect(mockRequest.user).toBeDefined();
-      expect(mockRequest.user.sub).toBe('dev-user-001');
-      expect(mockRequest.user.preferred_username).toBe('developer');
-      expect(mockRequest.user.email).toBe('dev@ebengkelku.local');
-    });
-
-    it('should set dev_mode_bypass flag in auth_metrics', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Local);
-
-      await guard.canActivate(mockExecutionContext);
-
-      expect(mockRequest.auth_metrics).toBeDefined();
-      expect(mockRequest.auth_metrics.dev_mode_bypass).toBe(true);
-      expect(mockRequest.auth_metrics.verify_duration_ms).toBe(0);
-    });
-
-    it('should set verify_duration_ms to 0 in dev mode', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Development);
-
-      await guard.canActivate(mockExecutionContext);
-
-      expect(mockRequest.auth_metrics.verify_duration_ms).toBe(0);
-    });
-  });
-
-  describe('Production mode (strict auth)', () => {
-    beforeEach(() => {
-      // Non-public route
-      mockReflector.getAllAndOverride.mockReturnValue(false);
-      // Production environment
-      mockConfigService.get.mockReturnValue(NodeEnv.Production);
-    });
-
-    it('should enforce auth in production environment', async () => {
-      mockRequest.headers = {
-        authorization: 'Bearer valid-jwt-token',
-        'x-lang': 'en',
-      };
-      mockAuthService.verifyAccessToken.mockResolvedValue(mockAccessUser);
-
-      const result = await guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
-      expect(mockAuthService.verifyAccessToken).toHaveBeenCalledWith(
-        'valid-jwt-token',
-        'en',
-      );
-    });
-
-    it('should throw UnauthorizedException when no Authorization header in production', async () => {
+    it('should throw UnauthorizedException when no Authorization header', async () => {
       mockRequest.headers = {};
 
       await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(
@@ -254,7 +155,7 @@ describe('JwtAuthGuard', () => {
       );
     });
 
-    it('should allow access when JWT token is valid in production', async () => {
+    it('should allow access when JWT token is valid', async () => {
       mockRequest.headers = {
         authorization: 'Bearer valid-jwt-token',
         'x-lang': 'en',
@@ -266,10 +167,24 @@ describe('JwtAuthGuard', () => {
       expect(result).toBe(true);
       expect(mockRequest.user).toEqual(mockAccessUser);
       expect(mockRequest.auth_metrics).toHaveProperty('verify_duration_ms');
-      expect(mockRequest.auth_metrics.dev_mode_bypass).toBeUndefined();
     });
 
-    it('should throw error when JWT token is invalid in production', async () => {
+    it('should verify JWT token with auth service', async () => {
+      mockRequest.headers = {
+        authorization: 'Bearer valid-jwt-token',
+        'x-lang': 'en',
+      };
+      mockAuthService.verifyAccessToken.mockResolvedValue(mockAccessUser);
+
+      await guard.canActivate(mockExecutionContext);
+
+      expect(mockAuthService.verifyAccessToken).toHaveBeenCalledWith(
+        'valid-jwt-token',
+        'en',
+      );
+    });
+
+    it('should throw error when JWT token is invalid', async () => {
       mockRequest.headers = {
         authorization: 'Bearer invalid-jwt-token',
         'x-lang': 'en',
@@ -288,7 +203,7 @@ describe('JwtAuthGuard', () => {
       );
     });
 
-    it('should throw error when JWT token is expired in production', async () => {
+    it('should throw error when JWT token is expired', async () => {
       mockRequest.headers = {
         authorization: 'Bearer expired-jwt-token',
         'x-lang': 'en',
@@ -338,7 +253,7 @@ describe('JwtAuthGuard', () => {
         'x-lang': 'en',
       };
 
-      // Simulate some processing time using extracted delay helper
+      // Simulate some processing time
       mockAuthService.verifyAccessToken.mockImplementation(async () => {
         await delay(50);
         return mockAccessUser;
@@ -353,116 +268,37 @@ describe('JwtAuthGuard', () => {
     });
   });
 
-  describe('getDevUser configuration', () => {
-    it('should return a valid AccessUser object', () => {
-      const devUser = getDevUser();
-
-      expect(devUser).toBeDefined();
-      expect(devUser.sub).toBe('dev-user-001');
-      expect(devUser.preferred_username).toBe('developer');
-      expect(devUser.email).toBe('dev@ebengkelku.local');
-    });
-
-    it('should have admin and user roles', () => {
-      const devUser = getDevUser();
-
-      expect(devUser.realm_access).toBeDefined();
-      expect(devUser.realm_access?.roles).toContain('admin');
-      expect(devUser.realm_access?.roles).toContain('user');
-    });
-
-    it('should have valid iat and exp timestamps', () => {
-      const now = Math.floor(Date.now() / 1000);
-      const devUser = getDevUser();
-
-      expect(devUser.iat).toBeDefined();
-      expect(devUser.exp).toBeDefined();
-      // iat should be close to current time (within 5 seconds)
-      expect(Math.abs((devUser.iat as number) - now)).toBeLessThan(5);
-      // exp should be approximately 1 day from now
-      expect((devUser.exp as number) - (devUser.iat as number)).toBe(86400);
-    });
-
-    it('should return a new object on each call', () => {
-      const devUser1 = getDevUser();
-      const devUser2 = getDevUser();
-
-      expect(devUser1).not.toBe(devUser2); // Different object references
-      expect(devUser1.sub).toBe(devUser2.sub); // Same content
-    });
-  });
-
-  describe('DEV_MODE_BYPASS_MESSAGE constant', () => {
-    it('should be defined and contain relevant information', () => {
-      expect(DEV_MODE_BYPASS_MESSAGE).toBeDefined();
-      expect(DEV_MODE_BYPASS_MESSAGE).toContain('Development mode');
-      expect(DEV_MODE_BYPASS_MESSAGE).toContain('bypass');
-    });
-  });
-
   describe('Edge cases', () => {
     beforeEach(() => {
       mockReflector.getAllAndOverride.mockReturnValue(false);
     });
 
-    it('should handle undefined nodeEnv (defaults to production behavior)', async () => {
-      mockConfigService.get.mockReturnValue(undefined);
-      mockRequest.headers = {};
+    it('should handle empty Bearer token', async () => {
+      mockRequest.headers = {
+        authorization: 'Bearer ',
+        'x-lang': 'en',
+      };
 
-      // Should throw because undefined is not local/development
+      const emptyTokenError = new Error('Token is empty');
+      mockAuthService.verifyAccessToken.mockRejectedValue(emptyTokenError);
+
       await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(
-        UnauthorizedException,
+        'Token is empty',
       );
     });
 
-    it('should handle null nodeEnv (defaults to production behavior)', async () => {
-      mockConfigService.get.mockReturnValue(null);
-      mockRequest.headers = {};
-
-      // Should throw because null is not local/development
-      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
-
-    it('should handle unknown environment string (defaults to production behavior)', async () => {
-      mockConfigService.get.mockReturnValue('staging');
-      mockRequest.headers = {};
-
-      // Should throw because 'staging' is not local/development
-      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
-
-    it('should bypass even with valid token in dev mode', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Local);
+    it('should attach user to request on successful verification', async () => {
       mockRequest.headers = {
         authorization: 'Bearer valid-jwt-token',
         'x-lang': 'en',
       };
+      mockAuthService.verifyAccessToken.mockResolvedValue(mockAccessUser);
 
-      const result = await guard.canActivate(mockExecutionContext);
+      await guard.canActivate(mockExecutionContext);
 
-      expect(result).toBe(true);
-      // Should use dev user, not verify the actual token
-      expect(mockAuthService.verifyAccessToken).not.toHaveBeenCalled();
-      expect(mockRequest.user.sub).toBe('dev-user-001');
-    });
-
-    it('should bypass even with invalid token in dev mode', async () => {
-      mockConfigService.get.mockReturnValue(NodeEnv.Development);
-      mockRequest.headers = {
-        authorization: 'Bearer totally-invalid-garbage',
-        'x-lang': 'en',
-      };
-
-      const result = await guard.canActivate(mockExecutionContext);
-
-      expect(result).toBe(true);
-      // Should use dev user without checking token
-      expect(mockAuthService.verifyAccessToken).not.toHaveBeenCalled();
-      expect(mockRequest.user.sub).toBe('dev-user-001');
+      expect(mockRequest.user).toBeDefined();
+      expect(mockRequest.user.sub).toBe('user-123');
+      expect(mockRequest.user.email).toBe('test@example.com');
     });
   });
 });

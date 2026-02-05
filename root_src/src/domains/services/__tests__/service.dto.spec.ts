@@ -354,18 +354,34 @@ describe('Service DTOs', () => {
       expect(dto.daily_quota).toBe(10);
     });
 
-    it('should handle maximum integer values', async () => {
+    it('should handle maximum integer values within business limits', async () => {
       const maxValuePayload = {
         name: 'Max Value Service',
-        price: 2147483647, // Max 32-bit signed integer
-        duration_minutes: 2147483647,
-        daily_quota: 2147483647,
+        price: 2147483647, // Max 32-bit signed integer for price
+        duration_minutes: 1440, // Max 1440 minutes (24 hours)
+        daily_quota: 1000, // Max 1000 daily quota
       };
 
       const dto = plainToClass(ServicePayloadDto, maxValuePayload);
       const errors = await validate(dto);
 
       expect(errors).toHaveLength(0);
+    });
+
+    it('should reject values exceeding business limits', async () => {
+      const exceedingPayload = {
+        name: 'Exceeding Value Service',
+        price: 100000,
+        duration_minutes: 1441, // Exceeds max
+        daily_quota: 1001, // Exceeds max
+      };
+
+      const dto = plainToClass(ServicePayloadDto, exceedingPayload);
+      const errors = await validate(dto);
+
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some((e) => e.property === 'duration_minutes')).toBe(true);
+      expect(errors.some((e) => e.property === 'daily_quota')).toBe(true);
     });
 
     it('should handle description length limit', async () => {

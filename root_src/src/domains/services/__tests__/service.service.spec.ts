@@ -30,6 +30,7 @@ describe('ServiceService', () => {
 
   const mockBusiness = {
     id: 'business-123',
+    owner_id: 'user-123',
     status: 'active',
     deleted_at: null,
   };
@@ -44,22 +45,26 @@ describe('ServiceService', () => {
   };
 
   beforeEach(async () => {
-    // Mock transaction
-    mockTrx = {
-      insert: jest.fn().mockResolvedValue(undefined),
+    // Create a query builder mock that chains methods
+    const mockQueryBuilder = {
       where: jest.fn().mockReturnThis(),
       whereNull: jest.fn().mockReturnThis(),
       first: jest.fn(),
-      '()': jest.fn(),
+      insert: jest.fn().mockResolvedValue(undefined),
     };
 
-    // Mock Knex
-    mockKnex = {
-      transaction: jest
-        .fn()
-        .mockImplementation((callback) => callback(mockTrx)),
-      '()': jest.fn().mockReturnValue(mockTrx),
-    };
+    // Mock transaction as a function that returns the query builder
+    mockTrx = jest.fn().mockReturnValue(mockQueryBuilder);
+    // Add methods directly on mockTrx for backward compatibility
+    Object.assign(mockTrx, mockQueryBuilder);
+
+    // Mock Knex as a function that also has transaction method
+    mockKnex = jest.fn().mockReturnValue(mockQueryBuilder);
+    mockKnex.transaction = jest
+      .fn()
+      .mockImplementation((callback) => callback(mockTrx));
+    // Add query builder methods to mockKnex for direct queries
+    Object.assign(mockKnex, mockQueryBuilder);
 
     // Mock services
     const mockRepository = {
@@ -141,6 +146,22 @@ describe('ServiceService', () => {
 
       expect(i18nService.t).toHaveBeenCalledWith(
         'services.errors.business.inactive',
+        expect.any(Object),
+      );
+    });
+
+    it('should throw ForbiddenException when user does not own the business', async () => {
+      mockTrx.first.mockResolvedValue({
+        ...mockBusiness,
+        owner_id: 'different-user-id',
+      });
+
+      await expect(
+        service.createSingle(validCreateDto, mockUser.id),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(i18nService.t).toHaveBeenCalledWith(
+        'services.errors.business.accessDenied',
         expect.any(Object),
       );
     });
@@ -257,7 +278,7 @@ describe('ServiceService', () => {
       ).rejects.toThrow(ConflictException);
 
       expect(i18nService.t).toHaveBeenCalledWith(
-        'services.errors.nameAlreadyExists',
+        'services.errors.batch.nameAlreadyExists',
         expect.any(Object),
       );
     });
@@ -324,7 +345,6 @@ describe('ServiceService', () => {
 
   describe('findByBusinessId', () => {
     beforeEach(() => {
-      mockKnex.mockReturnValue(mockTrx);
       mockTrx.first.mockResolvedValue(mockBusiness);
     });
 

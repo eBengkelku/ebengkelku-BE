@@ -4,16 +4,34 @@
     "name": {
       "required": "Nama layanan wajib diisi",
       "string": "Nama layanan harus berupa teks",
-      "length": "Nama layanan harus antara 1 dan 255 karakter"
+      "length": "Nama layanan harus antara 1 dan 255 karakter",
+      "notEmpty": "Nama layanan tidak boleh kosong"
     },
     "description": {
       "string": "Deskripsi harus berupa teks",
-      "maxLength": "Deskripsi tidak boleh melebihi 1000 karakter"
+      "maxLength": "Deskripsi tidak boleh melebihi 1000 karakter",
+      "length": "Deskripsi tidak boleh melebihi 1000 karakter"
     },
     "price": {
       "required": "Harga wajib diisi",
       "number": "Harga harus berupa angka yang valid",
-      "min": "Harga harus lebih besar atau sama dengan 0"
+      "min": "Harga harus lebih besar atau sama dengan 0",
+      "integer": "Harga harus berupa bilangan bulat",
+      "max": "Harga tidak boleh melebihi 2147483647"
+    },
+    "duration_minutes": {
+      "integer": "Durasi harus berupa bilangan bulat",
+      "min": "Durasi harus lebih besar atau sama dengan 0",
+      "max": "Durasi tidak boleh melebihi 1440 menit"
+    },
+    "daily_quota": {
+      "integer": "Kuota harian harus berupa bilangan bulat",
+      "min": "Kuota harian harus lebih besar atau sama dengan 0",
+      "max": "Kuota harian tidak boleh melebihi 1000"
+    },
+    "services": {
+      "array": "Layanan harus berupa array",
+      "max_size": "Tidak dapat membuat lebih dari 20 layanan sekaligus"
     },
     "business_id": {
       "required": "ID bisnis wajib diisi",
@@ -38,7 +56,7 @@
     "batch": {
       "tooLarge": "Ukuran batch melebihi batas maksimum {max}",
       "duplicateNames": "Nama layanan duplikat dalam permintaan atau database",
-      "nameAlreadyExists": "Nama layanan '{names}' sudah ada"
+      "nameAlreadyExists": "Nama-nama layanan '{names}' sudah ada"
     },
     "notFound": "Layanan tidak ditemukan",
     "notFoundDetail": "Layanan dengan ID {id} tidak ditemukan",

@@ -179,6 +179,13 @@ export class ServiceService {
         }),
       );
     }
+
+    // Verify user owns the business
+    if (business.owner_id !== userId) {
+      throw new ForbiddenException(
+        this.i18n.t('services.errors.business.accessDenied', { lang }),
+      );
+    }
   }
 
   private async validateNameUniqueness(

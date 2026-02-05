@@ -36,9 +36,7 @@
       "closeTimeFormat": "Close time must be in HH:MM format",
       "closeAfterOpen": "Close time must be after open time",
       "duplicateDay": "Duplicate day_of_week is not allowed"
-    },
-    "fileType": "Invalid file type. Allowed: {{types}}",
-    "fileSize": "File size must not exceed {{max}}"
+    }
   },
   "errors": {
     "ownerRequired": "Owner identity is required. Please provide a valid JWT.",

@@ -68,7 +68,36 @@ export class BusinessRepository {
     business: IBusiness;
     business_hours: IBusinessHours[];
   } | null> {
-    const rows = await this.knex
+    type JoinedRow = {
+      id: string;
+      owner_id: string;
+      name: string;
+      tagline?: string | null;
+      status: string;
+      phone?: string | null;
+      image?: string | null;
+      cover_image?: string | null;
+      latitude?: string | null;
+      longitude?: string | null;
+      address?: string | null;
+      created_at: Date;
+      updated_at?: Date | null;
+      deleted_at?: Date | null;
+      id_creator?: string | null;
+      id_updater?: string | null;
+      hour_id?: string | null;
+      hour_business_id?: string | null;
+      hour_day_of_week?: number | null;
+      hour_open_time?: string | null;
+      hour_close_time?: string | null;
+      hour_created_at?: Date | null;
+      hour_updated_at?: Date | null;
+      hour_deleted_at?: Date | null;
+      hour_id_creator?: string | null;
+      hour_id_updater?: string | null;
+    };
+
+    const rows = (await this.knex
       .withSchema(BUSINESS_SCHEMA)
       .from('businesses')
       .leftJoin('business_hours', function () {
@@ -106,11 +135,11 @@ export class BusinessRepository {
         'business_hours.deleted_at as hour_deleted_at',
         'business_hours.id_creator as hour_id_creator',
         'business_hours.id_updater as hour_id_updater',
-      );
+      )) as JoinedRow[];
 
     if (!rows?.length) return null;
 
-    const first: any = rows[0];
+    const first = rows[0];
     const business: IBusiness = {
       id: first.id,
       owner_id: first.owner_id,
@@ -130,7 +159,7 @@ export class BusinessRepository {
       id_updater: first.id_updater ?? null,
     };
 
-    const business_hours: IBusinessHours[] = (rows as any[])
+    const business_hours: IBusinessHours[] = rows
       .filter((r) => r.hour_id != null)
       .map((r) => ({
         id: r.hour_id,

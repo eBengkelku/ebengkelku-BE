@@ -17,6 +17,12 @@ describe('CreateBusinessDto', () => {
       expect(errors.some((e) => e.property === 'name')).toBe(true);
     });
 
+    it('should fail when name contains only whitespace', async () => {
+      const dto = plainToInstance(CreateBusinessDto, { name: '   ' });
+      const errors = await validate(dto);
+      expect(errors.some((e) => e.property === 'name')).toBe(true);
+    });
+
     it('should pass when name is provided', async () => {
       const dto = plainToInstance(CreateBusinessDto, { name: 'My Workshop' });
       const errors = await validate(dto);

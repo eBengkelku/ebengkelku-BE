@@ -165,16 +165,21 @@ export class BusinessService {
 
     const trx = await this.knex.transaction();
 
+    let imageFileId: string | null = null;
+    let coverFileId: string | null = null;
+
     try {
       let imagePath: string | null = null;
       let coverImagePath: string | null = null;
       if (image) {
         const fileRecord = await this.fileService.createWithFile(image);
         imagePath = fileRecord?.file_path ?? null;
+        imageFileId = (fileRecord as any)?.id ?? null;
       }
       if (cover_image) {
         const fileRecord = await this.fileService.createWithFile(cover_image);
         coverImagePath = fileRecord?.file_path ?? null;
+        coverFileId = (fileRecord as any)?.id ?? null;
       }
 
       const now = new Date();
@@ -200,25 +205,32 @@ export class BusinessService {
 
       const hoursRows: IBusinessHours[] = [];
       if (dto.business_hours?.length) {
-        const hoursToInsert = dto.business_hours.map((h) => {
-          const hourId = uuidv4();
-          return {
-            id: hourId,
-            business_id: businessId,
-            day_of_week: Number(h.day_of_week),
-            open_time: String(h.open_time).trim(),
-            close_time: String(h.close_time).trim(),
-            id_creator: idCreatorPublicId,
-          };
-        });
-        await this.repository.insertBusinessHours(trx, hoursToInsert as any[]);
-        for (const h of hoursToInsert) {
-          hoursRows.push({
-            ...h,
-            created_at: now,
-            updated_at: now,
-          } as IBusinessHours);
-        }
+        const hoursToInsert: Array<Record<string, unknown>> =
+          dto.business_hours.map((h) => {
+            const hourId = uuidv4();
+            const row = {
+              id: hourId,
+              business_id: businessId,
+              day_of_week: Number(h.day_of_week),
+              open_time: String(h.open_time).trim(),
+              close_time: String(h.close_time).trim(),
+              id_creator: idCreatorPublicId,
+            };
+            hoursRows.push({
+              ...(row as {
+                id: string;
+                business_id: string;
+                day_of_week: number;
+                open_time: string;
+                close_time: string;
+                id_creator: string;
+              }),
+              created_at: now,
+              updated_at: now,
+            } as IBusinessHours);
+            return row;
+          });
+        await this.repository.insertBusinessHours(trx, hoursToInsert);
       }
 
       await trx.commit();
@@ -242,6 +254,21 @@ export class BusinessService {
 
       return { business, business_hours: hoursRows };
     } catch (err) {
+      // Compensating cleanup for uploaded files if transaction failed
+      if (imageFileId) {
+        try {
+          await this.fileService.deleteFile(imageFileId);
+        } catch {
+          // swallow cleanup errors to not hide original error
+        }
+      }
+      if (coverFileId) {
+        try {
+          await this.fileService.deleteFile(coverFileId);
+        } catch {
+          // swallow cleanup errors
+        }
+      }
       await trx.rollback();
       throw err;
     }

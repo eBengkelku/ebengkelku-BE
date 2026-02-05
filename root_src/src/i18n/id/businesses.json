@@ -36,9 +36,7 @@
       "closeTimeFormat": "Jam tutup harus dalam format HH:MM",
       "closeAfterOpen": "Jam tutup harus setelah jam buka",
       "duplicateDay": "Hari yang sama tidak boleh duplikat"
-    },
-    "fileType": "Tipe file tidak valid. Diizinkan: {{types}}",
-    "fileSize": "Ukuran file tidak boleh melebihi {{max}}"
+    }
   },
   "errors": {
     "ownerRequired": "Identitas pemilik wajib. Sertakan JWT yang valid.",

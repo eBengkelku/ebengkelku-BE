@@ -20,6 +20,7 @@ import { ProductsModule } from './domains/products/products.module';
 import { CategoriesModule } from './domains/categories/categories.module';
 import { TagsModule } from './domains/tags/tags.module';
 import { BusinessesModule } from './domains/businesses/businesses.module';
+import { ServicesModule } from './domains/services/services.module';
 
 // Jobs
 import { UserEncryptionModule } from './jobs/user-encryption';
@@ -93,6 +94,7 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     CategoriesModule, // Category management
     TagsModule, // Tag management
     BusinessesModule, // Business/workshop registration
+    ServicesModule, // Service management
     ProductsModule,
     // Jobs
     UserEncryptionModule, // PII encryption cron job

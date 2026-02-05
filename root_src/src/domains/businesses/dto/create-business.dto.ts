@@ -21,9 +21,7 @@ export class CreateBusinessDto {
     minLength: 1,
     maxLength: 255,
   })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsNotEmpty({ message: 'businesses.validation.name.required' })
   @IsString({ message: 'businesses.validation.name.string' })
   @Length(1, 255, { message: 'businesses.validation.name.length' })
@@ -34,9 +32,7 @@ export class CreateBusinessDto {
     example: 'Service terpercaya sejak 2010',
     maxLength: 500,
   })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsOptional()
   @IsString({ message: 'businesses.validation.tagline.string' })
   @MaxLength(500, { message: 'businesses.validation.tagline.maxLength' })
@@ -47,9 +43,7 @@ export class CreateBusinessDto {
     example: '+6281234567890',
     maxLength: 50,
   })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsOptional()
   @IsString({ message: 'businesses.validation.phone.string' })
   @MaxLength(50, { message: 'businesses.validation.phone.maxLength' })
@@ -59,9 +53,7 @@ export class CreateBusinessDto {
     description: 'Full address',
     example: 'Jl. Sudirman No. 123, Jakarta',
   })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsOptional()
   @IsString({ message: 'businesses.validation.address.string' })
   address?: string;
@@ -116,4 +108,18 @@ export class CreateBusinessDto {
   @ValidateNested({ each: true })
   @Type(() => BusinessHoursItemDto)
   business_hours?: BusinessHoursItemDto[];
+
+  @ApiPropertyOptional({
+    description: 'Business logo/profile image',
+    type: 'string',
+    format: 'binary',
+  })
+  image?: Express.Multer.File;
+
+  @ApiPropertyOptional({
+    description: 'Business cover/banner image',
+    type: 'string',
+    format: 'binary',
+  })
+  cover_image?: Express.Multer.File;
 }

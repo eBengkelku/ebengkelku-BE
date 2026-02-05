@@ -1,0 +1,65 @@
+{
+  "title": "Workshop Services",
+  "validation": {
+    "name": {
+      "required": "Service name is required",
+      "string": "Service name must be a text value",
+      "length": "Service name must be between 1 and 255 characters",
+      "notEmpty": "Service name cannot be empty"
+    },
+    "description": {
+      "string": "Description must be a text value",
+      "maxLength": "Description cannot exceed 1000 characters",
+      "length": "Description cannot exceed 1000 characters"
+    },
+    "price": {
+      "required": "Price is required",
+      "number": "Price must be a valid number",
+      "min": "Price must be greater than or equal to 0",
+      "integer": "Price must be an integer",
+      "max": "Price must not exceed 2147483647"
+    },
+    "duration_minutes": {
+      "integer": "Duration must be an integer",
+      "min": "Duration must be greater than or equal to 0",
+      "max": "Duration must not exceed 1440 minutes"
+    },
+    "daily_quota": {
+      "integer": "Daily quota must be an integer",
+      "min": "Daily quota must be greater than or equal to 0",
+      "max": "Daily quota must not exceed 1000"
+    },
+    "services": {
+      "array": "Services must be an array",
+      "max_size": "Cannot create more than 20 services at once"
+    },
+    "business_id": {
+      "required": "Business ID is required",
+      "string": "Business ID must be a string",
+      "uuid": "Business ID must be a valid UUID format"
+    }
+  },
+  "success": {
+    "listed": "Services retrieved successfully",
+    "found": "Service found successfully",
+    "created": "Service created successfully",
+    "batchCreated": "Services created successfully",
+    "updated": "Service updated successfully",
+    "deleted": "Service deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "batch": {
+      "tooLarge": "Batch size exceeds the maximum limit of {max}",
+      "duplicateNames": "Duplicate service names in request or database",
+      "nameAlreadyExists": "Service names '{names}' already exist"
+    },
+    "notFound": "Service not found",
+    "notFoundDetail": "Service with ID {id} not found",
+    "nameAlreadyExists": "Service name '{name}' already exists"
+  }
+}

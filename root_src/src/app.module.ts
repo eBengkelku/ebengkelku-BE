@@ -19,6 +19,7 @@ import { FilesModule } from './domains/files/files.module';
 import { ProductsModule } from './domains/products/products.module';
 import { CategoriesModule } from './domains/categories/categories.module';
 import { TagsModule } from './domains/tags/tags.module';
+import { ServicesModule } from './domains/services/services.module';
 
 // Jobs
 import { UserEncryptionModule } from './jobs/user-encryption';
@@ -91,6 +92,7 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     FilesModule,
     CategoriesModule, // Category management
     TagsModule, // Tag management
+    ServicesModule, // Service management
     ProductsModule,
     // Jobs
     UserEncryptionModule, // PII encryption cron job

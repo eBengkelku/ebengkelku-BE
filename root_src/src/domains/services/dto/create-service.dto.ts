@@ -50,6 +50,7 @@ export class ServicePayloadDto {
   )
   @IsInt({ message: ServiceValidationMessages.DURATION_INTEGER })
   @Min(0, { message: ServiceValidationMessages.DURATION_MIN })
+  @Max(1440, { message: ServiceValidationMessages.DURATION_MAX })
   duration_minutes?: number;
 
   @ApiPropertyOptional({ description: 'Daily quota limit', example: 10 })
@@ -59,6 +60,7 @@ export class ServicePayloadDto {
   )
   @IsInt({ message: ServiceValidationMessages.QUOTA_INTEGER })
   @Min(0, { message: ServiceValidationMessages.QUOTA_MIN })
+  @Max(1000, { message: ServiceValidationMessages.QUOTA_MAX })
   daily_quota?: number;
 }
 
@@ -93,8 +95,8 @@ export class BatchCreateServicesDto {
     type: [ServicePayloadDto],
     description: 'Array of services to create (max 20)',
   })
-  @IsArray({ message: 'services.validation.services.array' })
-  @ArrayMaxSize(20, { message: 'services.validation.services.max_size' })
+  @IsArray({ message: ServiceValidationMessages.SERVICES_ARRAY })
+  @ArrayMaxSize(20, { message: ServiceValidationMessages.SERVICES_MAX_SIZE })
   @ValidateNested({ each: true })
   @Type(() => ServicePayloadDto)
   services: ServicePayloadDto[];

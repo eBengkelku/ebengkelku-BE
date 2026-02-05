@@ -39,4 +39,8 @@ export const ServiceValidationMessages = {
   // Description validation
   DESCRIPTION_STRING: 'services.validation.description.string',
   DESCRIPTION_LENGTH: 'services.validation.description.length',
+
+  // Array validation
+  SERVICES_ARRAY: 'services.validation.services.array',
+  SERVICES_MAX_SIZE: 'services.validation.services.max_size',
 };

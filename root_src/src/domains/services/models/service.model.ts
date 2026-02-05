@@ -136,7 +136,7 @@ export class ServiceModel extends BaseDomainModel<IService> {
       this.name = data.name.trim();
     }
     if (data.description !== undefined) {
-      this.description = data.description?.trim() ?? null;
+      this.description = data.description?.trim() || null;
     }
     if (data.price !== undefined) {
       ServiceModel.validatePrice(data.price);

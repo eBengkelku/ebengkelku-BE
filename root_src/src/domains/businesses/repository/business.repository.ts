@@ -176,5 +176,129 @@ export class BusinessRepository {
 
     return { business, business_hours };
   }
-}
 
+  /**
+   * Find all businesses by owner_id with business_hours using LEFT JOIN.
+   * Returns empty array if not found.
+   * Excludes soft-deleted businesses and hours.
+   * Orders by business created_at DESC, then hours day_of_week ASC.
+   *
+   * @param {string} ownerId - The owner's internal user ID (core.users.id)
+   * @returns {Promise<Array<{business: IBusiness; business_hours: IBusinessHours[]}>>}
+   */
+  async findAllByOwnerId(
+    ownerId: string,
+  ): Promise<Array<{ business: IBusiness; business_hours: IBusinessHours[] }>> {
+    type JoinedRow = {
+      id: string;
+      owner_id: string;
+      name: string;
+      tagline?: string | null;
+      status: string;
+      phone?: string | null;
+      image?: string | null;
+      cover_image?: string | null;
+      latitude?: string | null;
+      longitude?: string | null;
+      address?: string | null;
+      created_at: Date;
+      updated_at?: Date | null;
+      deleted_at?: Date | null;
+      id_creator?: string | null;
+      id_updater?: string | null;
+      hour_id?: number | null;
+      hour_business_id?: number | null;
+      hour_day_of_week?: number | null;
+      hour_open_time?: string | null;
+      hour_close_time?: string | null;
+    };
+
+    const rows = (await this.knex
+      .withSchema(BUSINESS_SCHEMA)
+      .from('businesses')
+      .leftJoin('business_hours', 'businesses.id', 'business_hours.business_id')
+      .where('businesses.owner_id', ownerId)
+      .whereNull('businesses.deleted_at')
+      .orderBy('businesses.created_at', 'desc')
+      .orderBy('business_hours.day_of_week', 'asc')
+      .select(
+        'businesses.id',
+        'businesses.owner_id',
+        'businesses.name',
+        'businesses.tagline',
+        'businesses.status',
+        'businesses.phone',
+        'businesses.image',
+        'businesses.cover_image',
+        'businesses.latitude',
+        'businesses.longitude',
+        'businesses.address',
+        'businesses.created_at',
+        'businesses.updated_at',
+        'businesses.deleted_at',
+        'businesses.id_creator',
+        'businesses.id_updater',
+        'business_hours.id as hour_id',
+        'business_hours.business_id as hour_business_id',
+        'business_hours.day_of_week as hour_day_of_week',
+        'business_hours.open_time as hour_open_time',
+        'business_hours.close_time as hour_close_time',
+      )) as JoinedRow[];
+
+    if (!rows?.length) return [];
+
+    // Group rows by business.id
+    const businessMap = new Map<
+      string,
+      { business: IBusiness; business_hours: IBusinessHours[] }
+    >();
+
+    for (const row of rows) {
+      const businessId = row.id;
+
+      // Initialize business if not exists
+      if (!businessMap.has(businessId)) {
+        businessMap.set(businessId, {
+          business: {
+            id: row.id,
+            owner_id: row.owner_id,
+            name: row.name,
+            tagline: row.tagline ?? null,
+            status: row.status,
+            phone: row.phone ?? null,
+            image: row.image ?? null,
+            cover_image: row.cover_image ?? null,
+            latitude: row.latitude ?? null,
+            longitude: row.longitude ?? null,
+            address: row.address ?? null,
+            created_at: row.created_at,
+            updated_at: row.updated_at ?? null,
+            deleted_at: row.deleted_at ?? null,
+            id_creator: row.id_creator ?? null,
+            id_updater: row.id_updater ?? null,
+          },
+          business_hours: [],
+        });
+      }
+
+      // Add business hour if exists (LEFT JOIN may return null)
+      if (row.hour_id && row.hour_business_id) {
+        businessMap.get(businessId)!.business_hours.push({
+          id: row.hour_id.toString(),
+          business_id: row.hour_business_id.toString(),
+          day_of_week: row.hour_day_of_week!,
+          open_time: row.hour_open_time!,
+          close_time: row.hour_close_time!,
+          created_at: null,
+          updated_at: null,
+          deleted_at: null,
+          id_creator: null,
+          id_updater: null,
+        } as IBusinessHours);
+      }
+    }
+
+    // Convert Map to Array (maintains insertion order = created_at DESC)
+    return Array.from(businessMap.values());
+  }
+}

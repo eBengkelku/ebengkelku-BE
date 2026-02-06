@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Req,
   UseInterceptors,
@@ -24,6 +25,7 @@ import { CreateBusinessDto } from './dto/create-business.dto';
 import { ResponseMessage } from '../../common/decorators/response-message.decorator';
 import { JwtAuthGuard } from '../../auth/jwt.guard';
 import { BusinessFormDataInterceptor } from './interceptors/business-form-data.interceptor';
+import type { IBusiness, IBusinessHours } from './interfaces';
 import type { Request } from 'express';
 
 @Controller('v1/businesses')
@@ -171,5 +173,160 @@ export class BusinessController {
       business: result.business,
       business_hours: result.business_hours,
     };
+  }
+
+  /**
+   * Get all businesses owned by the authenticated user.
+   * Returns empty array if user has no businesses.
+   * Owner is derived from JWT (cannot be spoofed).
+   *
+   * @param {Request} req - Express request with JWT user payload
+   * @returns {Promise<Array<{business: IBusiness; business_hours: IBusinessHours[]}>>}
+   * @throws {UnauthorizedException} If JWT is invalid or user not found
+   *
+   * @example
+   * ```
+   * GET /v1/businesses
+   * Headers:
+   *   Authorization: Bearer <jwt-token>
+   *   x-lang: en
+   *
+   * Response:
+   * {
+   *   "statusCode": 200,
+   *   "message": "Businesses retrieved successfully",
+   *   "data": [
+   *     {
+   *       "business": { "id": "...", "name": "Bengkel A", ... },
+   *       "business_hours": [ { "day_of_week": 1, ... } ]
+   *     }
+   *   ]
+   * }
+   * ```
+   */
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ResponseMessage('businesses.listed')
+  @ApiOperation({
+    summary: 'Get all businesses owned by authenticated user',
+    description:
+      'Returns all businesses with their operating hours for the current user. ' +
+      'Owner is automatically determined from JWT. Returns empty array if no businesses found.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Businesses retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Businesses retrieved successfully',
+        },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              business: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', example: 'uuid-123' },
+                  owner_id: { type: 'string', example: 'user-uuid' },
+                  name: { type: 'string', example: 'Bengkel Jaya Motor' },
+                  tagline: { type: 'string', example: 'Service terpercaya' },
+                  status: {
+                    type: 'string',
+                    enum: ['pending', 'active', 'banned'],
+                    example: 'active',
+                  },
+                  phone: { type: 'string', example: '+6281234567890' },
+                  image: { type: 'string', example: 'uploads/...' },
+                  cover_image: { type: 'string', example: 'uploads/...' },
+                  latitude: { type: 'string', example: '-6.2088' },
+                  longitude: { type: 'string', example: '106.8456' },
+                  address: { type: 'string', example: 'Jl. Sudirman No. 123' },
+                  created_at: {
+                    type: 'string',
+                    format: 'date-time',
+                    example: '2026-01-15T08:30:00.000Z',
+                  },
+                  updated_at: {
+                    type: 'string',
+                    format: 'date-time',
+                    example: '2026-01-20T10:15:00.000Z',
+                  },
+                  deleted_at: { type: 'string', nullable: true, example: null },
+                  id_creator: { type: 'string', example: 'public-uuid' },
+                  id_updater: { type: 'string', nullable: true, example: null },
+                },
+              },
+              business_hours: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string', example: 'hour-uuid' },
+                    business_id: { type: 'string', example: 'business-uuid' },
+                    day_of_week: {
+                      type: 'number',
+                      minimum: 0,
+                      maximum: 6,
+                      example: 1,
+                    },
+                    open_time: { type: 'string', example: '08:00' },
+                    close_time: { type: 'string', example: '17:00' },
+                    created_at: {
+                      type: 'string',
+                      format: 'date-time',
+                      example: '2026-01-15T08:30:00.000Z',
+                    },
+                    updated_at: {
+                      type: 'string',
+                      format: 'date-time',
+                      nullable: true,
+                      example: null,
+                    },
+                    deleted_at: {
+                      type: 'string',
+                      nullable: true,
+                      example: null,
+                    },
+                    id_creator: { type: 'string', example: 'public-uuid' },
+                    id_updater: {
+                      type: 'string',
+                      nullable: true,
+                      example: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  async findAll(
+    @Req()
+    req: Request & {
+      user?: { sub: string };
+    },
+  ): Promise<Array<{ business: IBusiness; business_hours: IBusinessHours[] }>> {
+    const sub = req.user?.sub;
+    const lang = (req.headers['x-lang'] as string) || 'en';
+
+    if (!sub) {
+      throw new UnauthorizedException(
+        this.i18n.t('businesses.errors.ownerRequired', { lang }),
+      );
+    }
+
+    return this.businessService.findAllByOwner(sub, lang);
   }
 }

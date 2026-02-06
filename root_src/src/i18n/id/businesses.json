@@ -1,6 +1,7 @@
 {
   "title": "Bisnis",
   "created": "Bisnis berhasil dibuat",
+  "listed": "Bisnis berhasil diambil",
   "validation": {
     "name": {
       "required": "Nama bisnis wajib diisi",

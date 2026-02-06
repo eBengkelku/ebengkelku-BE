@@ -252,4 +252,43 @@ export class BusinessService {
   } | null> {
     return this.repository.findBusinessWithHoursById(id);
   }
+
+  /**
+   * Find all businesses owned by the authenticated user with their business_hours.
+   * Returns empty array if user has no businesses.
+   * Uses LEFT JOIN to include businesses without hours.
+   *
+   * @param {string} sub - JWT sub claim (public_id from core.users)
+   * @param {string} [lang] - Language code for i18n error messages
+   * @returns {Promise<Array<{business: IBusiness; business_hours: IBusinessHours[]}>>}
+   * @throws {UnauthorizedException} If sub is invalid or user not found
+   *
+   * @example
+   * ```typescript
+   * const businesses = await businessService.findAllByOwner(userSub, 'en');
+   * // Returns: [
+   * //   { business: {...}, business_hours: [...] },
+   * //   { business: {...}, business_hours: [] }
+   * // ]
+   * ```
+   */
+  async findAllByOwner(
+    sub: string,
+    lang?: string,
+  ): Promise<Array<{ business: IBusiness; business_hours: IBusinessHours[] }>> {
+    // Validate input
+    if (!sub?.trim()) {
+      throw new UnauthorizedException(
+        this.i18n.t('businesses.errors.ownerRequired', { lang }),
+      );
+    }
+
+    // Resolve owner_id from JWT sub (prevents spoofing)
+    const ownerId = await this.resolveOwnerIdFromSub(sub);
+
+    // Fetch all businesses with hours via repository
+    const businesses = await this.repository.findAllByOwnerId(ownerId);
+
+    return businesses;
+  }
 }

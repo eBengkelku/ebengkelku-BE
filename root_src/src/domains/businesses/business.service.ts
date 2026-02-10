@@ -2,6 +2,8 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { DatabaseService } from '../../database/database.service';
@@ -194,7 +196,6 @@ export class BusinessService {
                 close_time: string;
                 id_creator: string;
               }),
-              created_at: now,
               updated_at: now,
             } as IBusinessHours);
             return row;
@@ -290,5 +291,66 @@ export class BusinessService {
     const businesses = await this.repository.findAllByOwnerId(ownerId);
 
     return businesses;
+  }
+
+  /**
+   * Find a specific business by ID, verifying that the authenticated user
+   * is the owner of the business. Uses LEFT JOIN to include business_hours.
+   *
+   * @param {string} businessId - UUID of the business to retrieve
+   * @param {string} sub - JWT sub claim (public_id from core.users)
+   * @param {string} [lang='en'] - Language code for i18n error messages
+   * @returns {Promise<{ business: IBusiness; business_hours: IBusinessHours[] }>}
+   * @throws {UnauthorizedException} If sub is invalid or user not found
+   * @throws {BadRequestException} If businessId is empty/invalid
+   * @throws {NotFoundException} If business not found or soft-deleted
+   * @throws {ForbiddenException} If user is not the owner of the business
+   *
+   * @example
+   * ```typescript
+   * const result = await businessService.findOneById('biz-uuid', userSub, 'en');
+   * // Returns: { business: {...}, business_hours: [...] }
+   * ```
+   */
+  async findOneById(
+    businessId: string,
+    sub: string,
+    lang?: string,
+  ): Promise<{ business: IBusiness; business_hours: IBusinessHours[] }> {
+    // 1. Validate sub (JWT claim)
+    if (!sub?.trim()) {
+      throw new UnauthorizedException(
+        this.i18n.t('businesses.errors.ownerRequired', { lang }),
+      );
+    }
+
+    // 2. Validate businessId
+    if (!businessId?.trim()) {
+      throw new BadRequestException(
+        this.i18n.t('businesses.errors.invalidBusinessId', { lang }),
+      );
+    }
+
+    // 3. Resolve owner_id from JWT sub (prevents spoofing)
+    const ownerId = await this.resolveOwnerIdFromSub(sub);
+
+    // 4. Fetch business with hours via repository (LEFT JOIN)
+    const result = await this.repository.findBusinessWithHoursById(businessId);
+
+    // 5. Check if business exists
+    if (!result) {
+      throw new NotFoundException(
+        this.i18n.t('businesses.errors.notFound', { lang }),
+      );
+    }
+
+    // 6. Verify ownership: only the owner can access this business
+    if (result.business.owner_id !== ownerId) {
+      throw new ForbiddenException(
+        this.i18n.t('businesses.errors.accessDenied', { lang }),
+      );
+    }
+
+    return result;
   }
 }

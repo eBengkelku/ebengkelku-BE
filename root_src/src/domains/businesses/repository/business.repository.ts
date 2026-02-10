@@ -90,7 +90,6 @@ export class BusinessRepository {
       hour_day_of_week?: number | null;
       hour_open_time?: string | null;
       hour_close_time?: string | null;
-      hour_created_at?: Date | null;
       hour_updated_at?: Date | null;
       hour_deleted_at?: Date | null;
       hour_id_creator?: string | null;
@@ -130,7 +129,6 @@ export class BusinessRepository {
         'business_hours.day_of_week as hour_day_of_week',
         'business_hours.open_time as hour_open_time',
         'business_hours.close_time as hour_close_time',
-        'business_hours.created_at as hour_created_at',
         'business_hours.updated_at as hour_updated_at',
         'business_hours.deleted_at as hour_deleted_at',
         'business_hours.id_creator as hour_id_creator',
@@ -167,7 +165,6 @@ export class BusinessRepository {
         day_of_week: r.hour_day_of_week,
         open_time: r.hour_open_time,
         close_time: r.hour_close_time,
-        created_at: r.hour_created_at ?? null,
         updated_at: r.hour_updated_at ?? null,
         deleted_at: r.hour_deleted_at ?? null,
         id_creator: r.hour_id_creator ?? null,

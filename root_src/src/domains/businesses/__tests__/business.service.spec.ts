@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { BusinessService } from '../business.service';
 import { DatabaseService } from '../../../database/database.service';
 import { FileService } from '../../../domains/files/file.service';
@@ -470,18 +475,17 @@ describe('BusinessService', () => {
           id_updater: null,
         },
         business_hours: [
-          {
-            id: 'h1',
-            business_id: businessId,
-            day_of_week: 1,
-            open_time: '09:00',
-            close_time: '17:00',
-            created_at: now,
-            updated_at: now,
-            deleted_at: null,
-            id_creator: null,
-            id_updater: null,
-          },
+      {
+          id: 'h1',
+          business_id: businessId,
+          day_of_week: 1,
+          open_time: '09:00',
+          close_time: '17:00',
+          updated_at: now,
+          deleted_at: null,
+          id_creator: null,
+          id_updater: null,
+        },
         ],
       });
 
@@ -536,7 +540,6 @@ describe('BusinessService', () => {
           day_of_week: 1,
           open_time: '08:00',
           close_time: '17:00',
-          created_at: new Date('2026-01-15T08:30:00.000Z'),
           updated_at: null,
           deleted_at: null,
           id_creator: publicId,
@@ -548,7 +551,6 @@ describe('BusinessService', () => {
           day_of_week: 2,
           open_time: '08:00',
           close_time: '17:00',
-          created_at: new Date('2026-01-15T08:30:00.000Z'),
           updated_at: null,
           deleted_at: null,
           id_creator: publicId,
@@ -632,7 +634,6 @@ describe('BusinessService', () => {
             day_of_week: day,
             open_time: '08:00',
             close_time: '17:00',
-            created_at: new Date('2026-01-15T08:30:00.000Z'),
             updated_at: null,
             deleted_at: null,
             id_creator: publicId,
@@ -839,7 +840,6 @@ describe('BusinessService', () => {
             day_of_week: day,
             open_time: '08:00',
             close_time: '17:00',
-            created_at: new Date(),
             updated_at: null,
             deleted_at: null,
             id_creator: publicId,
@@ -859,15 +859,15 @@ describe('BusinessService', () => {
         expect(Math.max(...days)).toBe(6);
       });
 
-      it('should return correct hour timestamps (created_at, updated_at)', async () => {
+      it('should return correct hour timestamps (updated_at, deleted_at)', async () => {
         (mockRepository.findAllByOwnerId as jest.Mock).mockResolvedValueOnce([
           mockBusinessWithHours,
         ]);
 
         const result = await service.findAllByOwner(publicId);
 
-        expect(result[0].business_hours[0].created_at).toBeInstanceOf(Date);
         expect(result[0].business_hours[0].updated_at).toBeNull();
+        expect(result[0].business_hours[0].deleted_at).toBeNull();
       });
 
       it('should handle UUID format for all ID fields', async () => {
@@ -959,7 +959,6 @@ describe('BusinessService', () => {
             day_of_week: i,
             open_time: '08:00',
             close_time: '17:00',
-            created_at: new Date(),
             updated_at: null,
             deleted_at: null,
             id_creator: publicId,
@@ -1478,7 +1477,6 @@ describe('BusinessService', () => {
             day_of_week: day,
             open_time: '08:00',
             close_time: '17:00',
-            created_at: new Date(),
             updated_at: null,
             deleted_at: null,
             id_creator: publicId,
@@ -1756,6 +1754,1461 @@ describe('BusinessService', () => {
         const result = await service.findAllByOwner(publicId);
 
         expect(result).toHaveLength(1000);
+      });
+    });
+  });
+
+  /**
+   * ========================================================================
+   * Test Suite: findOneById()
+   * GET /v1/businesses/:business_id endpoint business logic tests
+   * ========================================================================
+   */
+  describe('findOneById', () => {
+    const targetBusinessId = 'target-business-uuid-001';
+    const otherOwnerId = 'other-owner-uuid-999';
+
+    const mockBusinessResult = {
+      business: {
+        id: targetBusinessId,
+        owner_id: ownerId,
+        name: 'Bengkel Target',
+        tagline: 'Service terpercaya sejak 2010',
+        status: 'active',
+        phone: '+6281234567890',
+        image: 'uploads/images/target.jpg',
+        cover_image: 'uploads/images/target-cover.jpg',
+        latitude: '-6.2088',
+        longitude: '106.8456',
+        address: 'Jl. Sudirman No. 123, Jakarta',
+        created_at: new Date('2026-01-15T08:30:00.000Z'),
+        updated_at: new Date('2026-01-20T10:15:00.000Z'),
+        deleted_at: null,
+        id_creator: publicId,
+        id_updater: null,
+      },
+      business_hours: [
+        {
+          id: 'hour-1',
+          business_id: targetBusinessId,
+          day_of_week: 1,
+          open_time: '08:00',
+          close_time: '17:00',
+          updated_at: null,
+          deleted_at: null,
+          id_creator: publicId,
+          id_updater: null,
+        },
+        {
+          id: 'hour-2',
+          business_id: targetBusinessId,
+          day_of_week: 2,
+          open_time: '08:00',
+          close_time: '17:00',
+          updated_at: null,
+          deleted_at: null,
+          id_creator: publicId,
+          id_updater: null,
+        },
+      ],
+    };
+
+    const mockBusinessWithoutHoursResult = {
+      business: {
+        id: targetBusinessId,
+        owner_id: ownerId,
+        name: 'Bengkel Minimal',
+        tagline: null,
+        status: 'pending',
+        phone: null,
+        image: null,
+        cover_image: null,
+        latitude: null,
+        longitude: null,
+        address: null,
+        created_at: new Date('2026-01-10T14:20:00.000Z'),
+        updated_at: null,
+        deleted_at: null,
+        id_creator: publicId,
+        id_updater: null,
+      },
+      business_hours: [],
+    };
+
+    // ========================================================================
+    // POSITIVE TEST CASES (30+)
+    // ========================================================================
+
+    describe('Positive Test Cases', () => {
+      it('should return business with hours when found and owned by user', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result).toBeDefined();
+        expect(result.business.id).toBe(targetBusinessId);
+        expect(result.business_hours).toHaveLength(2);
+      });
+
+      it('should return business without hours when none exist', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessWithoutHoursResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.id).toBe(targetBusinessId);
+        expect(result.business_hours).toEqual([]);
+      });
+
+      it('should resolve owner_id from sub before querying', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        await service.findOneById(targetBusinessId, publicId, 'en');
+
+        expect(mockRepository.findUserIdByPublicId).toHaveBeenCalledWith(
+          publicId,
+        );
+      });
+
+      it('should call repository.findBusinessWithHoursById with correct id', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        await service.findOneById(targetBusinessId, publicId, 'en');
+
+        expect(
+          mockRepository.findBusinessWithHoursById,
+        ).toHaveBeenCalledWith(targetBusinessId);
+      });
+
+      it('should return correct business name', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.name).toBe('Bengkel Target');
+      });
+
+      it('should return correct business status', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.status).toBe('active');
+      });
+
+      it('should return business with pending status', async () => {
+        const pendingBusiness = {
+          ...mockBusinessResult,
+          business: { ...mockBusinessResult.business, status: 'pending' },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(pendingBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.status).toBe('pending');
+      });
+
+      it('should return business with banned status', async () => {
+        const bannedBusiness = {
+          ...mockBusinessResult,
+          business: { ...mockBusinessResult.business, status: 'banned' },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(bannedBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.status).toBe('banned');
+      });
+
+      it('should return correct owner_id', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.owner_id).toBe(ownerId);
+      });
+
+      it('should return correct tagline', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.tagline).toBe('Service terpercaya sejak 2010');
+      });
+
+      it('should return correct phone number', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.phone).toBe('+6281234567890');
+      });
+
+      it('should return correct image paths', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.image).toContain('uploads/images');
+        expect(result.business.cover_image).toContain('uploads/images');
+      });
+
+      it('should return correct coordinates', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.latitude).toBe('-6.2088');
+        expect(result.business.longitude).toBe('106.8456');
+      });
+
+      it('should return correct address', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.address).toContain('Jl. Sudirman');
+      });
+
+      it('should return correct timestamps', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.created_at).toBeInstanceOf(Date);
+        expect(result.business.updated_at).toBeInstanceOf(Date);
+        expect(result.business.deleted_at).toBeNull();
+      });
+
+      it('should return correct audit fields (id_creator, id_updater)', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.id_creator).toBe(publicId);
+        expect(result.business.id_updater).toBeNull();
+      });
+
+      it('should return business_hours with correct day_of_week values', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        const days = result.business_hours.map((h) => h.day_of_week);
+        expect(days).toContain(1);
+        expect(days).toContain(2);
+      });
+
+      it('should return business_hours with correct time values', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours[0].open_time).toBe('08:00');
+        expect(result.business_hours[0].close_time).toBe('17:00');
+      });
+
+      it('should return business_hours with all 7 days when set', async () => {
+        const businessWithAllDays = {
+          ...mockBusinessResult,
+          business_hours: [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+            id: `hour-${day}`,
+            business_id: targetBusinessId,
+            day_of_week: day,
+            open_time: '08:00',
+            close_time: '17:00',
+            updated_at: null,
+            deleted_at: null,
+            id_creator: publicId,
+            id_updater: null,
+          })),
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(businessWithAllDays);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours).toHaveLength(7);
+      });
+
+      it('should return business_hours with correct business_id reference', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        result.business_hours.forEach((h) => {
+          expect(h.business_id).toBe(targetBusinessId);
+        });
+      });
+
+      it('should work with lang parameter set to en', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result).toBeDefined();
+      });
+
+      it('should work with lang parameter set to id', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'id',
+        );
+
+        expect(result).toBeDefined();
+      });
+
+      it('should work without lang parameter (defaults)', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(targetBusinessId, publicId);
+
+        expect(result).toBeDefined();
+      });
+
+      it('should return business with special characters in name', async () => {
+        const specialBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            name: "Bengkel Pak John's & Co. \"Premium\"",
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(specialBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.name).toContain("'");
+        expect(result.business.name).toContain('&');
+        expect(result.business.name).toContain('"');
+      });
+
+      it('should return business with maximum length tagline (500 chars)', async () => {
+        const longTaglineBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            tagline: 'A'.repeat(500),
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(longTaglineBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.tagline?.length).toBe(500);
+      });
+
+      it('should return business with international phone number', async () => {
+        const intlPhoneBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            phone: '+1-555-123-4567',
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(intlPhoneBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.phone).toContain('+1');
+      });
+
+      it('should return business with multiline address', async () => {
+        const multilineAddressBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            address: 'Suite 100\nFloor 5, Building A\nJl. Sudirman\n12345',
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(multilineAddressBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.address).toContain('\n');
+      });
+
+      it('should return business with boundary coordinate values', async () => {
+        const boundaryCoordBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            latitude: '-90.00000000',
+            longitude: '180.00000000',
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(boundaryCoordBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.latitude).toBe('-90.00000000');
+        expect(result.business.longitude).toBe('180.00000000');
+      });
+
+      it('should return business_hours with early morning time (00:00)', async () => {
+        const earlyMorningBusiness = {
+          ...mockBusinessResult,
+          business_hours: [
+            {
+              ...mockBusinessResult.business_hours[0],
+              open_time: '00:00',
+              close_time: '06:00',
+            },
+          ],
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(earlyMorningBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours[0].open_time).toBe('00:00');
+      });
+
+      it('should return business_hours with late night time (23:59)', async () => {
+        const lateNightBusiness = {
+          ...mockBusinessResult,
+          business_hours: [
+            {
+              ...mockBusinessResult.business_hours[0],
+              open_time: '18:00',
+              close_time: '23:59',
+            },
+          ],
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(lateNightBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours[0].close_time).toBe('23:59');
+      });
+
+      it('should handle different public_id to owner_id mappings correctly', async () => {
+        const differentPublicId = '22222222-2222-4222-8222-222222222222';
+        const differentOwnerId = 'different-user-uuid';
+        (
+          mockRepository.findUserIdByPublicId as jest.Mock
+        ).mockResolvedValueOnce(differentOwnerId);
+
+        const businessForDifferentOwner = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            owner_id: differentOwnerId,
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(businessForDifferentOwner);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          differentPublicId,
+          'en',
+        );
+
+        expect(result.business.owner_id).toBe(differentOwnerId);
+        expect(mockRepository.findUserIdByPublicId).toHaveBeenCalledWith(
+          differentPublicId,
+        );
+      });
+
+      it('should return consistent data structure across repeated calls', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValue(mockBusinessResult);
+
+        const result1 = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+        const result2 = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result1).toEqual(result2);
+      });
+
+      it('should return business with id_updater when updated', async () => {
+        const updatedBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            id_updater: publicId,
+            updated_at: new Date('2026-02-01T12:00:00.000Z'),
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(updatedBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.id_updater).toBe(publicId);
+        expect(result.business.updated_at).toBeTruthy();
+      });
+
+      it('should return business_hours audit fields (id_creator, id_updater)', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours[0].id_creator).toBe(publicId);
+        expect(result.business_hours[0].id_updater).toBeNull();
+      });
+    });
+
+    // ========================================================================
+    // NEGATIVE TEST CASES (30+)
+    // ========================================================================
+
+    describe('Negative Test Cases', () => {
+      it('should throw UnauthorizedException when sub is null', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, null as any, 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw UnauthorizedException when sub is undefined', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, undefined as any, 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw UnauthorizedException when sub is empty string', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, '', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw UnauthorizedException when sub is whitespace only', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, '   ', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw UnauthorizedException when sub contains only tabs', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, '\t\t', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw UnauthorizedException when sub contains only newlines', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, '\n\n', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw BadRequestException when businessId is empty', async () => {
+        await expect(
+          service.findOneById('', publicId, 'en'),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should throw BadRequestException when businessId is null', async () => {
+        await expect(
+          service.findOneById(null as any, publicId, 'en'),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should throw BadRequestException when businessId is undefined', async () => {
+        await expect(
+          service.findOneById(undefined as any, publicId, 'en'),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should throw BadRequestException when businessId is whitespace only', async () => {
+        await expect(
+          service.findOneById('   ', publicId, 'en'),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should throw UnauthorizedException when public_id not found in core.users', async () => {
+        (
+          mockRepository.findUserIdByPublicId as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById(targetBusinessId, 'unknown-public-id', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw NotFoundException when business does not exist', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById('non-existent-id', publicId, 'en'),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should throw NotFoundException when business is soft-deleted', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById('soft-deleted-id', publicId, 'en'),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should throw ForbiddenException when user is not the owner', async () => {
+        const otherOwnerBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            owner_id: otherOwnerId,
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(otherOwnerBusiness);
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow(ForbiddenException);
+      });
+
+      it('should throw ForbiddenException with i18n accessDenied message', async () => {
+        const otherOwnerBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            owner_id: otherOwnerId,
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(otherOwnerBusiness);
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow(ForbiddenException);
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.accessDenied',
+          { lang: 'en' },
+        );
+      });
+
+      it('should throw NotFoundException with i18n notFound message', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById('non-existent-id', publicId, 'en'),
+        ).rejects.toThrow(NotFoundException);
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.notFound',
+          { lang: 'en' },
+        );
+      });
+
+      it('should throw UnauthorizedException with i18n ownerRequired message for empty sub', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, '', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.ownerRequired',
+          { lang: 'en' },
+        );
+      });
+
+      it('should throw BadRequestException with i18n invalidBusinessId message', async () => {
+        await expect(
+          service.findOneById('', publicId, 'en'),
+        ).rejects.toThrow(BadRequestException);
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.invalidBusinessId',
+          { lang: 'en' },
+        );
+      });
+
+      it('should use Indonesian language when lang is id', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, '', 'id'),
+        ).rejects.toThrow(UnauthorizedException);
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.ownerRequired',
+          { lang: 'id' },
+        );
+      });
+
+      it('should throw error when repository.findUserIdByPublicId throws', async () => {
+        (
+          mockRepository.findUserIdByPublicId as jest.Mock
+        ).mockRejectedValueOnce(new Error('Database connection error'));
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow('Database connection error');
+      });
+
+      it('should throw error when repository.findBusinessWithHoursById throws', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockRejectedValueOnce(new Error('Query failed'));
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow('Query failed');
+      });
+
+      it('should not call findBusinessWithHoursById when sub is invalid', async () => {
+        await expect(
+          service.findOneById(targetBusinessId, '', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+
+        expect(
+          mockRepository.findBusinessWithHoursById,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('should not call findBusinessWithHoursById when businessId is empty', async () => {
+        await expect(
+          service.findOneById('', publicId, 'en'),
+        ).rejects.toThrow(BadRequestException);
+
+        expect(
+          mockRepository.findBusinessWithHoursById,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('should not call findUserIdByPublicId when sub is empty', async () => {
+        // Reset mock to track calls from this test only
+        (mockRepository.findUserIdByPublicId as jest.Mock).mockClear();
+
+        await expect(
+          service.findOneById(targetBusinessId, '', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+
+        expect(
+          mockRepository.findUserIdByPublicId,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('should handle SQL injection attempt in businessId', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById(
+            "'; DROP TABLE businesses; --",
+            publicId,
+            'en',
+          ),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should handle SQL injection attempt in sub', async () => {
+        (
+          mockRepository.findUserIdByPublicId as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById(
+            targetBusinessId,
+            "' OR '1'='1",
+            'en',
+          ),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should handle very long businessId string', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById('a'.repeat(1000), publicId, 'en'),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should handle very long sub string', async () => {
+        (
+          mockRepository.findUserIdByPublicId as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById(targetBusinessId, 'a'.repeat(1000), 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should handle concurrent calls gracefully', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValue(mockBusinessResult);
+
+        const promises = Array.from({ length: 10 }, () =>
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        );
+
+        const results = await Promise.all(promises);
+
+        results.forEach((result) => {
+          expect(result.business.id).toBe(targetBusinessId);
+        });
+      });
+
+      it('should handle repository timeout gracefully', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockImplementationOnce(
+          () =>
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout')), 100),
+            ),
+        );
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow('Timeout');
+      });
+
+      it('should handle database connection failure', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockRejectedValueOnce(new Error('Connection refused'));
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow('Connection refused');
+      });
+
+      it('should throw ForbiddenException even for active business owned by other', async () => {
+        const activeOtherOwnerBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            status: 'active',
+            owner_id: otherOwnerId,
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(activeOtherOwnerBusiness);
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow(ForbiddenException);
+      });
+
+      it('should throw ForbiddenException for pending business owned by other', async () => {
+        const pendingOtherOwnerBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            status: 'pending',
+            owner_id: otherOwnerId,
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(pendingOtherOwnerBusiness);
+
+        await expect(
+          service.findOneById(targetBusinessId, publicId, 'en'),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    // ========================================================================
+    // EDGE CASES
+    // ========================================================================
+
+    describe('Edge Cases', () => {
+      it('should handle business with exactly 0 hours', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessWithoutHoursResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours).toEqual([]);
+        expect(result.business_hours).toHaveLength(0);
+      });
+
+      it('should handle business with exactly 7 hours (all days)', async () => {
+        const businessWithAllDays = {
+          ...mockBusinessResult,
+          business_hours: [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+            id: `hour-${day}`,
+            business_id: targetBusinessId,
+            day_of_week: day,
+            open_time: '08:00',
+            close_time: '17:00',
+            updated_at: null,
+            deleted_at: null,
+            id_creator: publicId,
+            id_updater: null,
+          })),
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(businessWithAllDays);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours).toHaveLength(7);
+        expect(
+          new Set(result.business_hours.map((h) => h.day_of_week)).size,
+        ).toBe(7);
+      });
+
+      it('should handle business created and updated in same millisecond', async () => {
+        const sameTime = new Date('2026-01-15T08:30:00.000Z');
+        const sameTimeBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            created_at: sameTime,
+            updated_at: sameTime,
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(sameTimeBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.created_at).toEqual(result.business.updated_at);
+      });
+
+      it('should handle business with null tagline vs empty tagline', async () => {
+        const nullTaglineBusiness = {
+          ...mockBusinessResult,
+          business: { ...mockBusinessResult.business, tagline: null },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(nullTaglineBusiness);
+
+        const result1 = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+        expect(result1.business.tagline).toBeNull();
+
+        const emptyTaglineBusiness = {
+          ...mockBusinessResult,
+          business: { ...mockBusinessResult.business, tagline: '' },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(emptyTaglineBusiness);
+
+        const result2 = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+        expect(result2.business.tagline).toBe('');
+      });
+
+      it('should handle business with null image vs undefined image', async () => {
+        const nullImageBusiness = {
+          ...mockBusinessResult,
+          business: { ...mockBusinessResult.business, image: null },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(nullImageBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.image).toBeNull();
+      });
+
+      it('should handle coordinates at boundary values (lat: -90/90, lon: -180/180)', async () => {
+        const maxCoordBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            latitude: '90.00000000',
+            longitude: '-180.00000000',
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(maxCoordBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.latitude).toBe('90.00000000');
+        expect(result.business.longitude).toBe('-180.00000000');
+      });
+
+      it('should handle coordinates at zero (equator/prime meridian)', async () => {
+        const zeroCoordBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            latitude: '0.00000000',
+            longitude: '0.00000000',
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(zeroCoordBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.latitude).toBe('0.00000000');
+        expect(result.business.longitude).toBe('0.00000000');
+      });
+
+      it('should handle business_hours with open_time 00:00 and close_time 23:59 (24h operation)', async () => {
+        const business24h = {
+          ...mockBusinessResult,
+          business_hours: [
+            {
+              ...mockBusinessResult.business_hours[0],
+              open_time: '00:00',
+              close_time: '23:59',
+            },
+          ],
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(business24h);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours[0].open_time).toBe('00:00');
+        expect(result.business_hours[0].close_time).toBe('23:59');
+      });
+
+      it('should handle addresses with special characters and newlines', async () => {
+        const specialAddressBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            address: 'Suite #123\nFloor 5 & 6\nJl. Sudirman "No. 1"',
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(specialAddressBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.address).toContain('\n');
+        expect(result.business.address).toContain('&');
+        expect(result.business.address).toContain('"');
+      });
+
+      it('should handle phone numbers with various formats', async () => {
+        const phoneFormats = [
+          '+62-812-3456-7890',
+          '081234567890',
+          '+1 (555) 123-4567',
+        ];
+
+        for (const phone of phoneFormats) {
+          const phoneBusiness = {
+            ...mockBusinessResult,
+            business: { ...mockBusinessResult.business, phone },
+          };
+          (
+            mockRepository.findBusinessWithHoursById as jest.Mock
+          ).mockResolvedValueOnce(phoneBusiness);
+
+          const result = await service.findOneById(
+            targetBusinessId,
+            publicId,
+            'en',
+          );
+
+          expect(result.business.phone).toBe(phone);
+        }
+      });
+
+      it('should handle all three business statuses correctly', async () => {
+        const statuses = ['pending', 'active', 'banned'];
+
+        for (const status of statuses) {
+          const statusBusiness = {
+            ...mockBusinessResult,
+            business: { ...mockBusinessResult.business, status },
+          };
+          (
+            mockRepository.findBusinessWithHoursById as jest.Mock
+          ).mockResolvedValueOnce(statusBusiness);
+
+          const result = await service.findOneById(
+            targetBusinessId,
+            publicId,
+            'en',
+          );
+
+          expect(result.business.status).toBe(status);
+        }
+      });
+
+      it('should handle response time for single business lookup', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const startTime = Date.now();
+        await service.findOneById(targetBusinessId, publicId, 'en');
+        const endTime = Date.now();
+
+        const duration = endTime - startTime;
+        expect(duration).toBeLessThan(1000);
+      });
+
+      it('should validate sub before validating businessId (order of checks)', async () => {
+        // Both sub and businessId are invalid
+        // sub check should happen first
+        await expect(
+          service.findOneById('', '', 'en'),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should handle UUID format businessId', async () => {
+        const uuidBusinessId = '550e8400-e29b-41d4-a716-446655440000';
+        const uuidBusiness = {
+          ...mockBusinessResult,
+          business: { ...mockBusinessResult.business, id: uuidBusinessId },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(uuidBusiness);
+
+        const result = await service.findOneById(
+          uuidBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.id).toBe(uuidBusinessId);
+      });
+
+      it('should handle non-UUID format businessId (repository handles it)', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(null);
+
+        await expect(
+          service.findOneById('not-a-uuid', publicId, 'en'),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should handle business_hours timestamps correctly', async () => {
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(mockBusinessResult);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business_hours[0].updated_at).toBeNull();
+        expect(result.business_hours[0].deleted_at).toBeNull();
+      });
+
+      it('should handle business with all nullable fields as null', async () => {
+        const allNullBusiness = {
+          business: {
+            id: targetBusinessId,
+            owner_id: ownerId,
+            name: 'Minimal Business',
+            tagline: null,
+            status: 'pending',
+            phone: null,
+            image: null,
+            cover_image: null,
+            latitude: null,
+            longitude: null,
+            address: null,
+            created_at: new Date(),
+            updated_at: null,
+            deleted_at: null,
+            id_creator: null,
+            id_updater: null,
+          },
+          business_hours: [],
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(allNullBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.tagline).toBeNull();
+        expect(result.business.phone).toBeNull();
+        expect(result.business.image).toBeNull();
+        expect(result.business.cover_image).toBeNull();
+        expect(result.business.latitude).toBeNull();
+        expect(result.business.longitude).toBeNull();
+        expect(result.business.address).toBeNull();
+        expect(result.business.id_creator).toBeNull();
+        expect(result.business.id_updater).toBeNull();
+      });
+
+      it('should handle business with name at max length (255 chars)', async () => {
+        const maxNameBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            name: 'B'.repeat(255),
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(maxNameBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.name.length).toBe(255);
+      });
+
+      it('should handle business with phone at max length (50 chars)', async () => {
+        const maxPhoneBusiness = {
+          ...mockBusinessResult,
+          business: {
+            ...mockBusinessResult.business,
+            phone: '+'.padEnd(50, '0'),
+          },
+        };
+        (
+          mockRepository.findBusinessWithHoursById as jest.Mock
+        ).mockResolvedValueOnce(maxPhoneBusiness);
+
+        const result = await service.findOneById(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+
+        expect(result.business.phone?.length).toBe(50);
       });
     });
   });

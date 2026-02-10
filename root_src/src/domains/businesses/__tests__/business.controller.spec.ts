@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { BusinessController } from '../business.controller';
 import { BusinessService } from '../business.service';
 import { I18nService } from 'nestjs-i18n';
@@ -51,6 +55,11 @@ describe('BusinessController', () => {
         business_hours: mockBusinessHours,
       }),
       findById: jest.fn().mockResolvedValue({
+        business: mockCreatedBusiness,
+        business_hours: mockBusinessHours,
+      }),
+      findAllByOwner: jest.fn().mockResolvedValue([]),
+      findOneById: jest.fn().mockResolvedValue({
         business: mockCreatedBusiness,
         business_hours: mockBusinessHours,
       }),
@@ -204,6 +213,405 @@ describe('BusinessController', () => {
       expect(
         (mockBusinessService.create as jest.Mock).mock.calls[0][0].owner_id,
       ).toBeUndefined();
+    });
+  });
+
+  /**
+   * ========================================================================
+   * Test Suite: findOne()
+   * GET /v1/businesses/:business_id controller tests
+   * ========================================================================
+   */
+  describe('findOne', () => {
+    const targetBusinessId = 'target-business-uuid-001';
+
+    const mockReq = (sub?: string, lang = 'en') =>
+      ({
+        user: sub ? { sub } : undefined,
+        headers: { 'x-lang': lang },
+      }) as any;
+
+    // ========================================================================
+    // POSITIVE TEST CASES
+    // ========================================================================
+
+    describe('Positive Test Cases', () => {
+      it('should return business with hours when JWT is valid and user is owner', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result).toEqual({
+          business: mockCreatedBusiness,
+          business_hours: mockBusinessHours,
+        });
+      });
+
+      it('should call businessService.findOneById with correct arguments', async () => {
+        await controller.findOne(targetBusinessId, mockReq(publicId));
+
+        expect(mockBusinessService.findOneById).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+      });
+
+      it('should pass x-lang header to service', async () => {
+        await controller.findOne(targetBusinessId, mockReq(publicId, 'id'));
+
+        expect(mockBusinessService.findOneById).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'id',
+        );
+      });
+
+      it('should return structure with business and business_hours keys', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result).toHaveProperty('business');
+        expect(result).toHaveProperty('business_hours');
+        expect(Array.isArray(result.business_hours)).toBe(true);
+      });
+
+      it('should return business object with correct id', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business.id).toBe(businessId);
+      });
+
+      it('should return business with correct owner_id', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business.owner_id).toBe(ownerId);
+      });
+
+      it('should return business with correct name', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business.name).toBe('Bengkel Jaya');
+      });
+
+      it('should return business_hours array with correct length', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business_hours).toHaveLength(1);
+      });
+
+      it('should return business_hours with correct day_of_week', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business_hours[0].day_of_week).toBe(1);
+      });
+
+      it('should return business_hours with correct time values', async () => {
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business_hours[0].open_time).toBe('09:00');
+        expect(result.business_hours[0].close_time).toBe('17:00');
+      });
+
+      it('should default to en language when x-lang header is missing', async () => {
+        const req = {
+          user: { sub: publicId },
+          headers: {},
+        } as any;
+
+        await controller.findOne(targetBusinessId, req);
+
+        expect(mockBusinessService.findOneById).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+      });
+
+      it('should handle UUID format businessId parameter', async () => {
+        const uuidId = '550e8400-e29b-41d4-a716-446655440000';
+
+        await controller.findOne(uuidId, mockReq(publicId));
+
+        expect(mockBusinessService.findOneById).toHaveBeenCalledWith(
+          uuidId,
+          publicId,
+          'en',
+        );
+      });
+
+      it('should return business with pending status', async () => {
+        const pendingBusiness = { ...mockCreatedBusiness, status: 'pending' };
+        (mockBusinessService.findOneById as jest.Mock).mockResolvedValueOnce({
+          business: pendingBusiness,
+          business_hours: mockBusinessHours,
+        });
+
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business.status).toBe('pending');
+      });
+
+      it('should return business with empty business_hours array', async () => {
+        (mockBusinessService.findOneById as jest.Mock).mockResolvedValueOnce({
+          business: mockCreatedBusiness,
+          business_hours: [],
+        });
+
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business_hours).toEqual([]);
+      });
+
+      it('should return business with all optional fields populated', async () => {
+        const fullBusiness = {
+          ...mockCreatedBusiness,
+          tagline: 'Best workshop',
+          phone: '+6281234567890',
+          image: 'uploads/images/biz.jpg',
+          cover_image: 'uploads/images/cover.jpg',
+          latitude: '-6.2088',
+          longitude: '106.8456',
+          address: 'Jl. Sudirman No. 123',
+        };
+        (mockBusinessService.findOneById as jest.Mock).mockResolvedValueOnce({
+          business: fullBusiness,
+          business_hours: mockBusinessHours,
+        });
+
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business.tagline).toBe('Best workshop');
+        expect(result.business.phone).toBeTruthy();
+        expect(result.business.image).toBeTruthy();
+        expect(result.business.cover_image).toBeTruthy();
+        expect(result.business.latitude).toBeTruthy();
+        expect(result.business.longitude).toBeTruthy();
+        expect(result.business.address).toBeTruthy();
+      });
+
+      it('should return business with null optional fields', async () => {
+        const minimalBusiness = {
+          ...mockCreatedBusiness,
+          tagline: null,
+          phone: null,
+          image: null,
+          cover_image: null,
+          latitude: null,
+          longitude: null,
+          address: null,
+        };
+        (mockBusinessService.findOneById as jest.Mock).mockResolvedValueOnce({
+          business: minimalBusiness,
+          business_hours: [],
+        });
+
+        const result = await controller.findOne(
+          targetBusinessId,
+          mockReq(publicId),
+        );
+
+        expect(result.business.tagline).toBeNull();
+        expect(result.business.phone).toBeNull();
+      });
+    });
+
+    // ========================================================================
+    // NEGATIVE TEST CASES
+    // ========================================================================
+
+    describe('Negative Test Cases', () => {
+      it('should throw UnauthorizedException when req.user is undefined', async () => {
+        const req = { headers: { 'x-lang': 'en' } } as any;
+
+        await expect(
+          controller.findOne(targetBusinessId, req),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw UnauthorizedException when req.user.sub is undefined', async () => {
+        const req = {
+          user: {},
+          headers: { 'x-lang': 'en' },
+        } as any;
+
+        await expect(
+          controller.findOne(targetBusinessId, req),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should throw UnauthorizedException when req.user is null', async () => {
+        const req = {
+          user: null,
+          headers: { 'x-lang': 'en' },
+        } as any;
+
+        await expect(
+          controller.findOne(targetBusinessId, req),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should not call findOneById when sub is missing', async () => {
+        const req = { headers: { 'x-lang': 'en' } } as any;
+
+        await expect(
+          controller.findOne(targetBusinessId, req),
+        ).rejects.toThrow(UnauthorizedException);
+
+        expect(mockBusinessService.findOneById).not.toHaveBeenCalled();
+      });
+
+      it('should propagate NotFoundException from service', async () => {
+        (mockBusinessService.findOneById as jest.Mock).mockRejectedValueOnce(
+          new NotFoundException('Business not found'),
+        );
+
+        await expect(
+          controller.findOne('non-existent-id', mockReq(publicId)),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should propagate ForbiddenException from service', async () => {
+        (mockBusinessService.findOneById as jest.Mock).mockRejectedValueOnce(
+          new ForbiddenException('Access denied'),
+        );
+
+        await expect(
+          controller.findOne(targetBusinessId, mockReq(publicId)),
+        ).rejects.toThrow(ForbiddenException);
+      });
+
+      it('should propagate UnauthorizedException from service', async () => {
+        (mockBusinessService.findOneById as jest.Mock).mockRejectedValueOnce(
+          new UnauthorizedException('Invalid token'),
+        );
+
+        await expect(
+          controller.findOne(targetBusinessId, mockReq(publicId)),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should propagate generic errors from service', async () => {
+        (mockBusinessService.findOneById as jest.Mock).mockRejectedValueOnce(
+          new Error('Internal server error'),
+        );
+
+        await expect(
+          controller.findOne(targetBusinessId, mockReq(publicId)),
+        ).rejects.toThrow('Internal server error');
+      });
+
+      it('should call i18n.t with correct key when sub is missing', async () => {
+        const req = { headers: { 'x-lang': 'en' } } as any;
+
+        await expect(
+          controller.findOne(targetBusinessId, req),
+        ).rejects.toThrow(UnauthorizedException);
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.ownerRequired',
+          { lang: 'en' },
+        );
+      });
+
+      it('should use Indonesian language for error when x-lang is id', async () => {
+        const req = { headers: { 'x-lang': 'id' } } as any;
+
+        await expect(
+          controller.findOne(targetBusinessId, req),
+        ).rejects.toThrow(UnauthorizedException);
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.ownerRequired',
+          { lang: 'id' },
+        );
+      });
+    });
+
+    // ========================================================================
+    // EDGE CASES
+    // ========================================================================
+
+    describe('Edge Cases', () => {
+      it('should handle empty string businessId (delegate to service)', async () => {
+        (mockBusinessService.findOneById as jest.Mock).mockRejectedValueOnce(
+          new NotFoundException('Business not found'),
+        );
+
+        await expect(
+          controller.findOne('', mockReq(publicId)),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should pass business_id param directly to service', async () => {
+        const longId = 'a'.repeat(100);
+
+        await controller.findOne(longId, mockReq(publicId));
+
+        expect(mockBusinessService.findOneById).toHaveBeenCalledWith(
+          longId,
+          publicId,
+          'en',
+        );
+      });
+
+      it('should handle concurrent findOne calls', async () => {
+        const promises = Array.from({ length: 5 }, () =>
+          controller.findOne(targetBusinessId, mockReq(publicId)),
+        );
+
+        const results = await Promise.all(promises);
+
+        results.forEach((result) => {
+          expect(result).toHaveProperty('business');
+          expect(result).toHaveProperty('business_hours');
+        });
+      });
+
+      it('should handle x-lang as empty string (defaults to en)', async () => {
+        const req = {
+          user: { sub: publicId },
+          headers: { 'x-lang': '' },
+        } as any;
+
+        await controller.findOne(targetBusinessId, req);
+
+        expect(mockBusinessService.findOneById).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+      });
     });
   });
 });

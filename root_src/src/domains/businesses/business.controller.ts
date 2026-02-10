@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Param,
   Req,
   UseInterceptors,
   UseGuards,
@@ -277,11 +278,6 @@ export class BusinessController {
                     },
                     open_time: { type: 'string', example: '08:00' },
                     close_time: { type: 'string', example: '17:00' },
-                    created_at: {
-                      type: 'string',
-                      format: 'date-time',
-                      example: '2026-01-15T08:30:00.000Z',
-                    },
                     updated_at: {
                       type: 'string',
                       format: 'date-time',
@@ -328,5 +324,178 @@ export class BusinessController {
     }
 
     return this.businessService.findAllByOwner(sub, lang);
+  }
+
+  /**
+   * Get a specific business by ID owned by the authenticated user.
+   * Returns the business with its business_hours.
+   * Owner is derived from JWT (cannot be spoofed).
+   * Only the owner of the business can access this endpoint.
+   *
+   * @param {string} businessId - UUID of the business (from URL path)
+   * @param {Request} req - Express request with JWT user payload
+   * @returns {Promise<{ business: IBusiness; business_hours: IBusinessHours[] }>}
+   * @throws {UnauthorizedException} If JWT is invalid or user not found
+   * @throws {NotFoundException} If business not found or soft-deleted
+   * @throws {ForbiddenException} If user is not the owner of the business
+   *
+   * @example
+   * ```
+   * GET /v1/businesses/550e8400-e29b-41d4-a716-446655440000
+   * Headers:
+   *   Authorization: Bearer <jwt-token>
+   *   x-lang: en
+   *
+   * Response:
+   * {
+   *   "statusCode": 200,
+   *   "message": "Business retrieved successfully",
+   *   "data": {
+   *     "business": { "id": "...", "name": "Bengkel A", ... },
+   *     "business_hours": [ { "day_of_week": 1, ... } ]
+   *   }
+   * }
+   * ```
+   */
+  @Get(':business_id')
+  @HttpCode(HttpStatus.OK)
+  @ResponseMessage('businesses.found')
+  @ApiOperation({
+    summary: 'Get a specific business by ID',
+    description:
+      'Returns a specific business with its operating hours. ' +
+      'Owner is automatically determined from JWT. ' +
+      'Only the owner of the business can access this endpoint.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Business retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Business retrieved successfully',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            business: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  example: '550e8400-e29b-41d4-a716-446655440000',
+                },
+                owner_id: { type: 'string', example: 'user-uuid' },
+                name: { type: 'string', example: 'Bengkel Jaya Motor' },
+                tagline: { type: 'string', example: 'Service terpercaya' },
+                status: {
+                  type: 'string',
+                  enum: ['pending', 'active', 'banned'],
+                  example: 'active',
+                },
+                phone: { type: 'string', example: '+6281234567890' },
+                image: { type: 'string', example: 'uploads/...' },
+                cover_image: { type: 'string', example: 'uploads/...' },
+                latitude: { type: 'string', example: '-6.2088' },
+                longitude: { type: 'string', example: '106.8456' },
+                address: {
+                  type: 'string',
+                  example: 'Jl. Sudirman No. 123',
+                },
+                created_at: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2026-01-15T08:30:00.000Z',
+                },
+                updated_at: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2026-01-20T10:15:00.000Z',
+                },
+                deleted_at: {
+                  type: 'string',
+                  nullable: true,
+                  example: null,
+                },
+                id_creator: { type: 'string', example: 'public-uuid' },
+                id_updater: {
+                  type: 'string',
+                  nullable: true,
+                  example: null,
+                },
+              },
+            },
+            business_hours: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', example: 'hour-uuid' },
+                  business_id: { type: 'string', example: 'business-uuid' },
+                  day_of_week: {
+                    type: 'number',
+                    minimum: 0,
+                    maximum: 6,
+                    example: 1,
+                  },
+                  open_time: { type: 'string', example: '08:00' },
+                  close_time: { type: 'string', example: '17:00' },
+                  updated_at: {
+                    type: 'string',
+                    format: 'date-time',
+                    nullable: true,
+                    example: null,
+                  },
+                  deleted_at: {
+                    type: 'string',
+                    nullable: true,
+                    example: null,
+                  },
+                  id_creator: { type: 'string', example: 'public-uuid' },
+                  id_updater: {
+                    type: 'string',
+                    nullable: true,
+                    example: null,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not the owner of the business',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Business does not exist or has been deleted',
+  })
+  async findOne(
+    @Param('business_id') businessId: string,
+    @Req()
+    req: Request & {
+      user?: { sub: string };
+    },
+  ): Promise<{ business: IBusiness; business_hours: IBusinessHours[] }> {
+    const sub = req.user?.sub;
+    const lang = (req.headers['x-lang'] as string) || 'en';
+
+    if (!sub) {
+      throw new UnauthorizedException(
+        this.i18n.t('businesses.errors.ownerRequired', { lang }),
+      );
+    }
+
+    return this.businessService.findOneById(businessId, sub, lang);
   }
 }

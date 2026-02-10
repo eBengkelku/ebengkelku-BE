@@ -2,6 +2,7 @@
   "title": "Businesses",
   "created": "Business created successfully",
   "listed": "Businesses retrieved successfully",
+  "found": "Business retrieved successfully",
   "validation": {
     "name": {
       "required": "Business name is required",
@@ -41,6 +42,8 @@
   },
   "errors": {
     "ownerRequired": "Owner identity is required. Please provide a valid JWT.",
-    "notFound": "Business not found"
+    "notFound": "Business not found",
+    "accessDenied": "You do not have permission to access this business",
+    "invalidBusinessId": "Business ID is required and must be a valid identifier"
   }
 }

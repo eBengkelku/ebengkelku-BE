@@ -2,6 +2,7 @@
   "title": "Bisnis",
   "created": "Bisnis berhasil dibuat",
   "listed": "Bisnis berhasil diambil",
+  "found": "Bisnis berhasil ditemukan",
   "validation": {
     "name": {
       "required": "Nama bisnis wajib diisi",
@@ -41,6 +42,8 @@
   },
   "errors": {
     "ownerRequired": "Identitas pemilik wajib. Sertakan JWT yang valid.",
-    "notFound": "Bisnis tidak ditemukan"
+    "notFound": "Bisnis tidak ditemukan",
+    "accessDenied": "Anda tidak memiliki izin untuk mengakses bisnis ini",
+    "invalidBusinessId": "ID bisnis wajib diisi dan harus berupa pengenal yang valid"
   }
 }

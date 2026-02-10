@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   ConflictException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ServiceRepository } from './repository/service.repository';
 import { ServiceModel } from './models/service.model';
@@ -154,9 +155,28 @@ export class ServiceService {
   // PRIVATE HELPERS
   // ============================================================================
 
+  /**
+   * Resolve core.users.id from JWT sub (public_id).
+   * owner_id in business.businesses references core.users.id,
+   * while JWT sub contains core.users.public_id.
+   */
+  private async resolveUserId(
+    publicId: string,
+    lang: string,
+    trx: Knex | Knex.Transaction,
+  ): Promise<string> {
+    const userId = await this.repository.findUserIdByPublicId(publicId, trx);
+    if (!userId) {
+      throw new UnauthorizedException(
+        this.i18n.t('services.errors.business.accessDenied', { lang }),
+      );
+    }
+    return userId;
+  }
+
   private async validateBusinessAccess(
     businessId: string,
-    userId: string,
+    userPublicId: string,
     lang: string,
     trx: Knex | Knex.Transaction,
   ): Promise<void> {
@@ -180,7 +200,9 @@ export class ServiceService {
       );
     }
 
-    // Verify user owns the business
+    // Resolve public_id -> id before comparing with owner_id
+    const userId = await this.resolveUserId(userPublicId, lang, trx);
+
     if (business.owner_id !== userId) {
       throw new ForbiddenException(
         this.i18n.t('services.errors.business.accessDenied', { lang }),

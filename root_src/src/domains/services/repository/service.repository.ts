@@ -92,6 +92,19 @@ export class ServiceRepository extends BaseDomainRepository<
   // CUSTOM METHODS
   // ============================================================================
 
+  /** Resolves core.users.id from public_id (JWT sub) */
+  async findUserIdByPublicId(
+    publicId: string,
+    trx?: Knex | Knex.Transaction,
+  ): Promise<string | null> {
+    const row = await (trx || this.knex)('core.users')
+      .where('public_id', publicId)
+      .whereNull('deleted_at')
+      .select('id')
+      .first();
+    return row?.id ?? null;
+  }
+
   /** Finds services by business ID */
   async findByBusinessId(
     businessId: string,

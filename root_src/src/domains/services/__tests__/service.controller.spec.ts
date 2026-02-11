@@ -5,7 +5,9 @@ import { JwtAuthGuard } from '../../../auth/jwt.guard';
 import {
   CreateServiceDto,
   BatchCreateServicesDto,
-} from '../dto/create-service.dto';
+  UpdateServiceDto,
+  DeleteServiceDto,
+} from '../dto';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 
 describe('ServiceController', () => {
@@ -33,6 +35,8 @@ describe('ServiceController', () => {
       createBatch: jest.fn(),
       findById: jest.fn(),
       findByBusinessId: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -296,6 +300,115 @@ describe('ServiceController', () => {
         mockUser.sub,
         'en',
       );
+    });
+  });
+
+  describe('update', () => {
+    const updateDto: UpdateServiceDto = {
+      business_id: 'business-123',
+      name: 'Updated Service',
+      price: 200000,
+    };
+
+    const updatedService = {
+      ...mockService,
+      name: 'Updated Service',
+      price: 200000,
+      updated_at: new Date(),
+    };
+
+    it('should update a service successfully', async () => {
+      service.update.mockResolvedValue(updatedService);
+
+      const result = await controller.update(
+        'service-123',
+        updateDto,
+        'en',
+        mockUser,
+      );
+
+      expect(service.update).toHaveBeenCalledWith(
+        'service-123',
+        updateDto,
+        mockUser.sub,
+        'en',
+      );
+      expect(result).toEqual(updatedService);
+    });
+
+    it('should handle default language parameter', async () => {
+      service.update.mockResolvedValue(updatedService);
+
+      await controller.update('service-123', updateDto, undefined, mockUser);
+
+      expect(service.update).toHaveBeenCalledWith(
+        'service-123',
+        updateDto,
+        mockUser.sub,
+        'en',
+      );
+    });
+
+    it('should propagate NotFoundExceptions', async () => {
+      service.update.mockRejectedValue(
+        new NotFoundException('Service not found'),
+      );
+
+      await expect(
+        controller.update('service-123', updateDto, 'en', mockUser),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should propagate ConflictExceptions', async () => {
+      service.update.mockRejectedValue(
+        new ConflictException('Name already exists'),
+      );
+
+      await expect(
+        controller.update('service-123', updateDto, 'en', mockUser),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('delete', () => {
+    const deleteDto: DeleteServiceDto = {
+      business_id: 'business-123',
+    };
+
+    it('should delete a service successfully', async () => {
+      service.delete.mockResolvedValue(undefined);
+
+      await controller.delete('service-123', deleteDto, 'en', mockUser);
+
+      expect(service.delete).toHaveBeenCalledWith(
+        'service-123',
+        deleteDto,
+        mockUser.sub,
+        'en',
+      );
+    });
+
+    it('should handle default language parameter', async () => {
+      service.delete.mockResolvedValue(undefined);
+
+      await controller.delete('service-123', deleteDto, undefined, mockUser);
+
+      expect(service.delete).toHaveBeenCalledWith(
+        'service-123',
+        deleteDto,
+        mockUser.sub,
+        'en',
+      );
+    });
+
+    it('should propagate NotFoundExceptions', async () => {
+      service.delete.mockRejectedValue(
+        new NotFoundException('Service not found'),
+      );
+
+      await expect(
+        controller.delete('service-123', deleteDto, 'en', mockUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

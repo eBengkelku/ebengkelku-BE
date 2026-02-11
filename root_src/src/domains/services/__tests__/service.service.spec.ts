@@ -7,7 +7,9 @@ import { ServiceModel } from '../models/service.model';
 import {
   CreateServiceDto,
   BatchCreateServicesDto,
-} from '../dto/create-service.dto';
+  UpdateServiceDto,
+  DeleteServiceDto,
+} from '../dto';
 import {
   NotFoundException,
   ForbiddenException,
@@ -73,6 +75,9 @@ describe('ServiceService', () => {
       nameExistsForBusiness: jest.fn(),
       findExistingNames: jest.fn(),
       batchInsert: jest.fn(),
+      findUserIdByPublicId: jest.fn(),
+      updateService: jest.fn(),
+      deleteService: jest.fn(),
     };
 
     const mockDatabaseService = {
@@ -410,6 +415,152 @@ describe('ServiceService', () => {
       await expect(
         service.createSingle(validCreateDto, mockUser.id),
       ).rejects.toThrow('Repository error');
+    });
+  });
+
+  describe('update service', () => {
+    const mockService = ServiceModel.create({
+      id: 'service-123',
+      business_id: 'business-123',
+      name: 'Oil Change Service',
+      description: 'Complete oil change',
+      price: 150000,
+      duration_minutes: 30,
+      daily_quota: 10,
+      id_creator: 'user-123',
+      created_at: new Date(),
+    });
+
+    const validUpdateDto: UpdateServiceDto = {
+      business_id: 'business-123',
+      name: 'Premium Oil Change',
+      price: 200000,
+    };
+
+    beforeEach(() => {
+      mockTrx.first.mockResolvedValue(mockBusiness);
+      repository.findUserIdByPublicId.mockResolvedValue('user-123');
+      repository.findById.mockResolvedValue(mockService);
+      repository.nameExistsForBusiness.mockResolvedValue(false);
+      repository.updateService.mockResolvedValue(undefined);
+    });
+
+    it('should update a service successfully', async () => {
+      const result = await service.update(
+        'service-123',
+        validUpdateDto,
+        mockUser.id,
+      );
+
+      expect(result).toHaveProperty('name', 'Premium Oil Change');
+      expect(result).toHaveProperty('price', 200000);
+      expect(repository.updateService).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if service not found', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.update('service-123', validUpdateDto, mockUser.id),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if service belongs to different business', async () => {
+      const differentBusinessDto: UpdateServiceDto = {
+        business_id: 'different-business-123',
+        name: 'Updated Service',
+      };
+
+      await expect(
+        service.update('service-123', differentBusinessDto, mockUser.id),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should check name uniqueness when name is updated', async () => {
+      await service.update('service-123', validUpdateDto, mockUser.id);
+
+      expect(repository.nameExistsForBusiness).toHaveBeenCalledWith(
+        'Premium Oil Change',
+        'business-123',
+        'service-123',
+        mockTrx,
+      );
+    });
+
+    it('should throw ConflictException if new name already exists', async () => {
+      repository.nameExistsForBusiness.mockResolvedValue(true);
+
+      await expect(
+        service.update('service-123', validUpdateDto, mockUser.id),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should not check name uniqueness if name is not updated', async () => {
+      const dtoWithoutName: UpdateServiceDto = {
+        business_id: 'business-123',
+        price: 200000,
+      };
+
+      await service.update('service-123', dtoWithoutName, mockUser.id);
+
+      expect(repository.nameExistsForBusiness).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('delete service', () => {
+    const mockService = ServiceModel.create({
+      id: 'service-123',
+      business_id: 'business-123',
+      name: 'Oil Change Service',
+      description: 'Complete oil change',
+      price: 150000,
+      duration_minutes: 30,
+      daily_quota: 10,
+      id_creator: 'user-123',
+      created_at: new Date(),
+    });
+
+    const validDeleteDto: DeleteServiceDto = {
+      business_id: 'business-123',
+    };
+
+    beforeEach(() => {
+      mockTrx.first.mockResolvedValue(mockBusiness);
+      repository.findUserIdByPublicId.mockResolvedValue('user-123');
+      repository.findById.mockResolvedValue(mockService);
+      repository.deleteService.mockResolvedValue(undefined);
+    });
+
+    it('should delete a service successfully', async () => {
+      await service.delete('service-123', validDeleteDto, mockUser.id);
+
+      expect(repository.deleteService).toHaveBeenCalledWith('service-123');
+    });
+
+    it('should throw NotFoundException if service not found', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.delete('service-123', validDeleteDto, mockUser.id),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if service belongs to different business', async () => {
+      const differentBusinessDto: DeleteServiceDto = {
+        business_id: 'different-business-123',
+      };
+
+      await expect(
+        service.delete('service-123', differentBusinessDto, mockUser.id),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should validate business access before deletion', async () => {
+      mockTrx.first.mockResolvedValue(null);
+
+      await expect(
+        service.delete('service-123', validDeleteDto, mockUser.id),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

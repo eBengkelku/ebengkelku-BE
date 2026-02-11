@@ -11,7 +11,9 @@ import { ServiceModel } from './models/service.model';
 import {
   CreateServiceDto,
   BatchCreateServicesDto,
-} from './dto/create-service.dto';
+  UpdateServiceDto,
+  DeleteServiceDto,
+} from './dto';
 import { IService } from './interfaces/service.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { Knex } from 'knex';
@@ -151,6 +153,99 @@ export class ServiceService {
     return services.map((s) => s.toEntity());
   }
 
+  /** Updates a service */
+  async update(
+    serviceId: string,
+    dto: UpdateServiceDto,
+    userId: string,
+    lang = 'en',
+  ): Promise<IService> {
+    return this.knex.transaction(async (trx) => {
+      // Validate business access first
+      await this.validateBusinessAccess(dto.business_id, userId, lang, trx);
+
+      // Find the service
+      const service = await this.repository.findById(serviceId);
+      if (!service) {
+        throw new NotFoundException(
+          this.i18n.t('services.errors.notFound', { lang }),
+        );
+      }
+
+      // Verify service belongs to the business
+      if (service.getBusinessId() !== dto.business_id) {
+        throw new ForbiddenException(
+          this.i18n.t('services.errors.business.accessDenied', { lang }),
+        );
+      }
+
+      // Check name uniqueness if name is being updated
+      if (dto.name && dto.name !== service.getName()) {
+        await this.validateNameUniqueness(
+          dto.name,
+          dto.business_id,
+          lang,
+          trx,
+          serviceId,
+        );
+      }
+
+      // Update service details
+      if (
+        dto.name !== undefined ||
+        dto.description !== undefined ||
+        dto.price !== undefined
+      ) {
+        service.updateDetails({
+          name: dto.name,
+          description: dto.description,
+          price: dto.price,
+        });
+      }
+
+      // Update quota settings
+      if (dto.duration_minutes !== undefined || dto.daily_quota !== undefined) {
+        service.updateQuotaSettings(dto.duration_minutes, dto.daily_quota);
+      }
+
+      // Save to database
+      await this.repository.updateService(service.toEntity());
+
+      return service.toEntity();
+    });
+  }
+
+  /** Deletes a service (soft delete) */
+  async delete(
+    serviceId: string,
+    dto: DeleteServiceDto,
+    userId: string,
+    lang = 'en',
+  ): Promise<void> {
+    return this.knex.transaction(async (trx) => {
+      // Validate business access first
+      await this.validateBusinessAccess(dto.business_id, userId, lang, trx);
+
+      // Find the service
+      const service = await this.repository.findById(serviceId);
+      if (!service) {
+        throw new NotFoundException(
+          this.i18n.t('services.errors.notFound', { lang }),
+        );
+      }
+
+      // Verify service belongs to the business
+      if (service.getBusinessId() !== dto.business_id) {
+        throw new ForbiddenException(
+          this.i18n.t('services.errors.business.accessDenied', { lang }),
+        );
+      }
+
+      // Soft delete the service
+      await this.repository.deleteService(serviceId);
+    });
+  }
+
   // ============================================================================
   // PRIVATE HELPERS
   // ============================================================================
@@ -215,11 +310,12 @@ export class ServiceService {
     businessId: string,
     lang: string,
     trx: Knex.Transaction,
+    excludeId?: string,
   ): Promise<void> {
     const exists = await this.repository.nameExistsForBusiness(
       name,
       businessId,
-      undefined,
+      excludeId,
       trx,
     );
     if (exists) {

@@ -166,4 +166,14 @@ export class ServiceRepository extends BaseDomainRepository<
 
     return rows.map((row: { name: string }) => row.name);
   }
+
+  /** Public method to update a service */
+  async updateService(entity: IService): Promise<void> {
+    await this.update(entity);
+  }
+
+  /** Public method to soft delete a service */
+  async deleteService(id: string): Promise<void> {
+    await this.softDelete(id);
+  }
 }

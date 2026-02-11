@@ -134,7 +134,7 @@ describe('BusinessService', () => {
       const result = await service.create(dto, ownerId, publicId, {});
       expect(result.business).toBeDefined();
       expect(result.business.name).toBe('My Workshop');
-      expect(result.business.status).toBe('pending');
+      expect(result.business.status).toBe('active');
       expect(result.business.owner_id).toBe(ownerId);
       expect(result.business_hours).toEqual([]);
     });
@@ -475,17 +475,17 @@ describe('BusinessService', () => {
           id_updater: null,
         },
         business_hours: [
-      {
-          id: 'h1',
-          business_id: businessId,
-          day_of_week: 1,
-          open_time: '09:00',
-          close_time: '17:00',
-          updated_at: now,
-          deleted_at: null,
-          id_creator: null,
-          id_updater: null,
-        },
+          {
+            id: 'h1',
+            business_id: businessId,
+            day_of_week: 1,
+            open_time: '09:00',
+            close_time: '17:00',
+            updated_at: now,
+            deleted_at: null,
+            id_creator: null,
+            id_updater: null,
+          },
         ],
       });
 
@@ -1890,9 +1890,9 @@ describe('BusinessService', () => {
 
         await service.findOneById(targetBusinessId, publicId, 'en');
 
-        expect(
-          mockRepository.findBusinessWithHoursById,
-        ).toHaveBeenCalledWith(targetBusinessId);
+        expect(mockRepository.findBusinessWithHoursById).toHaveBeenCalledWith(
+          targetBusinessId,
+        );
       });
 
       it('should return correct business name', async () => {
@@ -2194,7 +2194,7 @@ describe('BusinessService', () => {
           ...mockBusinessResult,
           business: {
             ...mockBusinessResult.business,
-            name: "Bengkel Pak John's & Co. \"Premium\"",
+            name: 'Bengkel Pak John\'s & Co. "Premium"',
           },
         };
         (
@@ -2476,9 +2476,9 @@ describe('BusinessService', () => {
       });
 
       it('should throw BadRequestException when businessId is empty', async () => {
-        await expect(
-          service.findOneById('', publicId, 'en'),
-        ).rejects.toThrow(BadRequestException);
+        await expect(service.findOneById('', publicId, 'en')).rejects.toThrow(
+          BadRequestException,
+        );
       });
 
       it('should throw BadRequestException when businessId is null', async () => {
@@ -2595,9 +2595,9 @@ describe('BusinessService', () => {
       });
 
       it('should throw BadRequestException with i18n invalidBusinessId message', async () => {
-        await expect(
-          service.findOneById('', publicId, 'en'),
-        ).rejects.toThrow(BadRequestException);
+        await expect(service.findOneById('', publicId, 'en')).rejects.toThrow(
+          BadRequestException,
+        );
 
         expect(mockI18nService.t).toHaveBeenCalledWith(
           'businesses.errors.invalidBusinessId',
@@ -2641,19 +2641,15 @@ describe('BusinessService', () => {
           service.findOneById(targetBusinessId, '', 'en'),
         ).rejects.toThrow(UnauthorizedException);
 
-        expect(
-          mockRepository.findBusinessWithHoursById,
-        ).not.toHaveBeenCalled();
+        expect(mockRepository.findBusinessWithHoursById).not.toHaveBeenCalled();
       });
 
       it('should not call findBusinessWithHoursById when businessId is empty', async () => {
-        await expect(
-          service.findOneById('', publicId, 'en'),
-        ).rejects.toThrow(BadRequestException);
+        await expect(service.findOneById('', publicId, 'en')).rejects.toThrow(
+          BadRequestException,
+        );
 
-        expect(
-          mockRepository.findBusinessWithHoursById,
-        ).not.toHaveBeenCalled();
+        expect(mockRepository.findBusinessWithHoursById).not.toHaveBeenCalled();
       });
 
       it('should not call findUserIdByPublicId when sub is empty', async () => {
@@ -2664,9 +2660,7 @@ describe('BusinessService', () => {
           service.findOneById(targetBusinessId, '', 'en'),
         ).rejects.toThrow(UnauthorizedException);
 
-        expect(
-          mockRepository.findUserIdByPublicId,
-        ).not.toHaveBeenCalled();
+        expect(mockRepository.findUserIdByPublicId).not.toHaveBeenCalled();
       });
 
       it('should handle SQL injection attempt in businessId', async () => {
@@ -2675,11 +2669,7 @@ describe('BusinessService', () => {
         ).mockResolvedValueOnce(null);
 
         await expect(
-          service.findOneById(
-            "'; DROP TABLE businesses; --",
-            publicId,
-            'en',
-          ),
+          service.findOneById("'; DROP TABLE businesses; --", publicId, 'en'),
         ).rejects.toThrow(NotFoundException);
       });
 
@@ -2689,11 +2679,7 @@ describe('BusinessService', () => {
         ).mockResolvedValueOnce(null);
 
         await expect(
-          service.findOneById(
-            targetBusinessId,
-            "' OR '1'='1",
-            'en',
-          ),
+          service.findOneById(targetBusinessId, "' OR '1'='1", 'en'),
         ).rejects.toThrow(UnauthorizedException);
       });
 
@@ -3077,9 +3063,9 @@ describe('BusinessService', () => {
       it('should validate sub before validating businessId (order of checks)', async () => {
         // Both sub and businessId are invalid
         // sub check should happen first
-        await expect(
-          service.findOneById('', '', 'en'),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(service.findOneById('', '', 'en')).rejects.toThrow(
+          UnauthorizedException,
+        );
       });
 
       it('should handle UUID format businessId', async () => {

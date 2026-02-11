@@ -24,7 +24,7 @@ describe('BusinessController', () => {
     owner_id: ownerId,
     name: 'Bengkel Jaya',
     tagline: 'Service terpercaya',
-    status: 'pending',
+    status: 'active',
     phone: null,
     image: null,
     cover_image: null,
@@ -454,9 +454,9 @@ describe('BusinessController', () => {
       it('should throw UnauthorizedException when req.user is undefined', async () => {
         const req = { headers: { 'x-lang': 'en' } } as any;
 
-        await expect(
-          controller.findOne(targetBusinessId, req),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(controller.findOne(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
       });
 
       it('should throw UnauthorizedException when req.user.sub is undefined', async () => {
@@ -465,9 +465,9 @@ describe('BusinessController', () => {
           headers: { 'x-lang': 'en' },
         } as any;
 
-        await expect(
-          controller.findOne(targetBusinessId, req),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(controller.findOne(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
       });
 
       it('should throw UnauthorizedException when req.user is null', async () => {
@@ -476,17 +476,17 @@ describe('BusinessController', () => {
           headers: { 'x-lang': 'en' },
         } as any;
 
-        await expect(
-          controller.findOne(targetBusinessId, req),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(controller.findOne(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
       });
 
       it('should not call findOneById when sub is missing', async () => {
         const req = { headers: { 'x-lang': 'en' } } as any;
 
-        await expect(
-          controller.findOne(targetBusinessId, req),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(controller.findOne(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
 
         expect(mockBusinessService.findOneById).not.toHaveBeenCalled();
       });
@@ -534,9 +534,9 @@ describe('BusinessController', () => {
       it('should call i18n.t with correct key when sub is missing', async () => {
         const req = { headers: { 'x-lang': 'en' } } as any;
 
-        await expect(
-          controller.findOne(targetBusinessId, req),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(controller.findOne(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
 
         expect(mockI18nService.t).toHaveBeenCalledWith(
           'businesses.errors.ownerRequired',
@@ -547,9 +547,9 @@ describe('BusinessController', () => {
       it('should use Indonesian language for error when x-lang is id', async () => {
         const req = { headers: { 'x-lang': 'id' } } as any;
 
-        await expect(
-          controller.findOne(targetBusinessId, req),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(controller.findOne(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
 
         expect(mockI18nService.t).toHaveBeenCalledWith(
           'businesses.errors.ownerRequired',
@@ -568,9 +568,9 @@ describe('BusinessController', () => {
           new NotFoundException('Business not found'),
         );
 
-        await expect(
-          controller.findOne('', mockReq(publicId)),
-        ).rejects.toThrow(NotFoundException);
+        await expect(controller.findOne('', mockReq(publicId))).rejects.toThrow(
+          NotFoundException,
+        );
       });
 
       it('should pass business_id param directly to service', async () => {

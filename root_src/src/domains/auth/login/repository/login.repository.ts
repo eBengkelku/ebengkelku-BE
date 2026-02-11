@@ -88,4 +88,18 @@ export class LoginRepository {
 
     return null;
   }
+
+  /**
+   * Update last login timestamp for a user
+   *
+   * @param publicId - User's public ID
+   * @returns Updated count (should be 1 on success)
+   */
+  async updateLastLogin(publicId: string): Promise<number> {
+    return await this.knex<IUserRow>('core.users')
+      .where('public_id', publicId)
+      .update({
+        last_login: this.knex.fn.now(),
+      });
+  }
 }

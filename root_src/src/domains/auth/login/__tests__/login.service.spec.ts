@@ -44,6 +44,7 @@ describe('LoginService', () => {
     id_creator: null,
     id_updater: null,
     is_encrypted: false,
+    last_login: null,
   };
 
   // Create UserModel from mock data
@@ -62,6 +63,7 @@ describe('LoginService', () => {
   beforeEach(async () => {
     const mockRepository = {
       findByEmail: jest.fn(),
+      updateLastLogin: jest.fn(),
     };
 
     const mockJwtService = {
@@ -107,6 +109,7 @@ describe('LoginService', () => {
     jest.clearAllMocks();
 
     // Default mock implementations
+    repository.updateLastLogin.mockResolvedValue(1);
     repository.findByEmail.mockResolvedValue(createMockUser());
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
     jwtService.generateAccessToken.mockResolvedValue(mockAccessToken);
@@ -204,6 +207,72 @@ describe('LoginService', () => {
       const result = await service.login(mockLoginDto);
 
       expect(result.data.expiration_time).toBe(300000);
+    });
+
+    it('should call repository.updateLastLogin with user public_id', async () => {
+      await service.login(mockLoginDto);
+
+      expect(repository.updateLastLogin).toHaveBeenCalledWith(
+        'public-uuid-456',
+      );
+    });
+  });
+
+  describe('Success Scenarios - First Time Login', () => {
+    it('should return first_time_login as true when last_login is null', async () => {
+      const newUser = createMockUser({ last_login: null });
+      repository.findByEmail.mockResolvedValue(newUser);
+
+      const result = await service.login(mockLoginDto);
+
+      expect(result.data.first_time_login).toBe(true);
+      expect(result.data.last_login).toBeNull();
+    });
+
+    it('should return first_time_login as false when last_login exists', async () => {
+      const existingUser = createMockUser({
+        last_login: new Date('2026-02-01T10:00:00.000Z'),
+      });
+      repository.findByEmail.mockResolvedValue(existingUser);
+
+      const result = await service.login(mockLoginDto);
+
+      expect(result.data.first_time_login).toBe(false);
+      expect(result.data.last_login).toEqual(
+        new Date('2026-02-01T10:00:00.000Z'),
+      );
+    });
+
+    it('should return previous last_login value before updating', async () => {
+      const previousLogin = new Date('2026-01-15T08:30:00.000Z');
+      const returningUser = createMockUser({ last_login: previousLogin });
+      repository.findByEmail.mockResolvedValue(returningUser);
+
+      const result = await service.login(mockLoginDto);
+
+      // Should return the OLD last_login, not the new one
+      expect(result.data.last_login).toEqual(previousLogin);
+    });
+
+    it('should update last_login even on first time login', async () => {
+      const newUser = createMockUser({ last_login: null });
+      repository.findByEmail.mockResolvedValue(newUser);
+
+      await service.login(mockLoginDto);
+
+      expect(repository.updateLastLogin).toHaveBeenCalledWith(
+        'public-uuid-456',
+      );
+    });
+
+    it('should not fail login if updateLastLogin fails', async () => {
+      repository.updateLastLogin.mockRejectedValue(new Error('Database error'));
+
+      const result = await service.login(mockLoginDto);
+
+      // Login should still succeed and return token
+      expect(result.success).toBe(true);
+      expect(result.data.access_token).toBeDefined();
     });
   });
 

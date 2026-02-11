@@ -21,6 +21,8 @@ describe('LoginController', () => {
         'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.mockPayload.mockSignature',
       type: 'Bearer',
       expiration_time: 300000,
+      first_time_login: true,
+      last_login: null,
     },
   };
 
@@ -161,6 +163,56 @@ describe('LoginController', () => {
       expect(result.data).toHaveProperty('access_token');
       expect(result.data).toHaveProperty('type');
       expect(result.data).toHaveProperty('expiration_time');
+      expect(result.data).toHaveProperty('first_time_login');
+      expect(result.data).toHaveProperty('last_login');
+    });
+
+    it('should return first_time_login as boolean', async () => {
+      const result = await controller.login(mockLoginDto);
+
+      expect(typeof result.data.first_time_login).toBe('boolean');
+    });
+
+    it('should return last_login as null or Date', async () => {
+      const result = await controller.login(mockLoginDto);
+
+      expect(
+        result.data.last_login === null ||
+          result.data.last_login instanceof Date,
+      ).toBe(true);
+    });
+
+    it('should return first_time_login true when user has never logged in before', async () => {
+      service.login.mockResolvedValue({
+        ...mockLoginResponse,
+        data: {
+          ...mockLoginResponse.data,
+          first_time_login: true,
+          last_login: null,
+        },
+      });
+
+      const result = await controller.login(mockLoginDto);
+
+      expect(result.data.first_time_login).toBe(true);
+      expect(result.data.last_login).toBeNull();
+    });
+
+    it('should return first_time_login false when user has logged in before', async () => {
+      const previousLogin = new Date('2026-02-10T08:15:30Z');
+      service.login.mockResolvedValue({
+        ...mockLoginResponse,
+        data: {
+          ...mockLoginResponse.data,
+          first_time_login: false,
+          last_login: previousLogin,
+        },
+      });
+
+      const result = await controller.login(mockLoginDto);
+
+      expect(result.data.first_time_login).toBe(false);
+      expect(result.data.last_login).toEqual(previousLogin);
     });
 
     it('should not include password in response', async () => {

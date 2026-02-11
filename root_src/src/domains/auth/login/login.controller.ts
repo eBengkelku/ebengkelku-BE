@@ -56,6 +56,7 @@ export class LoginController {
       - Email trimming (leading/trailing spaces)
       - Password verification using bcrypt
       - Returns JWT access token on success
+      - Tracks first-time login and last login timestamp
       
       **Security:**
       - Generic error messages prevent user enumeration
@@ -65,6 +66,10 @@ export class LoginController {
       **Account Requirements:**
       - Email must be verified (email_verified_at must be set)
       - Account must not be deleted (deleted_at must be null)
+      
+      **First Time Login:**
+      - If user has never logged in before (last_login is null), first_time_login will be true
+      - After successful login, last_login is updated with current timestamp
     `,
   })
   @ApiHeader({
@@ -88,6 +93,8 @@ export class LoginController {
           access_token: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...',
           type: 'Bearer',
           expiration_time: 300000,
+          first_time_login: true,
+          last_login: null,
         },
       },
     },

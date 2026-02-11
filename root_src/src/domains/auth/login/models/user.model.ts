@@ -29,6 +29,7 @@ export class UserModel {
     private readonly _idCreator: string | null,
     private readonly _idUpdater: string | null,
     private readonly _isEncrypted: boolean,
+    private readonly _lastLogin: Date | null,
   ) {}
 
   /**
@@ -55,6 +56,7 @@ export class UserModel {
       data.id_creator ?? null,
       data.id_updater ?? null,
       data.is_encrypted,
+      data.last_login ?? null,
     );
   }
 
@@ -124,6 +126,7 @@ export class UserModel {
       id_creator: this._idCreator,
       id_updater: this._idUpdater,
       is_encrypted: this._isEncrypted,
+      last_login: this._lastLogin,
     };
   }
 
@@ -169,6 +172,10 @@ export class UserModel {
 
   get deletedAt(): Date | null {
     return this._deletedAt;
+  }
+
+  get lastLogin(): Date | null {
+    return this._lastLogin;
   }
 
   // ============================================================================

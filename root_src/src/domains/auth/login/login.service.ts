@@ -59,12 +59,14 @@ export class LoginService {
    * 5. Check if email is verified via UserModel.isEmailVerified()
    * 6. Check if user has password auth via UserModel.hasPasswordAuth()
    * 7. Verify password using bcrypt
-   * 8. Generate JWT token
-   * 9. Return token response
+   * 8. Check if this is first time login (last_login is null)
+   * 9. Generate JWT token
+   * 10. Update last_login timestamp
+   * 11. Return token response with first_time_login indicator
    *
    * @param dto - Login credentials
    * @param lang - Language for i18n (optional)
-   * @returns Login response with access token
+   * @returns Login response with access token, first_time_login, and last_login
    * @throws UnauthorizedException - Invalid credentials or deleted account
    * @throws ForbiddenException - Email not verified
    * @throws InternalServerErrorException - Token generation failed
@@ -124,7 +126,11 @@ export class LoginService {
       });
     }
 
-    // Step 7: Generate JWT token using publicId from UserModel
+    // Step 7: Check if this is first time login
+    const isFirstTimeLogin = user.lastLogin === null;
+    const previousLastLogin = user.lastLogin;
+
+    // Step 8: Generate JWT token using publicId from UserModel
     let accessToken: string;
     try {
       accessToken = await this.jwtService.generateAccessToken(user.publicId);
@@ -139,10 +145,24 @@ export class LoginService {
       });
     }
 
-    // Step 8: Log successful login
+    // Step 9: Update last_login timestamp
+    try {
+      await this.repository.updateLastLogin(user.publicId);
+      this.logger.log(
+        `Updated last_login for user: ${user.publicId} (First time: ${isFirstTimeLogin})`,
+      );
+    } catch (error) {
+      // Log error but don't fail the login - user already has valid token
+      this.logger.error(
+        `Failed to update last_login for ${user.publicId}: ${error.message}`,
+        error.stack,
+      );
+    }
+
+    // Step 10: Log successful login
     this.logger.log(`Login successful for user: ${user.publicId}`);
 
-    // Step 9: Return response
+    // Step 11: Return response
     return {
       success: true,
       message: this.i18n.t('login.success', { lang }),
@@ -150,6 +170,8 @@ export class LoginService {
         access_token: accessToken,
         type: JWT_TOKEN_TYPE,
         expiration_time: this.expirationMs,
+        first_time_login: isFirstTimeLogin,
+        last_login: previousLastLogin,
       },
     };
   }

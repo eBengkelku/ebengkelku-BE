@@ -15,6 +15,8 @@ export interface ILoginResponseData {
   access_token: string;
   type: 'Bearer';
   expiration_time: number;
+  first_time_login: boolean;
+  last_login: Date | null;
 }
 
 /**
@@ -46,6 +48,7 @@ export interface IUserRow {
   id_creator?: string | null;
   id_updater?: string | null;
   is_encrypted: boolean;
+  last_login?: Date | null;
 }
 
 /**

@@ -1,0 +1,26 @@
+{
+  "title": "Produk Alat",
+  "validation": {
+    "warranty_months": {
+      "integer": "Bulan garansi harus berupa bilangan bulat",
+      "min": "Bulan garansi minimal 0"
+    }
+  },
+  "success": {
+    "found": "Produk alat ditemukan",
+    "created": "Produk alat berhasil dibuat",
+    "updated": "Produk alat berhasil diperbarui",
+    "deleted": "Produk alat berhasil dihapus"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Bisnis tidak aktif atau tidak ditemukan",
+      "notFound": "Bisnis tidak ditemukan",
+      "accessDenied": "Akses ke bisnis ditolak"
+    },
+    "notFound": "Produk alat tidak ditemukan",
+    "productNotFound": "Produk tidak ditemukan atau bukan milik bisnis ini",
+    "alreadyExists": "Data produk alat sudah ada untuk produk ini",
+    "notBelongToBusiness": "Produk bukan milik bisnis ini"
+  }
+}

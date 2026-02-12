@@ -53,11 +53,7 @@ export class BusinessController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ResponseMessage('businesses.created')
-  @ApiOperation({
-    summary: 'Create business',
-    description:
-      'Create a workshop/business. Owner is taken from JWT. Optional: tagline, phone, address, latitude, longitude, image, cover_image, business_hours[].',
-  })
+  @ApiOperation({ summary: 'Create new business' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -124,10 +120,75 @@ export class BusinessController {
   })
   @ApiResponse({
     status: 201,
-    description: 'Business created with business_hours',
+    description: 'Business created successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Business created successfully',
+        data: {
+          business: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            owner_id: 'user-uuid-internal',
+            name: 'Bengkel Jaya Motor',
+            tagline: 'Service terpercaya sejak 2010',
+            status: 'pending',
+            phone: '+6281234567890',
+            image: '/var/www/files/images/2026/02/abc123.jpg',
+            cover_image: null,
+            latitude: '-6.2088',
+            longitude: '106.8456',
+            address: 'Jl. Sudirman No. 123, Jakarta',
+            created_at: '2026-02-05T08:00:00.000Z',
+            updated_at: '2026-02-05T08:00:00.000Z',
+            deleted_at: null,
+            id_creator: 'public-uuid',
+            id_updater: null,
+          },
+          business_hours: [
+            {
+              id: '660e8400-e29b-41d4-a716-446655440001',
+              business_id: '550e8400-e29b-41d4-a716-446655440000',
+              day_of_week: 1,
+              open_time: '08:00',
+              close_time: '17:00',
+              created_at: '2026-02-05T08:00:00.000Z',
+              updated_at: null,
+              deleted_at: null,
+              id_creator: 'public-uuid',
+              id_updater: null,
+            },
+          ],
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [
+          {
+            field: 'name',
+            message: 'Business name is required',
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'BUSINESS_OWNER_REQUIRED',
+        message: 'Owner identity is required. Please provide a valid JWT.',
+      },
+    },
+  })
   async create(
     @Body() dto: CreateBusinessDto,
     @Req()
@@ -208,12 +269,7 @@ export class BusinessController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ResponseMessage('businesses.listed')
-  @ApiOperation({
-    summary: 'Get all businesses owned by authenticated user',
-    description:
-      'Returns all businesses with their operating hours for the current user. ' +
-      'Owner is automatically determined from JWT. Returns empty array if no businesses found.',
-  })
+  @ApiOperation({ summary: 'Get all businesses with operating hours' })
   @ApiResponse({
     status: 200,
     description: 'Businesses retrieved successfully',
@@ -306,7 +362,14 @@ export class BusinessController {
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized - Invalid or missing JWT token',
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'BUSINESS_OWNER_REQUIRED',
+        message: 'Owner identity is required. Please provide a valid JWT.',
+      },
+    },
   })
   async findAll(
     @Req()
@@ -360,16 +423,10 @@ export class BusinessController {
   @Get(':business_id')
   @HttpCode(HttpStatus.OK)
   @ResponseMessage('businesses.found')
-  @ApiOperation({
-    summary: 'Get a specific business by ID',
-    description:
-      'Returns a specific business with its operating hours. ' +
-      'Owner is automatically determined from JWT. ' +
-      'Only the owner of the business can access this endpoint.',
-  })
+  @ApiOperation({ summary: 'Get business by ID' })
   @ApiResponse({
     status: 200,
-    description: 'Business retrieved successfully',
+    description: 'Business found',
     schema: {
       type: 'object',
       properties: {
@@ -470,15 +527,36 @@ export class BusinessController {
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized - Invalid or missing JWT token',
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'BUSINESS_OWNER_REQUIRED',
+        message: 'Owner identity is required. Please provide a valid JWT.',
+      },
+    },
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - User is not the owner of the business',
+    description: 'Forbidden',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'BUSINESS_ACCESS_DENIED',
+        message: 'You do not have permission to access this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
-    description: 'Not Found - Business does not exist or has been deleted',
+    description: 'Business not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'BUSINESS_NOT_FOUND',
+        message: 'Business not found',
+      },
+    },
   })
   async findOne(
     @Param('business_id') businessId: string,

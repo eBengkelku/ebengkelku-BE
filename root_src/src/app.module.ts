@@ -21,6 +21,8 @@ import { CategoriesModule } from './domains/categories/categories.module';
 import { TagsModule } from './domains/tags/tags.module';
 import { BusinessesModule } from './domains/businesses/businesses.module';
 import { ServicesModule } from './domains/services/services.module';
+import { ProductTypesModule } from './domains/product-types/product-types.module';
+import { ProductCategoriesModule } from './domains/product-categories/product-categories.module';
 
 // Jobs
 import { UserEncryptionModule } from './jobs/user-encryption';
@@ -96,6 +98,8 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     BusinessesModule, // Business/workshop registration
     ServicesModule, // Service management
     ProductsModule,
+    ProductTypesModule, // Product type management
+    ProductCategoriesModule, // Product category management
     // Jobs
     UserEncryptionModule, // PII encryption cron job
     // Auth Registration

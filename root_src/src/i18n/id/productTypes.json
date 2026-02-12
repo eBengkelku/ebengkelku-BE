@@ -1,0 +1,32 @@
+{
+  "title": "Jenis Produk",
+  "validation": {
+    "name": {
+      "required": "Nama jenis produk wajib diisi",
+      "string": "Nama jenis produk harus berupa teks",
+      "length": "Nama jenis produk harus antara 1 dan 100 karakter"
+    },
+    "business_id": {
+      "required": "ID bisnis wajib diisi",
+      "uuid": "ID bisnis harus berupa format UUID yang valid"
+    }
+  },
+  "success": {
+    "listed": "Jenis produk berhasil diambil",
+    "found": "Jenis produk ditemukan",
+    "created": "Jenis produk berhasil dibuat",
+    "updated": "Jenis produk berhasil diperbarui",
+    "deleted": "Jenis produk berhasil dihapus"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Bisnis tidak aktif atau tidak ditemukan",
+      "notFound": "Bisnis tidak ditemukan",
+      "accessDenied": "Akses ke bisnis ditolak"
+    },
+    "notFound": "Jenis produk tidak ditemukan",
+    "notFoundDetail": "Jenis produk dengan ID {id} tidak ditemukan",
+    "nameAlreadyExists": "Nama jenis produk '{name}' sudah ada",
+    "hasCategories": "Tidak dapat menghapus jenis produk karena memiliki kategori yang aktif"
+  }
+}

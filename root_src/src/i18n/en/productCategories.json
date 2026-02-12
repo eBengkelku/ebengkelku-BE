@@ -1,0 +1,40 @@
+{
+  "title": "Product Categories",
+  "validation": {
+    "name": {
+      "required": "Product category name is required",
+      "string": "Product category name must be a text value",
+      "length": "Product category name must be between 1 and 255 characters"
+    },
+    "description": {
+      "string": "Description must be a text value"
+    },
+    "product_type_id": {
+      "required": "Product type ID is required",
+      "uuid": "Product type ID must be a valid UUID format"
+    },
+    "business_id": {
+      "required": "Business ID is required",
+      "uuid": "Business ID must be a valid UUID format"
+    }
+  },
+  "success": {
+    "listed": "Product categories retrieved successfully",
+    "found": "Product category found successfully",
+    "created": "Product category created successfully",
+    "updated": "Product category updated successfully",
+    "deleted": "Product category deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "notFound": "Product category not found",
+    "notFoundDetail": "Product category with ID {id} not found",
+    "nameAlreadyExists": "Product category name '{name}' already exists",
+    "typeNotFound": "Product type not found or has been deleted",
+    "hasProducts": "Cannot delete product category because it has active products"
+  }
+}

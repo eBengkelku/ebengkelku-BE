@@ -1,0 +1,32 @@
+{
+  "title": "Product Types",
+  "validation": {
+    "name": {
+      "required": "Product type name is required",
+      "string": "Product type name must be a text value",
+      "length": "Product type name must be between 1 and 100 characters"
+    },
+    "business_id": {
+      "required": "Business ID is required",
+      "uuid": "Business ID must be a valid UUID format"
+    }
+  },
+  "success": {
+    "listed": "Product types retrieved successfully",
+    "found": "Product type found successfully",
+    "created": "Product type created successfully",
+    "updated": "Product type updated successfully",
+    "deleted": "Product type deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "notFound": "Product type not found",
+    "notFoundDetail": "Product type with ID {id} not found",
+    "nameAlreadyExists": "Product type name '{name}' already exists",
+    "hasCategories": "Cannot delete product type because it has active categories"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "title": "Kategori Produk",
+  "validation": {
+    "name": {
+      "required": "Nama kategori produk wajib diisi",
+      "string": "Nama kategori produk harus berupa teks",
+      "length": "Nama kategori produk harus antara 1 dan 255 karakter"
+    },
+    "description": {
+      "string": "Deskripsi harus berupa teks"
+    },
+    "product_type_id": {
+      "required": "ID jenis produk wajib diisi",
+      "uuid": "ID jenis produk harus berupa format UUID yang valid"
+    },
+    "business_id": {
+      "required": "ID bisnis wajib diisi",
+      "uuid": "ID bisnis harus berupa format UUID yang valid"
+    }
+  },
+  "success": {
+    "listed": "Kategori produk berhasil diambil",
+    "found": "Kategori produk ditemukan",
+    "created": "Kategori produk berhasil dibuat",
+    "updated": "Kategori produk berhasil diperbarui",
+    "deleted": "Kategori produk berhasil dihapus"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Bisnis tidak aktif atau tidak ditemukan",
+      "notFound": "Bisnis tidak ditemukan",
+      "accessDenied": "Akses ke bisnis ditolak"
+    },
+    "notFound": "Kategori produk tidak ditemukan",
+    "notFoundDetail": "Kategori produk dengan ID {id} tidak ditemukan",
+    "nameAlreadyExists": "Nama kategori produk '{name}' sudah ada",
+    "typeNotFound": "Jenis produk tidak ditemukan atau telah dihapus",
+    "hasProducts": "Tidak dapat menghapus kategori produk karena memiliki produk yang aktif"
+  }
+}

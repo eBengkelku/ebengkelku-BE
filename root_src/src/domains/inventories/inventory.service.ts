@@ -50,7 +50,7 @@ export class InventoryService {
     creatorPublicId: string,
     lang = 'en',
   ): Promise<IInventoryWithProduct> {
-    return this.knex.transaction(async (trx) => {
+    await this.knex.transaction(async (trx) => {
       await this.validateBusinessAccess(businessId, creatorPublicId, lang, trx);
 
       // Validate product exists and belongs to business
@@ -73,14 +73,14 @@ export class InventoryService {
       });
 
       await this.repository.insertInventory(inventory.toEntity(), trx);
-
-      // Return with base product info
-      const result = await this.repository.findByProductIdWithProduct(
-        productId,
-        businessId,
-      );
-      return result!;
     });
+
+    // Read back after transaction commits so the pool connection can see the row
+    const result = await this.repository.findByProductIdWithProduct(
+      productId,
+      businessId,
+    );
+    return result!;
   }
 
   /**

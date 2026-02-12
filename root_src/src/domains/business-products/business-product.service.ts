@@ -48,7 +48,7 @@ export class BusinessProductService {
     creatorPublicId: string,
     lang = 'en',
   ): Promise<IBusinessProductWithCategory> {
-    return this.knex.transaction(async (trx) => {
+    const productId = await this.knex.transaction(async (trx) => {
       await this.validateBusinessAccess(businessId, creatorPublicId, lang, trx);
 
       // Validate category exists and is active
@@ -69,13 +69,15 @@ export class BusinessProductService {
 
       await this.repository.insertProduct(product.toEntity(), trx);
 
-      // Return with category info
-      const result = await this.repository.findByIdWithCategory(
-        product.getId(),
-        businessId,
-      );
-      return result!;
+      return product.getId();
     });
+
+    // Read back after transaction commits so the pool connection can see the row
+    const result = await this.repository.findByIdWithCategory(
+      productId,
+      businessId,
+    );
+    return result!;
   }
 
   /**

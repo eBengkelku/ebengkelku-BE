@@ -1,0 +1,47 @@
+{
+  "title": "Produk Bisnis",
+  "validation": {
+    "name": {
+      "required": "Nama produk wajib diisi",
+      "string": "Nama produk harus berupa teks",
+      "length": "Nama produk harus antara 1 dan 255 karakter"
+    },
+    "description": {
+      "string": "Deskripsi harus berupa teks"
+    },
+    "price": {
+      "required": "Harga wajib diisi",
+      "integer": "Harga harus berupa bilangan bulat",
+      "min": "Harga minimal 1"
+    },
+    "category_id": {
+      "required": "ID kategori wajib diisi",
+      "uuid": "ID kategori harus berupa format UUID yang valid"
+    },
+    "unit": {
+      "string": "Satuan harus berupa teks",
+      "length": "Satuan harus antara 1 dan 50 karakter"
+    },
+    "status": {
+      "invalid": "Status harus salah satu dari: active, draft, archived"
+    }
+  },
+  "success": {
+    "listed": "Produk berhasil diambil",
+    "found": "Produk ditemukan",
+    "created": "Produk berhasil dibuat",
+    "updated": "Produk berhasil diperbarui",
+    "deleted": "Produk berhasil dihapus"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Bisnis tidak aktif atau tidak ditemukan",
+      "notFound": "Bisnis tidak ditemukan",
+      "accessDenied": "Akses ke bisnis ditolak"
+    },
+    "notFound": "Produk tidak ditemukan",
+    "notFoundDetail": "Produk dengan ID {id} tidak ditemukan",
+    "notBelongToBusiness": "Produk bukan milik bisnis ini",
+    "categoryNotFound": "Kategori produk tidak ditemukan atau telah dihapus"
+  }
+}

@@ -5,8 +5,6 @@ import { DatabaseModule } from '../../database/database.module';
 import { DatabaseService } from '../../database/database.service';
 import { I18nService } from 'nestjs-i18n';
 import { AuthModule } from '../../auth/auth.module';
-import { CreateProductDto } from '../../domains/products/dto/create-product.dto';
-import { ProductService } from '../../domains/products/product.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import 'reflect-metadata';
 

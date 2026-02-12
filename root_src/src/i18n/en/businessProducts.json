@@ -1,0 +1,47 @@
+{
+  "title": "Business Products",
+  "validation": {
+    "name": {
+      "required": "Product name is required",
+      "string": "Product name must be a text value",
+      "length": "Product name must be between 1 and 255 characters"
+    },
+    "description": {
+      "string": "Description must be a text value"
+    },
+    "price": {
+      "required": "Price is required",
+      "integer": "Price must be a whole number (integer)",
+      "min": "Price must be at least 1"
+    },
+    "category_id": {
+      "required": "Category ID is required",
+      "uuid": "Category ID must be a valid UUID format"
+    },
+    "unit": {
+      "string": "Unit must be a text value",
+      "length": "Unit must be between 1 and 50 characters"
+    },
+    "status": {
+      "invalid": "Status must be one of: active, draft, archived"
+    }
+  },
+  "success": {
+    "listed": "Products retrieved successfully",
+    "found": "Product found successfully",
+    "created": "Product created successfully",
+    "updated": "Product updated successfully",
+    "deleted": "Product deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "notFound": "Product not found",
+    "notFoundDetail": "Product with ID {id} not found",
+    "notBelongToBusiness": "Product does not belong to this business",
+    "categoryNotFound": "Product category not found or has been deleted"
+  }
+}

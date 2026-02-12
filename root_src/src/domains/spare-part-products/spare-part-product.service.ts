@@ -40,6 +40,47 @@ export class SparePartProductService {
   // ============================================================================
 
   /**
+   * Finds all spare part products for a business with pagination
+   */
+  async findAll(
+    businessId: string,
+    pagination: { page: number; limit: number },
+    userPublicId: string,
+    lang = 'en',
+  ): Promise<{
+    data: ISparePartProductWithBaseProduct[];
+    meta: {
+      current_page: number;
+      per_page: number;
+      total: number;
+      last_page: number;
+    };
+  }> {
+    await this.validateBusinessAccess(
+      businessId,
+      userPublicId,
+      lang,
+      this.knex,
+    );
+
+    const { page = 1, limit = 10 } = pagination;
+    const result = await this.repository.findAllByBusiness(
+      businessId,
+      pagination,
+    );
+
+    return {
+      data: result.data,
+      meta: {
+        current_page: page,
+        per_page: limit,
+        total: result.total,
+        last_page: Math.ceil(result.total / limit),
+      },
+    };
+  }
+
+  /**
    * Creates a spare part product extension for an existing base product
    */
   async create(

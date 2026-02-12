@@ -11,6 +11,7 @@
   },
   "success": {
     "found": "Spare part product found successfully",
+    "listed": "Spare part products retrieved successfully",
     "created": "Spare part product created successfully",
     "updated": "Spare part product updated successfully",
     "deleted": "Spare part product deleted successfully"

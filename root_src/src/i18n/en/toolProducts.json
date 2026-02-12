@@ -8,6 +8,7 @@
   },
   "success": {
     "found": "Tool product found successfully",
+    "listed": "Tool products retrieved successfully",
     "created": "Tool product created successfully",
     "updated": "Tool product updated successfully",
     "deleted": "Tool product deleted successfully"

@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Headers,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiQuery,
   ApiHeader,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/jwt.guard';
@@ -96,6 +98,60 @@ export class SparePartProductController {
       businessId,
       productId,
       dto,
+      user.sub,
+      lang,
+    );
+  }
+
+  // ============================================================================
+  // READ ALL
+  // ============================================================================
+
+  @Get(':businessId')
+  @ApiOperation({ summary: 'Get all spare part products for a business' })
+  @ApiParam({
+    name: 'businessId',
+    description: 'Business UUID',
+    type: String,
+  })
+  @ApiHeader({
+    name: 'x-lang',
+    required: false,
+    schema: { enum: ['en', 'id'], default: 'en' },
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Spare part products retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied or business inactive',
+  })
+  @ApiResponse({ status: 404, description: 'Business not found' })
+  @ResponseMessage('sparePartProducts.success.listed')
+  async findAll(
+    @Param('businessId') businessId: string,
+    @CurrentUser() user: { sub: string },
+    @Headers('x-lang') lang = 'en',
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.sparePartProductService.findAll(
+      businessId,
+      { page, limit },
       user.sub,
       lang,
     );

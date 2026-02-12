@@ -1,0 +1,31 @@
+{
+  "title": "Inventories",
+  "validation": {
+    "quantity": {
+      "integer": "Quantity must be a whole number (integer)",
+      "min": "Quantity must be at least 0"
+    },
+    "min_stock": {
+      "integer": "Minimum stock must be a whole number (integer)",
+      "min": "Minimum stock must be at least 0"
+    }
+  },
+  "success": {
+    "found": "Inventories retrieved successfully",
+    "foundOne": "Inventory found successfully",
+    "created": "Inventory created successfully",
+    "updated": "Inventory updated successfully",
+    "deleted": "Inventory deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "notFound": "Inventory not found",
+    "productNotFound": "Product not found or does not belong to this business",
+    "alreadyExists": "Inventory data already exists for this product",
+    "notBelongToBusiness": "Product does not belong to this business"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Inventaris",
+  "validation": {
+    "quantity": {
+      "integer": "Jumlah harus berupa bilangan bulat",
+      "min": "Jumlah minimal 0"
+    },
+    "min_stock": {
+      "integer": "Stok minimum harus berupa bilangan bulat",
+      "min": "Stok minimum minimal 0"
+    }
+  },
+  "success": {
+    "found": "Inventaris berhasil ditemukan",
+    "foundOne": "Inventaris ditemukan",
+    "created": "Inventaris berhasil dibuat",
+    "updated": "Inventaris berhasil diperbarui",
+    "deleted": "Inventaris berhasil dihapus"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Bisnis tidak aktif atau tidak ditemukan",
+      "notFound": "Bisnis tidak ditemukan",
+      "accessDenied": "Akses ke bisnis ditolak"
+    },
+    "notFound": "Inventaris tidak ditemukan",
+    "productNotFound": "Produk tidak ditemukan atau bukan milik bisnis ini",
+    "alreadyExists": "Data inventaris sudah ada untuk produk ini",
+    "notBelongToBusiness": "Produk bukan milik bisnis ini"
+  }
+}

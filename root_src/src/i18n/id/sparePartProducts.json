@@ -1,0 +1,29 @@
+{
+  "title": "Produk Spare Part",
+  "validation": {
+    "brand": {
+      "string": "Merek harus berupa teks",
+      "length": "Merek harus antara 1 dan 255 karakter"
+    },
+    "grade": {
+      "invalid": "Grade harus salah satu dari: genuine, aftermarket"
+    }
+  },
+  "success": {
+    "found": "Produk spare part ditemukan",
+    "created": "Produk spare part berhasil dibuat",
+    "updated": "Produk spare part berhasil diperbarui",
+    "deleted": "Produk spare part berhasil dihapus"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Bisnis tidak aktif atau tidak ditemukan",
+      "notFound": "Bisnis tidak ditemukan",
+      "accessDenied": "Akses ke bisnis ditolak"
+    },
+    "notFound": "Produk spare part tidak ditemukan",
+    "productNotFound": "Produk tidak ditemukan atau bukan milik bisnis ini",
+    "alreadyExists": "Data produk spare part sudah ada untuk produk ini",
+    "notBelongToBusiness": "Produk bukan milik bisnis ini"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "title": "Spare Part Products",
+  "validation": {
+    "brand": {
+      "string": "Brand must be a text value",
+      "length": "Brand must be between 1 and 255 characters"
+    },
+    "grade": {
+      "invalid": "Grade must be one of: genuine, aftermarket"
+    }
+  },
+  "success": {
+    "found": "Spare part product found successfully",
+    "created": "Spare part product created successfully",
+    "updated": "Spare part product updated successfully",
+    "deleted": "Spare part product deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "notFound": "Spare part product not found",
+    "productNotFound": "Product not found or does not belong to this business",
+    "alreadyExists": "Spare part product data already exists for this product",
+    "notBelongToBusiness": "Product does not belong to this business"
+  }
+}

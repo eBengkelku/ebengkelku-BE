@@ -1,0 +1,26 @@
+{
+  "title": "Tool Products",
+  "validation": {
+    "warranty_months": {
+      "integer": "Warranty months must be a whole number (integer)",
+      "min": "Warranty months must be at least 0"
+    }
+  },
+  "success": {
+    "found": "Tool product found successfully",
+    "created": "Tool product created successfully",
+    "updated": "Tool product updated successfully",
+    "deleted": "Tool product deleted successfully"
+  },
+  "errors": {
+    "business": {
+      "inactive": "Business is inactive or not found",
+      "notFound": "Business not found",
+      "accessDenied": "Access to business denied"
+    },
+    "notFound": "Tool product not found",
+    "productNotFound": "Product not found or does not belong to this business",
+    "alreadyExists": "Tool product data already exists for this product",
+    "notBelongToBusiness": "Product does not belong to this business"
+  }
+}

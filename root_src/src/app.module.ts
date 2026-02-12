@@ -23,6 +23,9 @@ import { ServicesModule } from './domains/services/services.module';
 import { ProductTypesModule } from './domains/product-types/product-types.module';
 import { ProductCategoriesModule } from './domains/product-categories/product-categories.module';
 import { BusinessProductsModule } from './domains/business-products/business-products.module';
+import { ToolProductsModule } from './domains/tool-products/tool-products.module';
+import { SparePartProductsModule } from './domains/spare-part-products/spare-part-products.module';
+import { InventoriesModule } from './domains/inventories/inventories.module';
 
 // Jobs
 import { UserEncryptionModule } from './jobs/user-encryption';
@@ -100,6 +103,9 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     ProductTypesModule, // Product type management
     ProductCategoriesModule, // Product category management
     BusinessProductsModule, // Business-scoped product CRUD
+    ToolProductsModule, // Tool product extensions
+    SparePartProductsModule, // Spare part product extensions
+    InventoriesModule, // Inventory management
     // Jobs
     UserEncryptionModule, // PII encryption cron job
     // Auth Registration

@@ -2,3 +2,6 @@
 docker-compose.yaml
 docker-compose.local.yaml
 Makefile
+
+#Ignore cursor AI rules
+.cursor\rules\codacy.mdc

@@ -160,7 +160,7 @@ export class BusinessService {
         owner_id: ownerId,
         name: dto.name.trim(),
         tagline: dto.tagline?.trim() || null,
-        status: 'active',
+        status: 'active', // in the future we'll not assign a default value, but from logic
         phone: dto.phone?.trim() || null,
         image: imagePath,
         cover_image: coverImagePath,

@@ -8,6 +8,7 @@
   },
   "success": {
     "found": "Produk alat ditemukan",
+    "listed": "Produk alat berhasil diambil",
     "created": "Produk alat berhasil dibuat",
     "updated": "Produk alat berhasil diperbarui",
     "deleted": "Produk alat berhasil dihapus"

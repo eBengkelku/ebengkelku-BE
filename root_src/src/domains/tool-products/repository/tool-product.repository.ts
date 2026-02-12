@@ -105,6 +105,54 @@ export class ToolProductRepository extends BaseDomainRepository<
   // ============================================================================
 
   /**
+   * Find all tool products for a business with LEFT JOIN to base products
+   */
+  async findAllByBusiness(
+    businessId: string,
+    pagination: { page: number; limit: number },
+  ): Promise<{ data: IToolProductWithBaseProduct[]; total: number }> {
+    const { page = 1, limit = 10 } = pagination;
+    const offset = (page - 1) * limit;
+
+    // Count query
+    const [{ count }] = await this.knex(this.tableName)
+      .leftJoin('product.products as p', `${this.tableName}.product_id`, 'p.id')
+      .where('p.business_id', businessId)
+      .whereNull(`${this.tableName}.deleted_at`)
+      .whereNull('p.deleted_at')
+      .count('* as count');
+
+    const total = parseInt(count as string, 10);
+
+    // Data query with LEFT JOIN
+    const rows = await this.knex(this.tableName)
+      .leftJoin('product.products as p', `${this.tableName}.product_id`, 'p.id')
+      .where('p.business_id', businessId)
+      .whereNull(`${this.tableName}.deleted_at`)
+      .whereNull('p.deleted_at')
+      .select(
+        `${this.tableName}.*`,
+        'p.id as prod_id',
+        'p.name as prod_name',
+        'p.description as prod_description',
+        'p.price as prod_price',
+        'p.unit as prod_unit',
+        'p.status as prod_status',
+        'p.business_id as prod_business_id',
+        'p.category_id as prod_category_id',
+      )
+      .orderBy(`${this.tableName}.product_id`, 'desc')
+      .limit(limit)
+      .offset(offset);
+
+    const data: IToolProductWithBaseProduct[] = rows.map((row: any) =>
+      this.mapRowToToolProductWithBaseProduct(row),
+    );
+
+    return { data, total };
+  }
+
+  /**
    * Find a tool product by product_id with LEFT JOIN to base products
    */
   async findByProductIdWithBaseProduct(

@@ -87,6 +87,7 @@ describe('ToolProductService', () => {
             updateToolProduct: jest.fn(),
             softDeleteToolProduct: jest.fn(),
             findByProductIdWithBaseProduct: jest.fn(),
+            findAllByBusiness: jest.fn(),
           },
         },
         {
@@ -253,6 +254,76 @@ describe('ToolProductService', () => {
           'en',
         ),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  // =========================================================================
+  // FIND ALL
+  // =========================================================================
+
+  describe('findAll', () => {
+    beforeEach(() => {
+      repository.findUserIdByPublicId.mockResolvedValue(mockUserId);
+    });
+
+    it('should return paginated tool products with meta', async () => {
+      repository.findAllByBusiness.mockResolvedValue({
+        data: [mockToolProductWithBase],
+        total: 1,
+      });
+
+      const result = await service.findAll(
+        mockBusinessId,
+        { page: 1, limit: 10 },
+        mockUserPublicId,
+        'en',
+      );
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0]).toEqual(mockToolProductWithBase);
+      expect(result.meta).toEqual({
+        current_page: 1,
+        per_page: 10,
+        total: 1,
+        last_page: 1,
+      });
+    });
+
+    it('should return empty array when no tool products exist', async () => {
+      repository.findAllByBusiness.mockResolvedValue({
+        data: [],
+        total: 0,
+      });
+
+      const result = await service.findAll(
+        mockBusinessId,
+        { page: 1, limit: 10 },
+        mockUserPublicId,
+        'en',
+      );
+      expect(result.data).toHaveLength(0);
+      expect(result.meta.total).toBe(0);
+      expect(result.meta.last_page).toBe(0);
+    });
+
+    it('should throw NotFoundException when business not found', async () => {
+      mockTrx.mockImplementationOnce((tableName: string) => {
+        const qb: any = {
+          where: jest.fn().mockReturnThis(),
+          whereNull: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          first: jest.fn().mockResolvedValue(null),
+        };
+        return qb;
+      });
+
+      await expect(
+        service.findAll(
+          mockBusinessId,
+          { page: 1, limit: 10 },
+          mockUserPublicId,
+          'en',
+        ),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

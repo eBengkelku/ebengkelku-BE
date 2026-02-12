@@ -11,6 +11,7 @@
   },
   "success": {
     "found": "Produk spare part ditemukan",
+    "listed": "Produk spare part berhasil diambil",
     "created": "Produk spare part berhasil dibuat",
     "updated": "Produk spare part berhasil diperbarui",
     "deleted": "Produk spare part berhasil dihapus"

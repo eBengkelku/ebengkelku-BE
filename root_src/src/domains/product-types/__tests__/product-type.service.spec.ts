@@ -266,12 +266,7 @@ describe('ProductTypeService', () => {
   // ============================================================================
 
   describe('update', () => {
-    const mockProductType = ProductTypeModel.create({
-      id: 'type-123',
-      name: 'Tools',
-      id_creator: 'user-1',
-      created_at: new Date(),
-    });
+    let mockProductType: ProductTypeModel;
 
     const validUpdateDto: UpdateProductTypeDto = {
       name: 'Updated Tools',
@@ -279,6 +274,13 @@ describe('ProductTypeService', () => {
     };
 
     beforeEach(() => {
+      mockProductType = ProductTypeModel.create({
+        id: 'type-123',
+        name: 'Tools',
+        id_creator: 'user-1',
+        created_at: new Date(),
+      });
+
       mockTrx.first.mockResolvedValue(mockBusiness);
       repository.findUserIdByPublicId.mockResolvedValue('user-internal-id');
       repository.findById.mockResolvedValue(mockProductType);

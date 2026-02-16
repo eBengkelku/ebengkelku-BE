@@ -280,14 +280,7 @@ describe('ProductCategoryService', () => {
   // ============================================================================
 
   describe('update', () => {
-    const mockCategory = ProductCategoryModel.create({
-      id: 'cat-123',
-      name: 'Engine Oil',
-      description: 'Various engine oils',
-      product_type_id: 'type-123',
-      id_creator: 'user-1',
-      created_at: new Date(),
-    });
+    let mockCategory: ProductCategoryModel;
 
     const validUpdateDto: UpdateProductCategoryDto = {
       name: 'Brake Fluid',
@@ -295,6 +288,15 @@ describe('ProductCategoryService', () => {
     };
 
     beforeEach(() => {
+      mockCategory = ProductCategoryModel.create({
+        id: 'cat-123',
+        name: 'Engine Oil',
+        description: 'Various engine oils',
+        product_type_id: 'type-123',
+        id_creator: 'user-1',
+        created_at: new Date(),
+      });
+
       mockTrx.first.mockResolvedValue(mockBusiness);
       repository.findUserIdByPublicId.mockResolvedValue('user-internal-id');
       repository.findById.mockResolvedValue(mockCategory);
@@ -360,19 +362,21 @@ describe('ProductCategoryService', () => {
   // ============================================================================
 
   describe('delete', () => {
-    const mockCategory = ProductCategoryModel.create({
-      id: 'cat-123',
-      name: 'Engine Oil',
-      product_type_id: 'type-123',
-      id_creator: 'user-1',
-      created_at: new Date(),
-    });
+    let mockCategory: ProductCategoryModel;
 
     const validDeleteDto: DeleteProductCategoryDto = {
       business_id: 'business-123',
     };
 
     beforeEach(() => {
+      mockCategory = ProductCategoryModel.create({
+        id: 'cat-123',
+        name: 'Engine Oil',
+        product_type_id: 'type-123',
+        id_creator: 'user-1',
+        created_at: new Date(),
+      });
+
       mockTrx.first.mockResolvedValue(mockBusiness);
       repository.findUserIdByPublicId.mockResolvedValue('user-internal-id');
       repository.findById.mockResolvedValue(mockCategory);

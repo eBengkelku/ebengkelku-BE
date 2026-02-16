@@ -68,6 +68,7 @@ describe('DomainExceptionFilter', () => {
 
       expect(callArgs).toEqual({
         success: false,
+        data: null,
         message: 'Translated: domain.products.validation.price_negative',
         errors: [
           {
@@ -114,6 +115,7 @@ describe('DomainExceptionFilter', () => {
 
       expect(callArgs).toEqual({
         success: false,
+        data: null,
         message: 'Translated: domain.products.not_found',
         errors: [
           {
@@ -144,6 +146,7 @@ describe('DomainExceptionFilter', () => {
 
       expect(callArgs).toEqual({
         success: false,
+        data: null,
         message: 'Translated: domain.products.sku_already_exists',
         errors: [
           {

@@ -55,31 +55,40 @@ describe('BusinessProductService', () => {
   let mockTrx: any;
 
   beforeEach(async () => {
-    mockTrx = jest.fn().mockReturnValue({
-      where: jest.fn().mockReturnThis(),
-      whereNull: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      first: jest.fn().mockResolvedValue(mockBusiness),
-    });
-    // For direct table access (trx('table_name'))
-    mockTrx.where = jest.fn().mockReturnThis();
-    mockTrx.whereNull = jest.fn().mockReturnThis();
-    mockTrx.select = jest.fn().mockReturnThis();
-    mockTrx.first = jest.fn().mockResolvedValue(mockBusiness);
+    // Define mock functions that will be shared across usage contexts
+    const mockFirst = jest.fn().mockResolvedValue(mockBusiness);
+    const mockSelect = jest.fn().mockReturnThis();
+    const mockWhere = jest.fn().mockReturnThis();
+    const mockWhereNull = jest.fn().mockReturnThis();
 
+    // The query builder object returned when calling trx('table')
+    const mockQueryBuilder = {
+      where: mockWhere,
+      whereNull: mockWhereNull,
+      select: mockSelect,
+      first: mockFirst,
+    };
+
+    // The mock transaction function itself
+    mockTrx = jest.fn().mockReturnValue(mockQueryBuilder);
+
+    // Attach same mock functions to properties for direct access if needed
+    // and so tests can do mockTrx.first.mockResolvedValue(...)
+    mockTrx.first = mockFirst;
+    mockTrx.select = mockSelect;
+    mockTrx.where = mockWhere;
+    mockTrx.whereNull = mockWhereNull;
+
+    // Define mockKnex to handle transaction calls
     const mockKnex: any = {
       transaction: jest.fn().mockImplementation(async (callback: any) => {
         return callback(mockTrx);
       }),
     };
-    // Also support mockKnex('table') — which is essentially the same mockTrx
+
+    // Make knex callable (e.g. this.knex('table')) and attach transaction method
     const knexCallable: any = Object.assign(
-      jest.fn().mockReturnValue({
-        where: jest.fn().mockReturnThis(),
-        whereNull: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        first: jest.fn().mockResolvedValue(mockBusiness),
-      }),
+      jest.fn().mockReturnValue(mockQueryBuilder),
       mockKnex,
     );
 

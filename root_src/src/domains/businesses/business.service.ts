@@ -17,6 +17,8 @@ import { Knex } from 'knex';
 
 const HH_MM_REGEX = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
+import { BusinessStatus } from './contracts/business-status.enum';
+
 @Injectable()
 export class BusinessService {
   constructor(
@@ -160,7 +162,7 @@ export class BusinessService {
         owner_id: ownerId,
         name: dto.name.trim(),
         tagline: dto.tagline?.trim() || null,
-        status: 'active', // in the future we'll not assign a default value, but from logic
+        status: BusinessStatus.ACTIVE,
         phone: dto.phone?.trim() || null,
         image: imagePath,
         cover_image: coverImagePath,
@@ -210,7 +212,8 @@ export class BusinessService {
         owner_id: ownerId,
         name: businessRow.name as string,
         tagline: (businessRow.tagline as string) ?? null,
-        status: 'pending',
+        status: businessRow.status as BusinessStatus,
+
         phone: (businessRow.phone as string) ?? null,
         image: imagePath,
         cover_image: coverImagePath,

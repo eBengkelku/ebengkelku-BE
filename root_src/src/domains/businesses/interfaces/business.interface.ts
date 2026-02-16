@@ -7,12 +7,14 @@
  * @interface IBusiness
  */
 
+import { BusinessStatus } from '../contracts/business-status.enum';
+
 export interface IBusiness {
   id: string;
   owner_id: string;
   name: string;
   tagline?: string | null;
-  status: string;
+  status: BusinessStatus;
   phone?: string | null;
   image?: string | null;
   cover_image?: string | null;

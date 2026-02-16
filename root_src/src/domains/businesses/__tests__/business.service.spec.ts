@@ -11,6 +11,7 @@ import { FileService } from '../../../domains/files/file.service';
 import { BusinessRepository } from '../repository/business.repository';
 import { I18nService } from 'nestjs-i18n';
 import { CreateBusinessDto } from '../dto/create-business.dto';
+import { BusinessStatus } from '../contracts/business-status.enum';
 
 describe('BusinessService', () => {
   let service: BusinessService;
@@ -134,7 +135,7 @@ describe('BusinessService', () => {
       const result = await service.create(dto, ownerId, publicId, {});
       expect(result.business).toBeDefined();
       expect(result.business.name).toBe('My Workshop');
-      expect(result.business.status).toBe('active');
+      expect(result.business.status).toBe(BusinessStatus.ACTIVE);
       expect(result.business.owner_id).toBe(ownerId);
       expect(result.business_hours).toEqual([]);
     });

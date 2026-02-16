@@ -3,6 +3,8 @@ import { Knex } from 'knex';
 import { DatabaseService } from '../../../database/database.service';
 import type { IBusiness, IBusinessHours } from '../interfaces';
 
+import { BusinessStatus } from '../contracts/business-status.enum';
+
 const BUSINESS_SCHEMA = 'business';
 
 /**
@@ -143,7 +145,7 @@ export class BusinessRepository {
       owner_id: first.owner_id,
       name: first.name,
       tagline: first.tagline ?? null,
-      status: first.status,
+      status: first.status as BusinessStatus,
       phone: first.phone ?? null,
       image: first.image ?? null,
       cover_image: first.cover_image ?? null,
@@ -261,7 +263,7 @@ export class BusinessRepository {
             owner_id: row.owner_id,
             name: row.name,
             tagline: row.tagline ?? null,
-            status: row.status,
+            status: row.status as BusinessStatus,
             phone: row.phone ?? null,
             image: row.image ?? null,
             cover_image: row.cover_image ?? null,

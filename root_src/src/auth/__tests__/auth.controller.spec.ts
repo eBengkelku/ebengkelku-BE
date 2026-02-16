@@ -19,8 +19,6 @@ describe('AuthController - getCurrentUser with JwtAuthGuard', () => {
     sub: 'user-123',
     email: 'test@example.com',
     name: 'Test User',
-    preferred_username: 'testuser',
-    realm_access: { roles: ['user'] },
   };
 
   const mockAuthService = {

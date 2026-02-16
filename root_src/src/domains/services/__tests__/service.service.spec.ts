@@ -116,6 +116,7 @@ describe('ServiceService', () => {
     beforeEach(() => {
       // Mock business validation
       mockTrx.first.mockResolvedValue(mockBusiness);
+      repository.findUserIdByPublicId.mockResolvedValue('user-123');
       repository.nameExistsForBusiness.mockResolvedValue(false);
       repository.batchInsert.mockResolvedValue(undefined);
     });
@@ -221,6 +222,7 @@ describe('ServiceService', () => {
 
     beforeEach(() => {
       mockTrx.first.mockResolvedValue(mockBusiness);
+      repository.findUserIdByPublicId.mockResolvedValue('user-123');
       repository.findExistingNames.mockResolvedValue([]);
       repository.batchInsert.mockResolvedValue(undefined);
     });
@@ -243,7 +245,7 @@ describe('ServiceService', () => {
     it('should throw BadRequestException when batch size exceeds limit', async () => {
       const largeBatchDto = {
         business_id: 'business-123',
-        services: Array(21).fill({ name: 'Service', price: 100000 }),
+        services: new Array(21).fill({ name: 'Service', price: 100000 }),
       };
 
       await expect(
@@ -351,6 +353,7 @@ describe('ServiceService', () => {
   describe('findByBusinessId', () => {
     beforeEach(() => {
       mockTrx.first.mockResolvedValue(mockBusiness);
+      repository.findUserIdByPublicId.mockResolvedValue('user-123');
     });
 
     it('should return services for valid business', async () => {
@@ -408,6 +411,7 @@ describe('ServiceService', () => {
 
     it('should handle repository errors', async () => {
       mockTrx.first.mockResolvedValue(mockBusiness);
+      repository.findUserIdByPublicId.mockResolvedValue('user-123');
       repository.nameExistsForBusiness.mockRejectedValue(
         new Error('Repository error'),
       );
@@ -419,17 +423,7 @@ describe('ServiceService', () => {
   });
 
   describe('update service', () => {
-    const mockService = ServiceModel.create({
-      id: 'service-123',
-      business_id: 'business-123',
-      name: 'Oil Change Service',
-      description: 'Complete oil change',
-      price: 150000,
-      duration_minutes: 30,
-      daily_quota: 10,
-      id_creator: 'user-123',
-      created_at: new Date(),
-    });
+    let mockService: ServiceModel;
 
     const validUpdateDto: UpdateServiceDto = {
       business_id: 'business-123',
@@ -438,6 +432,18 @@ describe('ServiceService', () => {
     };
 
     beforeEach(() => {
+      mockService = ServiceModel.create({
+        id: 'service-123',
+        business_id: 'business-123',
+        name: 'Oil Change Service',
+        description: 'Complete oil change',
+        price: 150000,
+        duration_minutes: 30,
+        daily_quota: 10,
+        id_creator: 'user-123',
+        created_at: new Date(),
+      });
+
       mockTrx.first.mockResolvedValue(mockBusiness);
       repository.findUserIdByPublicId.mockResolvedValue('user-123');
       repository.findById.mockResolvedValue(mockService);

@@ -20,6 +20,8 @@ const jestConfig: JestConfig = {
     '!src/**/__mocks__/**',
     '!src/**/*.spec.ts',
     '!src/**/*.d.ts',
+    '!src/**/*.module.ts',
+    '!src/**/*.dto.ts',
     '!src/database/migrations/**',
     '!src/database/seeds/**',
   ],

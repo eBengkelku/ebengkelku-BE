@@ -28,6 +28,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*", "knexfile.js", "examples/**/*"],
+  "include": ["src/**/*", "test/**/*", "knexfile.js", "examples/**/*", "jest.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -22,6 +22,8 @@ const jestConfig: JestConfig = {
     '!src/**/*.d.ts',
     '!src/**/*.module.ts',
     '!src/**/*.dto.ts',
+    '!src/domains/**/constants/**',
+    '!src/domains/**/interfaces/**',
     '!src/database/migrations/**',
     '!src/database/seeds/**',
   ],
@@ -33,6 +35,8 @@ const jestConfig: JestConfig = {
     '/__mocks__/',
     '/src/database/migrations/',
     '/src/database/seeds/',
+    '/src/domains/.*/constants/',
+    '/src/domains/.*/interfaces/',
   ],
   transformIgnorePatterns: ['node_modules/(?!(.pnpm/jose@|jose))'],
   moduleNameMapper: {

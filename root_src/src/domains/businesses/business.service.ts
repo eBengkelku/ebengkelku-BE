@@ -238,15 +238,19 @@ export class BusinessService {
     this.validateBusinessHours(dto.business_hours, lang);
 
     const trx = await this.knex.transaction();
+    let imageFileId: string | null = null;
+    let coverFileId: string | null = null;
 
     try {
       // Upload files
       const {
         imagePath,
-        imageFileId: _imageFileId,
+        imageFileId: uploadedImageFileId,
         coverImagePath,
-        coverFileId: _coverFileId,
+        coverFileId: uploadedCoverFileId,
       } = await this.uploadFiles({ image, cover_image });
+      imageFileId = uploadedImageFileId;
+      coverFileId = uploadedCoverFileId;
 
       // Create business record
       const now = new Date();
@@ -303,6 +307,7 @@ export class BusinessService {
 
       return { business, business_hours: hoursEntities };
     } catch (err) {
+      await this.cleanupUploadedFiles(imageFileId, coverFileId);
       await trx.rollback();
       throw err;
     }
@@ -468,6 +473,8 @@ export class BusinessService {
 
     // Start transaction
     const trx = await this.knex.transaction();
+    let imageFileId: string | null = null;
+    let coverFileId: string | null = null;
 
     try {
       const now = new Date();
@@ -475,10 +482,12 @@ export class BusinessService {
       // Upload files if provided
       const {
         imagePath,
-        imageFileId: _imageFileId,
+        imageFileId: uploadedImageFileId,
         coverImagePath,
-        coverFileId: _coverFileId,
+        coverFileId: uploadedCoverFileId,
       } = await this.uploadFiles({ image, cover_image });
+      imageFileId = uploadedImageFileId;
+      coverFileId = uploadedCoverFileId;
 
       // Prepare updates object
       const updates = this.buildBusinessUpdates(dto, {
@@ -526,6 +535,7 @@ export class BusinessService {
 
       return { business, business_hours: hoursRows };
     } catch (err) {
+      await this.cleanupUploadedFiles(imageFileId, coverFileId);
       await trx.rollback();
       throw err;
     }

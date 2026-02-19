@@ -386,9 +386,9 @@ export class BusinessService {
       );
     }
 
-    // 3. Resolve owner_id from JWT sub (prevents spoofing)
+    // 3. Resolve owner_id from JWT sub (prevents spoofing) and validate user existence
     const ownerId = await this.resolveOwnerIdFromSub(sub);
-    const idUpdater = await this.resolveCreatorPublicId(sub);
+    const idUpdater = sub;
 
     // 4. Fetch business INCLUDING soft-deleted for idempotency check
     const result =
@@ -408,19 +408,34 @@ export class BusinessService {
       );
     }
 
-    // 7. Idempotent: if already soft-deleted, return success
-    if (result.business.deleted_at !== null) {
-      return; // Already deleted, return 200 OK
-    }
-
-    // 8. Store file paths for cleanup after DB commit
+    // 7. Store file paths for cleanup after DB commit
     const imagePath = result.business.image ?? null;
     const coverImagePath = result.business.cover_image ?? null;
 
-    // 9. Start transaction for cascade soft-delete
+    // 8. Start transaction for cascade soft-delete
     const trx = await this.knex.transaction();
 
     try {
+      // Re-fetch business row inside the transaction with a row-level lock
+      // to prevent race conditions in concurrent delete scenarios.
+      const lockedBusiness = await trx<IBusiness>('businesses')
+        .where('id', businessId)
+        .forUpdate()
+        .first();
+
+      // If the business was hard-deleted between the initial check and now
+      if (!lockedBusiness) {
+        throw new NotFoundException(
+          this.i18n.t('businesses.errors.notFound', { lang }),
+        );
+      }
+
+      // Idempotent: if already soft-deleted, do nothing
+      if (lockedBusiness.deleted_at !== null) {
+        await trx.commit();
+        return;
+      }
+
       // Cascade soft delete: children first, then parent
       await this.repository.softDeleteBusinessHours(trx, businessId, idUpdater);
       await this.repository.softDeleteBusinessReviews(
@@ -437,8 +452,8 @@ export class BusinessService {
       throw err;
     }
 
-    // 10. Delete physical files after DB commit (log errors, don't throw)
-    await this.cleanupPhysicalFiles(imagePath, coverImagePath);
+    // 9. Delete physical files after DB commit (log errors, don't throw)
+    await this.cleanupPhysicalFiles(imagePath, coverImagePath, businessId);
   }
 
   /**
@@ -448,15 +463,17 @@ export class BusinessService {
    *
    * @param {string | null} imagePath - Path to image file
    * @param {string | null} coverImagePath - Path to cover image file
+   * @param {string} businessId - Business ID for error context
    */
   private async cleanupPhysicalFiles(
     imagePath: string | null,
     coverImagePath: string | null,
+    businessId: string,
   ): Promise<void> {
     const filesToDelete: string[] = [];
 
     // Find file IDs by path
-    if (imagePath) {
+    if (imagePath && imagePath.trim()) {
       try {
         const fileRecord = await this.knex('files.files')
           .where('file_path', imagePath)
@@ -468,11 +485,15 @@ export class BusinessService {
           filesToDelete.push(fileRecord.id);
         }
       } catch (error) {
-        console.error('Failed to find image file record:', imagePath, error);
+        console.error(
+          `Failed to find image file record for business ${businessId}:`,
+          imagePath,
+          error,
+        );
       }
     }
 
-    if (coverImagePath) {
+    if (coverImagePath && coverImagePath.trim()) {
       try {
         const fileRecord = await this.knex('files.files')
           .where('file_path', coverImagePath)
@@ -485,7 +506,7 @@ export class BusinessService {
         }
       } catch (error) {
         console.error(
-          'Failed to find cover image file record:',
+          `Failed to find cover image file record for business ${businessId}:`,
           coverImagePath,
           error,
         );
@@ -497,7 +518,10 @@ export class BusinessService {
       try {
         await this.fileService.deleteFile(fileId);
       } catch (error) {
-        console.error('Failed to delete file:', fileId, error);
+        console.error(
+          `Failed to delete file ${fileId} for business ${businessId}:`,
+          error,
+        );
       }
     }
   }

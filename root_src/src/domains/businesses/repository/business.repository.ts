@@ -418,6 +418,9 @@ export class BusinessRepository {
   /**
    * Soft delete business_hours for a given business.
    * Sets deleted_at = NOW() and id_updater.
+   * Only updates records not yet soft-deleted (whereNull('deleted_at')).
+   * Records previously soft-deleted independently retain their original
+   * deleted_at and id_updater values.
    */
   async softDeleteBusinessHours(
     trx: Knex.Transaction,

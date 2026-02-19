@@ -63,6 +63,7 @@ describe('BusinessController', () => {
         business: mockCreatedBusiness,
         business_hours: mockBusinessHours,
       }),
+      remove: jest.fn().mockResolvedValue(undefined),
     };
 
     mockI18nService = {
@@ -611,6 +612,190 @@ describe('BusinessController', () => {
           publicId,
           'en',
         );
+      });
+    });
+  });
+
+  /**
+   * ========================================================================
+   * Test Suite: remove()
+   * DELETE /v1/businesses/:business_id controller tests
+   * ========================================================================
+   */
+  describe('remove', () => {
+    const targetBusinessId = 'target-business-uuid-del-001';
+
+    const mockReq = (sub?: string, lang = 'en') =>
+      ({
+        user: sub ? { sub } : undefined,
+        headers: { 'x-lang': lang },
+      }) as any;
+
+    beforeEach(() => {
+      mockBusinessService.remove = jest.fn().mockResolvedValue(undefined);
+    });
+
+    // ========================================================================
+    // POSITIVE TEST CASES
+    // ========================================================================
+
+    describe('Positive Test Cases', () => {
+      it('should call service.remove with correct arguments and return void', async () => {
+        const result = await controller.remove(targetBusinessId, mockReq(publicId));
+
+        expect(result).toBeUndefined();
+        expect(mockBusinessService.remove).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+      });
+
+      it('should pass x-lang header to service', async () => {
+        await controller.remove(targetBusinessId, mockReq(publicId, 'id'));
+
+        expect(mockBusinessService.remove).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'id',
+        );
+      });
+
+      it('should default to en language when x-lang header is missing', async () => {
+        const req = { user: { sub: publicId }, headers: {} } as any;
+
+        await controller.remove(targetBusinessId, req);
+
+        expect(mockBusinessService.remove).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+      });
+
+      it('should pass business_id param directly to service', async () => {
+        const uuidId = '550e8400-e29b-41d4-a716-446655440001';
+
+        await controller.remove(uuidId, mockReq(publicId));
+
+        expect(mockBusinessService.remove).toHaveBeenCalledWith(
+          uuidId,
+          publicId,
+          'en',
+        );
+      });
+    });
+
+    // ========================================================================
+    // NEGATIVE TEST CASES
+    // ========================================================================
+
+    describe('Negative Test Cases', () => {
+      it('should throw UnauthorizedException when req.user is undefined', async () => {
+        const req = { headers: { 'x-lang': 'en' } } as any;
+
+        await expect(controller.remove(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
+        expect(mockBusinessService.remove).not.toHaveBeenCalled();
+      });
+
+      it('should throw UnauthorizedException when req.user.sub is undefined', async () => {
+        const req = { user: {}, headers: { 'x-lang': 'en' } } as any;
+
+        await expect(controller.remove(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
+        expect(mockBusinessService.remove).not.toHaveBeenCalled();
+      });
+
+      it('should throw UnauthorizedException when req.user is null', async () => {
+        const req = { user: null, headers: { 'x-lang': 'en' } } as any;
+
+        await expect(controller.remove(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
+        expect(mockBusinessService.remove).not.toHaveBeenCalled();
+      });
+
+      it('should propagate NotFoundException from service', async () => {
+        (mockBusinessService.remove as jest.Mock).mockRejectedValueOnce(
+          new NotFoundException('Business not found'),
+        );
+
+        await expect(
+          controller.remove('non-existent-id', mockReq(publicId)),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should propagate ForbiddenException from service', async () => {
+        (mockBusinessService.remove as jest.Mock).mockRejectedValueOnce(
+          new ForbiddenException('Access denied'),
+        );
+
+        await expect(
+          controller.remove(targetBusinessId, mockReq(publicId)),
+        ).rejects.toThrow(ForbiddenException);
+      });
+
+      it('should propagate UnauthorizedException from service', async () => {
+        (mockBusinessService.remove as jest.Mock).mockRejectedValueOnce(
+          new UnauthorizedException('Invalid token'),
+        );
+
+        await expect(
+          controller.remove(targetBusinessId, mockReq(publicId)),
+        ).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should call i18n.t with ownerRequired key when sub is missing', async () => {
+        const req = { headers: { 'x-lang': 'en' } } as any;
+
+        await expect(controller.remove(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.ownerRequired',
+          { lang: 'en' },
+        );
+      });
+    });
+
+    // ========================================================================
+    // EDGE CASES
+    // ========================================================================
+
+    describe('Edge Cases', () => {
+      it('should handle x-lang as empty string (defaults to en)', async () => {
+        const req = { user: { sub: publicId }, headers: { 'x-lang': '' } } as any;
+
+        await controller.remove(targetBusinessId, req);
+
+        expect(mockBusinessService.remove).toHaveBeenCalledWith(
+          targetBusinessId,
+          publicId,
+          'en',
+        );
+      });
+
+      it('should handle Indonesian language error for missing sub', async () => {
+        const req = { headers: { 'x-lang': 'id' } } as any;
+
+        await expect(controller.remove(targetBusinessId, req)).rejects.toThrow(
+          UnauthorizedException,
+        );
+
+        expect(mockI18nService.t).toHaveBeenCalledWith(
+          'businesses.errors.ownerRequired',
+          { lang: 'id' },
+        );
+      });
+
+      it('should return void (undefined) on successful delete', async () => {
+        const result = await controller.remove(targetBusinessId, mockReq(publicId));
+
+        expect(result).toBeUndefined();
       });
     });
   });

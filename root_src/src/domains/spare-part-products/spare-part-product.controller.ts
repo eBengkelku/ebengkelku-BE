@@ -71,20 +71,104 @@ export class SparePartProductController {
   @ApiResponse({
     status: 201,
     description: 'Spare part product created successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Spare part product created successfully',
+        data: {
+          product_id: '550e8400-e29b-41d4-a716-446655440000',
+          brand: 'Denso',
+          grade: 'genuine',
+          updated_at: null,
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: null,
+          product: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Spark Plug Denso',
+            description: 'High performance spark plug for various models',
+            price: 75000,
+            unit: 'pcs',
+            status: 'active',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [
+          {
+            field: 'grade',
+            message: 'Grade must be one of genuine or aftermarket',
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SPARE_PART_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or product not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        productNotFound: {
+          summary: 'Product not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_NOT_FOUND',
+            message: 'Product not found',
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 409,
     description: 'Spare part product already exists for this product',
+    schema: {
+      example: {
+        statusCode: 409,
+        code: 'SPARE_PART_PRODUCT_ALREADY_EXISTS',
+        message: 'Spare part product already exists for this product',
+      },
+    },
   })
   @ResponseMessage('sparePartProducts.success.created')
   async create(
@@ -134,13 +218,68 @@ export class SparePartProductController {
   @ApiResponse({
     status: 200,
     description: 'Spare part products retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Spare part products retrieved successfully',
+        data: [
+          {
+            product_id: '550e8400-e29b-41d4-a716-446655440000',
+            brand: 'Denso',
+            grade: 'genuine',
+            updated_at: null,
+            deleted_at: null,
+            id_creator: 'public-uuid',
+            id_updater: null,
+            product: {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+              name: 'Spark Plug Denso',
+              description: 'High performance spark plug for various models',
+              price: 75000,
+              unit: 'pcs',
+              status: 'active',
+              business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+              category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+            },
+          },
+        ],
+        pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      },
+    },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SPARE_PART_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
-  @ApiResponse({ status: 404, description: 'Business not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'SPARE_PART_PRODUCT_BUSINESS_NOT_FOUND',
+        message: 'Business not found',
+      },
+    },
+  })
   @ResponseMessage('sparePartProducts.success.listed')
   async findAll(
     @Param('businessId') businessId: string,
@@ -181,15 +320,77 @@ export class SparePartProductController {
   @ApiResponse({
     status: 200,
     description: 'Spare part product found successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Spare part product found successfully',
+        data: {
+          product_id: '550e8400-e29b-41d4-a716-446655440000',
+          brand: 'Denso',
+          grade: 'genuine',
+          updated_at: null,
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: null,
+          product: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Spark Plug Denso',
+            description: 'High performance spark plug for various models',
+            price: 75000,
+            unit: 'pcs',
+            status: 'active',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SPARE_PART_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or spare part product not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        sparePartProductNotFound: {
+          summary: 'Spare part product not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_NOT_FOUND',
+            message: 'Spare part product not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('sparePartProducts.success.found')
   async findOne(
@@ -230,16 +431,93 @@ export class SparePartProductController {
   @ApiResponse({
     status: 200,
     description: 'Spare part product updated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Spare part product updated successfully',
+        data: {
+          product_id: '550e8400-e29b-41d4-a716-446655440000',
+          brand: 'Denso',
+          grade: 'aftermarket',
+          updated_at: '2026-02-05T10:00:00.000Z',
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: 'public-uuid',
+          product: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Spark Plug Denso',
+            description: 'High performance spark plug for various models',
+            price: 75000,
+            unit: 'pcs',
+            status: 'active',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [
+          {
+            field: 'brand',
+            message: 'Brand is too long',
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SPARE_PART_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or spare part product not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        sparePartProductNotFound: {
+          summary: 'Spare part product not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_NOT_FOUND',
+            message: 'Spare part product not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('sparePartProducts.success.updated')
   async update(
@@ -284,15 +562,59 @@ export class SparePartProductController {
   @ApiResponse({
     status: 200,
     description: 'Spare part product deleted successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Spare part product deleted successfully',
+        data: null,
+      },
+    },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SPARE_PART_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or spare part product not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        sparePartProductNotFound: {
+          summary: 'Spare part product not found',
+          value: {
+            statusCode: 404,
+            code: 'SPARE_PART_PRODUCT_NOT_FOUND',
+            message: 'Spare part product not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('sparePartProducts.success.deleted')
   async remove(

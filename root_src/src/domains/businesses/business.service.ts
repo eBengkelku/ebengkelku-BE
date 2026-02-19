@@ -307,8 +307,8 @@ export class BusinessService {
 
       return { business, business_hours: hoursEntities };
     } catch (err) {
-      await this.cleanupUploadedFiles(imageFileId, coverFileId);
       await trx.rollback();
+      await this.cleanupUploadedFiles(imageFileId, coverFileId);
       throw err;
     }
   }
@@ -535,8 +535,8 @@ export class BusinessService {
 
       return { business, business_hours: hoursRows };
     } catch (err) {
-      await this.cleanupUploadedFiles(imageFileId, coverFileId);
       await trx.rollback();
+      await this.cleanupUploadedFiles(imageFileId, coverFileId);
       throw err;
     }
   }

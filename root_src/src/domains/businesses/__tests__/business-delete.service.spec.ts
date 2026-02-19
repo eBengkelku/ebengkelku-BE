@@ -31,6 +31,7 @@ describe('BusinessService - remove()', () => {
   let i18nService: I18nService;
   let mockKnex: any;
   let mockTrx: any;
+  let mockTrxQueryBuilder: any;
   let mockQueryBuilder: any;
 
   const mockBusiness = {
@@ -75,7 +76,15 @@ describe('BusinessService - remove()', () => {
       first: jest.fn().mockResolvedValue(null),
     };
 
-    mockTrx = {
+    // Query builder for trx('businesses').where().forUpdate().first()
+    mockTrxQueryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      forUpdate: jest.fn().mockReturnThis(),
+      first: jest.fn().mockResolvedValue(mockBusiness),
+    };
+
+    // mockTrx must be callable (trx('businesses')) and also have object methods
+    mockTrx = Object.assign(jest.fn(() => mockTrxQueryBuilder), {
       withSchema: jest.fn().mockReturnThis(),
       table: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
@@ -86,7 +95,7 @@ describe('BusinessService - remove()', () => {
       fn: {
         now: jest.fn().mockReturnValue(new Date()),
       },
-    };
+    });
 
     mockKnex = jest.fn(() => mockQueryBuilder) as any;
     mockKnex.transaction = jest.fn().mockResolvedValue(mockTrx);
@@ -383,10 +392,13 @@ describe('BusinessService - remove()', () => {
           business: deletedBusiness,
           business_hours: [],
         });
+      // Simulate the locked business inside the transaction also being deleted
+      mockTrxQueryBuilder.first = jest.fn().mockResolvedValue(deletedBusiness);
 
       await service.remove('business-123', 'user-public-id', 'en');
 
       expect(repository.softDeleteBusiness).not.toHaveBeenCalled();
+      expect(mockTrx.commit).toHaveBeenCalled();
     });
 
     it('HP10: should be idempotent - second DELETE returns success', async () => {
@@ -403,6 +415,8 @@ describe('BusinessService - remove()', () => {
           business: deletedBusiness,
           business_hours: [],
         });
+      // Simulate the locked business inside the transaction also being deleted
+      mockTrxQueryBuilder.first = jest.fn().mockResolvedValue(deletedBusiness);
 
       await service.remove('business-123', 'user-public-id', 'en');
       await service.remove('business-123', 'user-public-id', 'en');
@@ -1498,15 +1512,17 @@ describe('BusinessService - remove()', () => {
         .mockResolvedValue('user-public-id');
       jest
         .spyOn(repository, 'findBusinessByIdIncludingDeleted')
-        .mockResolvedValueOnce({ business: mockBusiness, business_hours: [] })
-        .mockResolvedValueOnce({
-          business: deletedBusiness,
-          business_hours: [],
-        });
+        .mockResolvedValue({ business: mockBusiness, business_hours: [] });
       jest.spyOn(repository, 'softDeleteBusinessHours').mockResolvedValue();
       jest.spyOn(repository, 'softDeleteBusinessReviews').mockResolvedValue();
       jest.spyOn(repository, 'softDeleteServices').mockResolvedValue();
       jest.spyOn(repository, 'softDeleteBusiness').mockResolvedValue();
+      // Simulate the DB-level lock: the second request inside the transaction
+      // sees the business as already deleted (simulates forUpdate locking)
+      mockTrxQueryBuilder.first = jest
+        .fn()
+        .mockResolvedValueOnce(mockBusiness)
+        .mockResolvedValueOnce(deletedBusiness);
 
       const promise1 = service.remove('business-123', 'user-public-id', 'en');
       const promise2 = service.remove('business-123', 'user-public-id', 'en');
@@ -1747,19 +1763,18 @@ describe('BusinessService - remove()', () => {
         .mockResolvedValue('user-public-id');
       jest
         .spyOn(repository, 'findBusinessByIdIncludingDeleted')
-        .mockResolvedValueOnce({ business: mockBusiness, business_hours: [] })
-        .mockResolvedValueOnce({
-          business: deletedBusiness,
-          business_hours: [],
-        })
-        .mockResolvedValueOnce({
-          business: deletedBusiness,
-          business_hours: [],
-        });
+        .mockResolvedValue({ business: mockBusiness, business_hours: [] });
       jest.spyOn(repository, 'softDeleteBusinessHours').mockResolvedValue();
       jest.spyOn(repository, 'softDeleteBusinessReviews').mockResolvedValue();
       jest.spyOn(repository, 'softDeleteServices').mockResolvedValue();
       jest.spyOn(repository, 'softDeleteBusiness').mockResolvedValue();
+      // Simulate the locked business: first call processes, subsequent calls
+      // see the business as already deleted inside the transaction
+      mockTrxQueryBuilder.first = jest
+        .fn()
+        .mockResolvedValueOnce(mockBusiness)
+        .mockResolvedValueOnce(deletedBusiness)
+        .mockResolvedValueOnce(deletedBusiness);
 
       await service.remove('business-123', 'user-public-id', 'en');
       await service.remove('business-123', 'user-public-id', 'en');

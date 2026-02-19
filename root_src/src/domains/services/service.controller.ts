@@ -49,15 +49,87 @@ export class ServiceController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 201, description: 'Service created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 201,
+    description: 'Service created successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Service created successfully',
+        data: {
+          id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          name: 'Oil Change Service',
+          description: 'Standard oil change service',
+          price: 150000,
+          duration_minutes: 30,
+          daily_quota: 10,
+          id_creator: 'public-uuid',
+          created_at: '2026-02-10T10:00:00.000Z',
+          updated_at: null,
+          deleted_at: null,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [
+          { field: 'name', message: 'Service name is required' },
+          { field: 'business_id', message: 'Business ID is required' },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SERVICE_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
-  @ApiResponse({ status: 404, description: 'Business not found' })
-  @ApiResponse({ status: 409, description: 'Service name already exists' })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'SERVICE_BUSINESS_NOT_FOUND',
+        message: 'Business not found',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Service name already exists',
+    schema: {
+      example: {
+        statusCode: 409,
+        code: 'SERVICE_VALIDATION_NAME_DUPLICATE',
+        message: 'Service name already exists',
+      },
+    },
+  })
   @ResponseMessage('services.success.created')
   async create(
     @Body() dto: CreateServiceDto,
@@ -75,14 +147,111 @@ export class ServiceController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 201, description: 'Services created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Services created successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Services created successfully',
+        data: [
+          {
+            id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            name: 'Oil Change Service',
+            description: 'Standard oil change service',
+            price: 150000,
+            duration_minutes: 30,
+            daily_quota: 10,
+            id_creator: 'public-uuid',
+            created_at: '2026-02-10T10:00:00.000Z',
+            updated_at: null,
+            deleted_at: null,
+          },
+          {
+            id: 'b2c3d4e5-f678-9012-abcd-ef1234567890',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            name: 'Tire Rotation',
+            description: 'Rotate tires for even wear',
+            price: 80000,
+            duration_minutes: 20,
+            daily_quota: 15,
+            id_creator: 'public-uuid',
+            created_at: '2026-02-10T10:00:00.000Z',
+            updated_at: null,
+            deleted_at: null,
+          },
+        ],
+      },
+    },
+  })
   @ApiResponse({
     status: 400,
     description: 'Validation error or batch too large',
+    schema: {
+      examples: {
+        validation: {
+          summary: 'Validation error',
+          value: {
+            statusCode: 400,
+            message: 'Validation failed',
+            errors: [{ field: 'services', message: 'Services must be an array' }],
+          },
+        },
+        batchTooLarge: {
+          summary: 'Batch too large',
+          value: {
+            statusCode: 400,
+            code: 'SERVICE_BATCH_TOO_LARGE',
+            message: 'Batch too large (max 20)',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SERVICE_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'SERVICE_BUSINESS_NOT_FOUND',
+        message: 'Business not found',
+      },
+    },
   })
   @ApiResponse({
     status: 409,
     description: 'Duplicate names in batch or database',
+    schema: {
+      example: {
+        statusCode: 409,
+        code: 'SERVICE_VALIDATION_NAME_DUPLICATE',
+        message: 'Duplicate service names are not allowed',
+      },
+    },
   })
   @ResponseMessage('services.success.batchCreated')
   async createBatch(
@@ -96,8 +265,51 @@ export class ServiceController {
   /** Get service by ID */
   @Get('services/:id')
   @ApiOperation({ summary: 'Get service by ID' })
-  @ApiResponse({ status: 200, description: 'Service found' })
-  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Service found',
+    schema: {
+      example: {
+        success: true,
+        message: 'Service found',
+        data: {
+          id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          name: 'Oil Change Service',
+          description: 'Standard oil change service',
+          price: 150000,
+          duration_minutes: 30,
+          daily_quota: 10,
+          id_creator: 'public-uuid',
+          created_at: '2026-02-10T10:00:00.000Z',
+          updated_at: null,
+          deleted_at: null,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Service not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'SERVICE_NOT_FOUND',
+        message: 'Service not found',
+      },
+    },
+  })
   @ResponseMessage('services.success.found')
   async findById(
     @Param('id') id: string,
@@ -346,8 +558,64 @@ export class ServiceController {
   /** Get all services for a business */
   @Get('businesses/:businessId/services')
   @ApiOperation({ summary: 'Get services by business ID' })
-  @ApiResponse({ status: 200, description: 'Services found' })
-  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({
+    status: 200,
+    description: 'Services found',
+    schema: {
+      example: {
+        success: true,
+        message: 'Services found',
+        data: [
+          {
+            id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            name: 'Oil Change Service',
+            description: 'Standard oil change service',
+            price: 150000,
+            duration_minutes: 30,
+            daily_quota: 10,
+            id_creator: 'public-uuid',
+            created_at: '2026-02-10T10:00:00.000Z',
+            updated_at: null,
+            deleted_at: null,
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Access denied',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'SERVICE_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'SERVICE_BUSINESS_NOT_FOUND',
+        message: 'Business not found',
+      },
+    },
+  })
   @ResponseMessage('services.success.listed')
   async findByBusinessId(
     @Param('businessId') businessId: string,

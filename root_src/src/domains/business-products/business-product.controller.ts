@@ -61,16 +61,95 @@ export class BusinessProductController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 201, description: 'Product created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 201,
+    description: 'Product created successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Product created successfully',
+        data: {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          name: 'Oli Mesin Toyota 10W-40',
+          description: 'Oli mesin berkualitas tinggi untuk kendaraan Toyota',
+          price: 85000,
+          unit: 'liter',
+          status: 'active',
+          business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          created_at: '2026-02-05T08:00:00.000Z',
+          updated_at: null,
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: null,
+          category: {
+            id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+            name: 'Engine Oil',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [
+          { field: 'name', message: 'Product name is required' },
+          { field: 'price', message: 'Price must be a positive integer' },
+          { field: 'category_id', message: 'Category ID is required' },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'BUSINESS_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or category not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        categoryNotFound: {
+          summary: 'Category not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_CATEGORY_NOT_FOUND',
+            message: 'Category not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('businessProducts.success.created')
   async create(
@@ -123,13 +202,68 @@ export class BusinessProductController {
   @ApiResponse({
     status: 200,
     description: 'Products retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Products retrieved successfully',
+        data: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Oli Mesin Toyota 10W-40',
+            description: 'Oli mesin berkualitas tinggi untuk kendaraan Toyota',
+            price: 85000,
+            unit: 'liter',
+            status: 'active',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+            created_at: '2026-02-05T08:00:00.000Z',
+            updated_at: null,
+            deleted_at: null,
+            id_creator: 'public-uuid',
+            id_updater: null,
+            category: {
+              id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+              name: 'Engine Oil',
+            },
+          },
+        ],
+        pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      },
+    },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'BUSINESS_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
-  @ApiResponse({ status: 404, description: 'Business not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'BUSINESS_PRODUCT_BUSINESS_NOT_FOUND',
+        message: 'Business not found',
+      },
+    },
+  })
   @ResponseMessage('businessProducts.success.listed')
   async findAll(
     @Param('businessId') businessId: string,
@@ -170,15 +304,80 @@ export class BusinessProductController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 200, description: 'Product found successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product found successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Product found successfully',
+        data: {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          name: 'Oli Mesin Toyota 10W-40',
+          description: 'Oli mesin berkualitas tinggi untuk kendaraan Toyota',
+          price: 85000,
+          unit: 'liter',
+          status: 'active',
+          business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          created_at: '2026-02-05T08:00:00.000Z',
+          updated_at: null,
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: null,
+          category: {
+            id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+            name: 'Engine Oil',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'BUSINESS_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or product not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        productNotFound: {
+          summary: 'Product not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_NOT_FOUND',
+            message: 'Product not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('businessProducts.success.found')
   async findOne(
@@ -216,16 +415,99 @@ export class BusinessProductController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 200, description: 'Product updated successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product updated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Product updated successfully',
+        data: {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          name: 'Oli Mesin Toyota 10W-40 (Updated)',
+          description: 'Updated description',
+          price: 90000,
+          unit: 'liter',
+          status: 'active',
+          business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          created_at: '2026-02-05T08:00:00.000Z',
+          updated_at: '2026-02-05T10:00:00.000Z',
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: 'public-uuid',
+          category: {
+            id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+            name: 'Engine Oil',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [{ field: 'price', message: 'Price must be a positive integer' }],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'BUSINESS_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business, product, or category not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        productNotFound: {
+          summary: 'Product not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_NOT_FOUND',
+            message: 'Product not found',
+          },
+        },
+        categoryNotFound: {
+          summary: 'Category not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_CATEGORY_NOT_FOUND',
+            message: 'Category not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('businessProducts.success.updated')
   async update(
@@ -265,15 +547,62 @@ export class BusinessProductController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 200, description: 'Product deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product deleted successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Product deleted successfully',
+        data: null,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'BUSINESS_PRODUCT_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or product not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        productNotFound: {
+          summary: 'Product not found',
+          value: {
+            statusCode: 404,
+            code: 'BUSINESS_PRODUCT_NOT_FOUND',
+            message: 'Product not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('businessProducts.success.deleted')
   async remove(

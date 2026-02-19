@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Param,
   Req,
@@ -575,5 +576,163 @@ export class BusinessController {
     }
 
     return this.businessService.findOneById(businessId, sub, lang);
+  }
+
+  /**
+   * Delete (soft delete) a business by ID owned by the authenticated user.
+   * Cascades soft delete to business_hours, business_reviews, and services.
+   * Deletes physical image files after successful database transaction.
+   * Only the owner of the business can delete it.
+   * Idempotent: returns 200 OK if business is already soft-deleted.
+   *
+   * @param {string} businessId - UUID of the business (from URL path)
+   * @param {Request} req - Express request with JWT user payload
+   * @returns {Promise<void>}
+   * @throws {UnauthorizedException} If JWT is invalid or user not found
+   * @throws {BadRequestException} If businessId is empty/invalid
+   * @throws {NotFoundException} If business not found
+   * @throws {ForbiddenException} If user is not the owner of the business
+   *
+   * @example
+   * ```
+   * DELETE /v1/businesses/550e8400-e29b-41d4-a716-446655440000
+   * Headers:
+   *   Authorization: Bearer <jwt-token>
+   *   x-lang: en
+   *
+   * Response:
+   * {
+   *   "success": true,
+   *   "statusCode": 200,
+   *   "message": "Business deleted successfully",
+   *   "data": null,
+   *   "errors": null,
+   *   "timestamp": "2026-02-18T10:00:00.000Z",
+   *   "path": "/v1/businesses/550e8400-e29b-41d4-a716-446655440000",
+   *   "requestTime": 45
+   * }
+   * ```
+   */
+  @Delete(':business_id')
+  @HttpCode(HttpStatus.OK)
+  @ResponseMessage('businesses.deleted')
+  @ApiOperation({ summary: 'Delete business by ID (soft delete)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Business deleted successfully',
+    schema: {
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Business deleted successfully',
+        data: null,
+        errors: null,
+        timestamp: '2026-02-18T10:00:00.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440000',
+        requestTime: 45,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid business ID',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 400,
+        message: 'Business ID is required and must be a valid identifier',
+        data: null,
+        errors: [
+          {
+            code: 'INVALID_BUSINESS_ID',
+            message: 'Business ID is required and must be a valid identifier',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:00.000Z',
+        path: '/v1/businesses/invalid',
+        requestTime: 5,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 401,
+        message: 'Owner identity is required. Please provide a valid JWT.',
+        data: null,
+        errors: [
+          {
+            code: 'BUSINESS_OWNER_REQUIRED',
+            message: 'Owner identity is required. Please provide a valid JWT.',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:00.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440000',
+        requestTime: 2,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 403,
+        message: 'You do not have permission to access this business',
+        data: null,
+        errors: [
+          {
+            code: 'BUSINESS_ACCESS_DENIED',
+            message: 'You do not have permission to access this business',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:00.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440000',
+        requestTime: 12,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 404,
+        message: 'Business not found',
+        data: null,
+        errors: [
+          {
+            code: 'BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:00.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440001',
+        requestTime: 8,
+      },
+    },
+  })
+  async remove(
+    @Param('business_id') businessId: string,
+    @Req()
+    req: Request & {
+      user?: { sub: string };
+    },
+  ): Promise<void> {
+    const sub = req.user?.sub;
+    const lang = (req.headers['x-lang'] as string) || 'en';
+
+    if (!sub) {
+      throw new UnauthorizedException(
+        this.i18n.t('businesses.errors.ownerRequired', { lang }),
+      );
+    }
+
+    await this.businessService.remove(businessId, sub, lang);
   }
 }

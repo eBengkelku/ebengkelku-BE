@@ -1,6 +1,8 @@
 {
   "title": "Bisnis",
   "created": "Bisnis berhasil dibuat",
+  "updated": "Bisnis berhasil diperbarui",
+  "deleted": "Bisnis berhasil dihapus",
   "listed": "Bisnis berhasil diambil",
   "found": "Bisnis berhasil ditemukan",
   "validation": {

@@ -300,4 +300,200 @@ export class BusinessRepository {
     // Convert Map to Array (maintains insertion order = created_at DESC)
     return Array.from(businessMap.values());
   }
+
+  /**
+   * Find business by id INCLUDING soft-deleted records.
+   * Used for idempotency check in delete operations.
+   * Returns null if not found at all.
+   */
+  async findBusinessByIdIncludingDeleted(id: string): Promise<{
+    business: IBusiness;
+    business_hours: IBusinessHours[];
+  } | null> {
+    type JoinedRow = {
+      id: string;
+      owner_id: string;
+      name: string;
+      tagline?: string | null;
+      status: string;
+      phone?: string | null;
+      image?: string | null;
+      cover_image?: string | null;
+      latitude?: string | null;
+      longitude?: string | null;
+      address?: string | null;
+      created_at: Date;
+      updated_at?: Date | null;
+      deleted_at?: Date | null;
+      id_creator?: string | null;
+      id_updater?: string | null;
+      hour_id?: string | null;
+      hour_business_id?: string | null;
+      hour_day_of_week?: number | null;
+      hour_open_time?: string | null;
+      hour_close_time?: string | null;
+      hour_updated_at?: Date | null;
+      hour_deleted_at?: Date | null;
+      hour_id_creator?: string | null;
+      hour_id_updater?: string | null;
+    };
+
+    const rows = (await this.knex
+      .withSchema(BUSINESS_SCHEMA)
+      .from('businesses')
+      .leftJoin('business_hours', 'businesses.id', 'business_hours.business_id')
+      .where('businesses.id', id)
+      .orderBy('business_hours.day_of_week')
+      .select(
+        'businesses.id',
+        'businesses.owner_id',
+        'businesses.name',
+        'businesses.tagline',
+        'businesses.status',
+        'businesses.phone',
+        'businesses.image',
+        'businesses.cover_image',
+        'businesses.latitude',
+        'businesses.longitude',
+        'businesses.address',
+        'businesses.created_at',
+        'businesses.updated_at',
+        'businesses.deleted_at',
+        'businesses.id_creator',
+        'businesses.id_updater',
+        'business_hours.id as hour_id',
+        'business_hours.business_id as hour_business_id',
+        'business_hours.day_of_week as hour_day_of_week',
+        'business_hours.open_time as hour_open_time',
+        'business_hours.close_time as hour_close_time',
+        'business_hours.updated_at as hour_updated_at',
+        'business_hours.deleted_at as hour_deleted_at',
+        'business_hours.id_creator as hour_id_creator',
+        'business_hours.id_updater as hour_id_updater',
+      )) as JoinedRow[];
+
+    if (!rows?.length) return null;
+
+    const first = rows[0];
+    const business: IBusiness = {
+      id: first.id,
+      owner_id: first.owner_id,
+      name: first.name,
+      tagline: first.tagline ?? null,
+      status: first.status as BusinessStatus,
+      phone: first.phone ?? null,
+      image: first.image ?? null,
+      cover_image: first.cover_image ?? null,
+      latitude: first.latitude ?? null,
+      longitude: first.longitude ?? null,
+      address: first.address ?? null,
+      created_at: first.created_at,
+      updated_at: first.updated_at ?? null,
+      deleted_at: first.deleted_at ?? null,
+      id_creator: first.id_creator ?? null,
+      id_updater: first.id_updater ?? null,
+    };
+
+    const business_hours: IBusinessHours[] = rows
+      .filter((r) => r.hour_id != null)
+      .map((r) => ({
+        id: r.hour_id,
+        business_id: r.hour_business_id,
+        day_of_week: r.hour_day_of_week,
+        open_time: r.hour_open_time,
+        close_time: r.hour_close_time,
+        updated_at: r.hour_updated_at ?? null,
+        deleted_at: r.hour_deleted_at ?? null,
+        id_creator: r.hour_id_creator ?? null,
+        id_updater: r.hour_id_updater ?? null,
+      })) as IBusinessHours[];
+
+    return { business, business_hours };
+  }
+
+  // ============================================================================
+  // Soft delete operations (for CASCADE delete)
+  // ============================================================================
+
+  /**
+   * Soft delete business_hours for a given business.
+   * Sets deleted_at = NOW() and id_updater.
+   */
+  async softDeleteBusinessHours(
+    trx: Knex.Transaction,
+    businessId: string,
+    idUpdater: string,
+  ): Promise<void> {
+    await trx
+      .withSchema(BUSINESS_SCHEMA)
+      .table('business_hours')
+      .where('business_id', businessId)
+      .whereNull('deleted_at')
+      .update({
+        deleted_at: trx.fn.now(),
+        id_updater: idUpdater,
+      });
+  }
+
+  /**
+   * Soft delete business_reviews for a given business.
+   * Sets deleted_at = NOW() and id_updater.
+   */
+  async softDeleteBusinessReviews(
+    trx: Knex.Transaction,
+    businessId: string,
+    idUpdater: string,
+  ): Promise<void> {
+    await trx
+      .withSchema(BUSINESS_SCHEMA)
+      .table('business_reviews')
+      .where('business_id', businessId)
+      .whereNull('deleted_at')
+      .update({
+        deleted_at: trx.fn.now(),
+        id_updater: idUpdater,
+      });
+  }
+
+  /**
+   * Soft delete services for a given business.
+   * Sets deleted_at = NOW() and id_updater.
+   * Services are in service.services schema.
+   */
+  async softDeleteServices(
+    trx: Knex.Transaction,
+    businessId: string,
+    idUpdater: string,
+  ): Promise<void> {
+    await trx
+      .withSchema('service')
+      .table('services')
+      .where('business_id', businessId)
+      .whereNull('deleted_at')
+      .update({
+        deleted_at: trx.fn.now(),
+        id_updater: idUpdater,
+      });
+  }
+
+  /**
+   * Soft delete a business record.
+   * Sets deleted_at = NOW(), updated_at = NOW(), and id_updater.
+   */
+  async softDeleteBusiness(
+    trx: Knex.Transaction,
+    businessId: string,
+    idUpdater: string,
+  ): Promise<void> {
+    await trx
+      .withSchema(BUSINESS_SCHEMA)
+      .table('businesses')
+      .where('id', businessId)
+      .whereNull('deleted_at')
+      .update({
+        deleted_at: trx.fn.now(),
+        updated_at: trx.fn.now(),
+        id_updater: idUpdater,
+      });
+  }
 }

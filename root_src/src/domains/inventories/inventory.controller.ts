@@ -64,20 +64,112 @@ export class InventoryController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 201, description: 'Inventory created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 201,
+    description: 'Inventory created successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Inventory created successfully',
+        data: {
+          id: '660e8400-e29b-41d4-a716-446655440000',
+          product_id: '550e8400-e29b-41d4-a716-446655440000',
+          quantity: 50,
+          min_stock: 10,
+          updated_at: null,
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: null,
+          product: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Impact Wrench 800W',
+            description: 'Heavy duty impact wrench for workshop use',
+            price: 1500000,
+            unit: 'pcs',
+            status: 'active',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [
+          {
+            field: 'quantity',
+            message: 'Quantity must not be negative',
+          },
+          {
+            field: 'min_stock',
+            message: 'Min stock must not be negative',
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'INVENTORY_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or product not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        productNotFound: {
+          summary: 'Product not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_NOT_FOUND',
+            message: 'Product not found in inventory',
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 409,
     description: 'Inventory already exists for this product',
+    schema: {
+      example: {
+        statusCode: 409,
+        code: 'INVENTORY_ALREADY_EXISTS',
+        message: 'Inventory already exists for this product',
+      },
+    },
   })
   @ResponseMessage('inventories.success.created')
   async create(
@@ -132,13 +224,72 @@ export class InventoryController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 200, description: 'Inventories list retrieved' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventories list retrieved',
+    schema: {
+      example: {
+        success: true,
+        message: 'Inventories list retrieved',
+        data: [
+          {
+            id: '660e8400-e29b-41d4-a716-446655440000',
+            product_id: '550e8400-e29b-41d4-a716-446655440000',
+            quantity: 50,
+            min_stock: 10,
+            updated_at: null,
+            deleted_at: null,
+            id_creator: 'public-uuid',
+            id_updater: null,
+            product: {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+              name: 'Impact Wrench 800W',
+              description: 'Heavy duty impact wrench for workshop use',
+              price: 1500000,
+              unit: 'pcs',
+              status: 'active',
+              business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+              category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+            },
+          },
+        ],
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'INVENTORY_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
-  @ApiResponse({ status: 404, description: 'Business not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        code: 'INVENTORY_BUSINESS_NOT_FOUND',
+        message: 'Business not found',
+      },
+    },
+  })
   @ResponseMessage('inventories.success.found')
   async findAll(
     @Param('businessId') businessId: string,
@@ -181,15 +332,81 @@ export class InventoryController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 200, description: 'Inventory found successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory found successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Inventory found successfully',
+        data: {
+          id: '660e8400-e29b-41d4-a716-446655440000',
+          product_id: '550e8400-e29b-41d4-a716-446655440000',
+          quantity: 50,
+          min_stock: 10,
+          updated_at: null,
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: null,
+          product: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Impact Wrench 800W',
+            description: 'Heavy duty impact wrench for workshop use',
+            price: 1500000,
+            unit: 'pcs',
+            status: 'active',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'INVENTORY_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or inventory not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        inventoryNotFound: {
+          summary: 'Inventory not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_NOT_FOUND',
+            message: 'Inventory not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('inventories.success.foundOne')
   async findOne(
@@ -222,16 +439,97 @@ export class InventoryController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 200, description: 'Inventory updated successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory updated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Inventory updated successfully',
+        data: {
+          id: '660e8400-e29b-41d4-a716-446655440000',
+          product_id: '550e8400-e29b-41d4-a716-446655440000',
+          quantity: 40,
+          min_stock: 10,
+          updated_at: '2026-02-05T10:00:00.000Z',
+          deleted_at: null,
+          id_creator: 'public-uuid',
+          id_updater: 'public-uuid',
+          product: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Impact Wrench 800W',
+            description: 'Heavy duty impact wrench for workshop use',
+            price: 1500000,
+            unit: 'pcs',
+            status: 'active',
+            business_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            category_id: '0d3f2e8a-8d9c-4b2e-9f74-7b7d3c5e1a2b',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Validation failed',
+        errors: [
+          {
+            field: 'quantity',
+            message: 'Quantity must not be negative',
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'INVENTORY_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or inventory not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        inventoryNotFound: {
+          summary: 'Inventory not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_NOT_FOUND',
+            message: 'Inventory not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('inventories.success.updated')
   async update(
@@ -271,15 +569,62 @@ export class InventoryController {
     required: false,
     schema: { enum: ['en', 'id'], default: 'en' },
   })
-  @ApiResponse({ status: 200, description: 'Inventory deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory deleted successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Inventory deleted successfully',
+        data: null,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    },
+  })
   @ApiResponse({
     status: 403,
     description: 'Access denied or business inactive',
+    schema: {
+      example: {
+        statusCode: 403,
+        code: 'INVENTORY_BUSINESS_ACCESS_DENIED',
+        message: 'Access denied to this business',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Business or inventory not found',
+    schema: {
+      examples: {
+        businessNotFound: {
+          summary: 'Business not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        },
+        inventoryNotFound: {
+          summary: 'Inventory not found',
+          value: {
+            statusCode: 404,
+            code: 'INVENTORY_NOT_FOUND',
+            message: 'Inventory not found',
+          },
+        },
+      },
+    },
   })
   @ResponseMessage('inventories.success.deleted')
   async remove(

@@ -1,5 +1,4 @@
 import { IsInt, Min, Max, Matches, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 const HH_MM_REGEX = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
@@ -14,7 +13,6 @@ export class BusinessHoursItemDto {
   @IsInt({ message: 'businesses.validation.hours.dayInteger' })
   @Min(0, { message: 'businesses.validation.hours.dayRange' })
   @Max(6, { message: 'businesses.validation.hours.dayRange' })
-  @Type(() => Number)
   day_of_week: number;
 
   @ApiProperty({

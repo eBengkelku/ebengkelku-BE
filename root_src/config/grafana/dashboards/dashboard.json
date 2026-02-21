@@ -682,7 +682,7 @@
           },
           "direction": "backward",
           "editorMode": "builder",
-          "expr": "{service=\"nest-app-api\"} |= `` | json",
+          "expr": "{service=\"nest-app-api\"} |= ``",
           "queryType": "range",
           "refId": "A"
         }

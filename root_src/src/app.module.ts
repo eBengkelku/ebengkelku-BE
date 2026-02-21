@@ -45,6 +45,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import configuration, { AppConfig, LoggerConfig, LoggerFormat } from './config';
 import { RedisModule } from './libs/redis/redis.module';
 import { RequestTimingMiddleware } from './common/middlewares/request-timing.middleware';
+import { MetricsModule } from './common/metrics/metrics.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt.guard';
 
@@ -106,6 +107,8 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     ToolProductsModule, // Tool product extensions
     SparePartProductsModule, // Spare part product extensions
     InventoriesModule, // Inventory management
+    // Observability
+    MetricsModule, // Prometheus metrics endpoint + HTTP metrics
     // Jobs
     UserEncryptionModule, // PII encryption cron job
     // Auth Registration

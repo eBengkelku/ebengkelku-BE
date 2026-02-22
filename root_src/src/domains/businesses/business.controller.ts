@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Body,
   Param,
   Req,
@@ -23,6 +24,7 @@ import {
 import { I18nService } from 'nestjs-i18n';
 import { BusinessService } from './business.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
+import { UpdateBusinessDto } from './dto/update-business.dto';
 import { ResponseMessage } from '../../common/decorators/response-message.decorator';
 import { JwtAuthGuard } from '../../auth/jwt.guard';
 import { BusinessFormDataInterceptor } from './interceptors/business-form-data.interceptor';
@@ -575,5 +577,299 @@ export class BusinessController {
     }
 
     return this.businessService.findOneById(businessId, sub, lang);
+  }
+
+  /**
+   * Update a business by ID owned by the authenticated user.
+   * Supports partial updates for all fields including images and business_hours.
+   * Only the owner of the business can update it.
+   *
+   * @param {string} businessId - UUID of the business (from URL path)
+   * @param {UpdateBusinessDto} dto - Fields to update (all optional)
+   * @param {Request} req - Express request with JWT user payload and files
+   * @returns {Promise<{ business: IBusiness; business_hours: IBusinessHours[] }>}
+   * @throws {UnauthorizedException} If JWT is invalid or user not found
+   * @throws {BadRequestException} If validation fails
+   * @throws {NotFoundException} If business not found or soft-deleted
+   * @throws {ForbiddenException} If user is not the owner of the business
+   *
+   * @example
+   * ```
+   * PUT /v1/businesses/550e8400-e29b-41d4-a716-446655440000
+   * Headers:
+   *   Authorization: Bearer <jwt-token>
+   *   Content-Type: multipart/form-data
+   *   x-lang: en
+   *
+   * Body (form-data):
+   *   name: "Bengkel Jaya Motor Updated"
+   *   tagline: "Service terpercaya sejak 2010"
+   *   business_hours: [{"day_of_week":1,"open_time":"08:00","close_time":"17:00"}]
+   *   image: (file)
+   *
+   * Response:
+   * {
+   *   "success": true,
+   *   "statusCode": 200,
+   *   "message": "Business updated successfully",
+   *   "data": {
+   *     "business": { "id": "...", "name": "Bengkel Jaya Motor Updated", ... },
+   *     "business_hours": [ { "day_of_week": 1, ... } ]
+   *   },
+   *   "errors": null,
+   *   "timestamp": "2026-02-18T10:00:01.000Z",
+   *   "path": "/v1/businesses/550e8400-e29b-41d4-a716-446655440000",
+   *   "requestTime": 120
+   * }
+   * ```
+   */
+  @Put(':business_id')
+  @HttpCode(HttpStatus.OK)
+  @ResponseMessage('businesses.updated')
+  @ApiOperation({ summary: 'Update business by ID' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Business/workshop name',
+          example: 'Bengkel Jaya Motor Updated',
+          minLength: 1,
+          maxLength: 255,
+        },
+        tagline: {
+          type: 'string',
+          description: 'Short tagline',
+          example: 'Service terpercaya sejak 2010',
+          maxLength: 500,
+        },
+        status: {
+          type: 'string',
+          enum: ['pending', 'active', 'banned'],
+          description: 'Business status',
+          example: 'active',
+        },
+        phone: {
+          type: 'string',
+          description: 'Contact phone',
+          example: '+6281234567890',
+          maxLength: 50,
+        },
+        address: {
+          type: 'string',
+          description: 'Full address',
+          example: 'Jl. Sudirman No. 123, Jakarta',
+        },
+        latitude: {
+          type: 'number',
+          description: 'Latitude coordinate',
+          example: -6.2088,
+          minimum: -90,
+          maximum: 90,
+        },
+        longitude: {
+          type: 'number',
+          description: 'Longitude coordinate',
+          example: 106.8456,
+          minimum: -180,
+          maximum: 180,
+        },
+        business_hours: {
+          type: 'string',
+          description:
+            'Operating hours per day as JSON string. Example: [{"day_of_week":1,"open_time":"08:00","close_time":"17:00"}]',
+          example:
+            '[{"day_of_week":1,"open_time":"08:00","close_time":"17:00"}]',
+        },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Business logo/profile image',
+        },
+        cover_image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Business cover/banner image',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Business updated successfully',
+    schema: {
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Business updated successfully',
+        data: {
+          business: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            owner_id: 'user-uuid-internal',
+            name: 'Bengkel Jaya Motor Updated',
+            tagline: 'Service terpercaya sejak 2010',
+            status: 'active',
+            phone: '+6281234567890',
+            image: '/var/www/files/images/2026/02/abc123.jpg',
+            cover_image: '/var/www/files/images/2026/02/cover123.jpg',
+            latitude: '-6.2088',
+            longitude: '106.8456',
+            address: 'Jl. Sudirman No. 123, Jakarta',
+            created_at: '2026-02-05T08:00:00.000Z',
+            updated_at: '2026-02-18T10:00:00.000Z',
+            deleted_at: null,
+            id_creator: 'public-uuid',
+            id_updater: 'public-uuid',
+          },
+          business_hours: [
+            {
+              id: '660e8400-e29b-41d4-a716-446655440001',
+              business_id: '550e8400-e29b-41d4-a716-446655440000',
+              day_of_week: 1,
+              open_time: '08:00',
+              close_time: '17:00',
+              updated_at: '2026-02-18T10:00:00.000Z',
+              deleted_at: null,
+              id_creator: 'public-uuid',
+              id_updater: 'public-uuid',
+            },
+          ],
+        },
+        errors: null,
+        timestamp: '2026-02-18T10:00:01.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440000',
+        requestTime: 120,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 400,
+        message: 'Validation failed',
+        data: null,
+        errors: [
+          {
+            field: 'name',
+            message: 'Business name must be between 1 and 255 characters',
+            code: 'VALIDATION_LENGTH',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:01.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440000',
+        requestTime: 5,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 401,
+        message: 'Owner identity is required. Please provide a valid JWT.',
+        data: null,
+        errors: [
+          {
+            code: 'UNAUTHORIZED',
+            message: 'Owner identity is required. Please provide a valid JWT.',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:01.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440000',
+        requestTime: 2,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 403,
+        message: 'You do not have permission to access this business',
+        data: null,
+        errors: [
+          {
+            code: 'BUSINESS_ACCESS_DENIED',
+            message: 'You do not have permission to access this business',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:01.000Z',
+        path: '/v1/businesses/550e8400-e29b-41d4-a716-446655440000',
+        requestTime: 8,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 404,
+        message: 'Business not found',
+        data: null,
+        errors: [
+          {
+            code: 'BUSINESS_NOT_FOUND',
+            message: 'Business not found',
+          },
+        ],
+        timestamp: '2026-02-18T10:00:01.000Z',
+        path: '/v1/businesses/00000000-0000-0000-0000-000000000000',
+        requestTime: 6,
+      },
+    },
+  })
+  async update(
+    @Param('business_id') businessId: string,
+    @Body() dto: UpdateBusinessDto,
+    @Req()
+    req: Request & {
+      user?: { sub: string };
+      files?: {
+        image?: Express.Multer.File[];
+        cover_image?: Express.Multer.File[];
+      };
+    },
+  ): Promise<{ business: IBusiness; business_hours: IBusinessHours[] }> {
+    const sub = req.user?.sub;
+    const lang = (req.headers['x-lang'] as string) || 'en';
+
+    if (!sub) {
+      throw new UnauthorizedException(
+        this.i18n.t('businesses.errors.ownerRequired', { lang }),
+      );
+    }
+
+    const files = req.files ?? {};
+    const image = Array.isArray(files.image) ? files.image[0] : files.image;
+    const cover_image = Array.isArray(files.cover_image)
+      ? files.cover_image[0]
+      : files.cover_image;
+
+    // Prevent owner_id spoofing: remove from DTO if present
+    const { owner_id: _omit, ...dtoSafe } = dto as UpdateBusinessDto & {
+      owner_id?: string;
+    };
+
+    return this.businessService.update(
+      businessId,
+      dtoSafe as UpdateBusinessDto,
+      sub,
+      {
+        image,
+        cover_image,
+        lang,
+      },
+    );
   }
 }

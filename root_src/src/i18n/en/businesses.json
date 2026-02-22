@@ -1,6 +1,7 @@
 {
   "title": "Businesses",
   "created": "Business created successfully",
+  "updated": "Business updated successfully",
   "listed": "Businesses retrieved successfully",
   "found": "Business retrieved successfully",
   "validation": {
@@ -19,6 +20,9 @@
     },
     "address": {
       "string": "Address must be a text value"
+    },
+    "status": {
+      "invalid": "Status must be one of: pending, active, banned"
     },
     "latitude": {
       "number": "Latitude must be a valid number",

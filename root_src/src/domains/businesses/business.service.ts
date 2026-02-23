@@ -628,4 +628,173 @@ export class BusinessService {
       id_updater: idUpdater,
     };
   }
+
+  /**
+   * Soft delete a business by ID with cascade to related tables.
+   * Only the owner can delete their business.
+   * Idempotent: returns success if already soft-deleted and requester is owner.
+   *
+   * @param {string} businessId - UUID of the business
+   * @param {string} sub - JWT sub claim (public_id from core.users)
+   * @param {string} lang - Language for i18n messages
+   * @returns {Promise<void>}
+   * @throws {UnauthorizedException} If sub is invalid or user not found
+   * @throws {BadRequestException} If businessId is empty/invalid
+   * @throws {NotFoundException} If business not found
+   * @throws {ForbiddenException} If user is not the owner of the business
+   */
+  async remove(businessId: string, sub: string, lang?: string): Promise<void> {
+    // 1. Validate sub (JWT claim)
+    if (!sub?.trim()) {
+      throw new UnauthorizedException(
+        this.i18n.t('businesses.errors.ownerRequired', { lang }),
+      );
+    }
+
+    // 2. Validate businessId
+    if (!businessId?.trim()) {
+      throw new BadRequestException(
+        this.i18n.t('businesses.errors.invalidBusinessId', { lang }),
+      );
+    }
+
+    // 3. Resolve owner_id from JWT sub (prevents spoofing) and validate user existence
+    const ownerId = await this.resolveOwnerIdFromSub(sub);
+    const idUpdater = sub;
+
+    // 4. Fetch business INCLUDING soft-deleted for idempotency check
+    const result =
+      await this.repository.findBusinessByIdIncludingDeleted(businessId);
+
+    // 5. Check if business exists (404 if never existed)
+    if (!result) {
+      throw new NotFoundException(
+        this.i18n.t('businesses.errors.notFound', { lang }),
+      );
+    }
+
+    // 6. Verify ownership (403 if not owner, even if already deleted)
+    if (result.business.owner_id !== ownerId) {
+      throw new ForbiddenException(
+        this.i18n.t('businesses.errors.accessDenied', { lang }),
+      );
+    }
+
+    // 7. Store file paths for cleanup after DB commit
+    const imagePath = result.business.image ?? null;
+    const coverImagePath = result.business.cover_image ?? null;
+
+    // 8. Start transaction for cascade soft-delete
+    const trx = await this.knex.transaction();
+
+    try {
+      // Re-fetch business row inside the transaction with a row-level lock
+      // to prevent race conditions in concurrent delete scenarios.
+      const lockedBusiness = await trx<IBusiness>('businesses')
+        .where('id', businessId)
+        .forUpdate()
+        .first();
+
+      // If the business was hard-deleted between the initial check and now
+      if (!lockedBusiness) {
+        throw new NotFoundException(
+          this.i18n.t('businesses.errors.notFound', { lang }),
+        );
+      }
+
+      // Idempotent: if already soft-deleted, do nothing
+      if (lockedBusiness.deleted_at !== null) {
+        await trx.commit();
+        return;
+      }
+
+      // Cascade soft delete: children first, then parent
+      await this.repository.softDeleteBusinessHours(trx, businessId, idUpdater);
+      await this.repository.softDeleteBusinessReviews(
+        trx,
+        businessId,
+        idUpdater,
+      );
+      await this.repository.softDeleteServices(trx, businessId, idUpdater);
+      await this.repository.softDeleteBusiness(trx, businessId, idUpdater);
+
+      await trx.commit();
+    } catch (err) {
+      await trx.rollback();
+      throw err;
+    }
+
+    // 9. Delete physical files after DB commit (log errors, don't throw)
+    await this.cleanupPhysicalFiles(imagePath, coverImagePath, businessId);
+  }
+
+  /**
+   * Delete physical image files from storage.
+   * Finds file records by path, then deletes them via FileService.
+   * Logs errors but does not throw to prevent breaking the delete operation.
+   *
+   * @param {string | null} imagePath - Path to image file
+   * @param {string | null} coverImagePath - Path to cover image file
+   * @param {string} businessId - Business ID for error context
+   */
+  private async cleanupPhysicalFiles(
+    imagePath: string | null,
+    coverImagePath: string | null,
+    businessId: string,
+  ): Promise<void> {
+    const filesToDelete: string[] = [];
+
+    // Find file IDs by path
+    if (imagePath && imagePath.trim()) {
+      try {
+        const fileRecord = await this.knex('files.files')
+          .where('file_path', imagePath)
+          .whereNull('deleted_at')
+          .select('id')
+          .first();
+
+        if (fileRecord?.id) {
+          filesToDelete.push(fileRecord.id);
+        }
+      } catch (error) {
+        console.error(
+          `Failed to find image file record for business ${businessId}:`,
+          imagePath,
+          error,
+        );
+      }
+    }
+
+    if (coverImagePath && coverImagePath.trim()) {
+      try {
+        const fileRecord = await this.knex('files.files')
+          .where('file_path', coverImagePath)
+          .whereNull('deleted_at')
+          .select('id')
+          .first();
+
+        if (fileRecord?.id) {
+          filesToDelete.push(fileRecord.id);
+        }
+      } catch (error) {
+        console.error(
+          `Failed to find cover image file record for business ${businessId}:`,
+          coverImagePath,
+          error,
+        );
+      }
+    }
+
+    // Delete files via FileService
+    for (const fileId of filesToDelete) {
+      try {
+        await this.fileService.deleteFile(fileId);
+      } catch (error) {
+        console.error(
+          `Failed to delete file ${fileId} for business ${businessId}:`,
+          error,
+        );
+      }
+    }
+  }
 }

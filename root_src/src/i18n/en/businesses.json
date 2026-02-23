@@ -2,6 +2,7 @@
   "title": "Businesses",
   "created": "Business created successfully",
   "updated": "Business updated successfully",
+  "deleted": "Business deleted successfully",
   "listed": "Businesses retrieved successfully",
   "found": "Business retrieved successfully",
   "validation": {

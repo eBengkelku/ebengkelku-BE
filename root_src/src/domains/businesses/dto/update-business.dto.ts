@@ -1,7 +1,6 @@
 import {
-  IsNotEmpty,
-  IsString,
   IsOptional,
+  IsString,
   IsArray,
   ValidateNested,
   Length,
@@ -9,23 +8,25 @@ import {
   IsNumber,
   Min,
   Max,
+  IsEnum,
 } from 'class-validator';
 import { Type, Transform, plainToInstance } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { BusinessHoursItemDto } from './business-hours-item.dto';
+import { BusinessStatus } from '../contracts/business-status.enum';
 
-export class CreateBusinessDto {
-  @ApiProperty({
+export class UpdateBusinessDto {
+  @ApiPropertyOptional({
     description: 'Business/workshop name',
     example: 'Bengkel Jaya Motor',
     minLength: 1,
     maxLength: 255,
   })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @IsNotEmpty({ message: 'businesses.validation.name.required' })
+  @IsOptional()
   @IsString({ message: 'businesses.validation.name.string' })
   @Length(1, 255, { message: 'businesses.validation.name.length' })
-  name: string;
+  name?: string;
 
   @ApiPropertyOptional({
     description: 'Short tagline',
@@ -37,6 +38,17 @@ export class CreateBusinessDto {
   @IsString({ message: 'businesses.validation.tagline.string' })
   @MaxLength(500, { message: 'businesses.validation.tagline.maxLength' })
   tagline?: string;
+
+  @ApiPropertyOptional({
+    description: 'Business status',
+    enum: BusinessStatus,
+    example: BusinessStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsEnum(BusinessStatus, {
+    message: 'businesses.validation.status.invalid',
+  })
+  status?: BusinessStatus;
 
   @ApiPropertyOptional({
     description: 'Contact phone',

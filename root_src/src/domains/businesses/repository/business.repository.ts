@@ -63,6 +63,42 @@ export class BusinessRepository {
   }
 
   /**
+   * Update business by id within a transaction
+   */
+  async updateBusiness(
+    trx: Knex.Transaction,
+    businessId: string,
+    updates: Record<string, unknown>,
+  ): Promise<void> {
+    await trx
+      .withSchema(BUSINESS_SCHEMA)
+      .table('businesses')
+      .where('id', businessId)
+      .update(updates);
+  }
+
+  /**
+   * Soft-delete all business hours for a business within a transaction
+   */
+  async softDeleteBusinessHours(
+    trx: Knex.Transaction,
+    businessId: string,
+    idUpdater: string,
+  ): Promise<void> {
+    const now = new Date();
+    await trx
+      .withSchema(BUSINESS_SCHEMA)
+      .table('business_hours')
+      .where('business_id', businessId)
+      .whereNull('deleted_at')
+      .update({
+        deleted_at: now,
+        updated_at: now,
+        id_updater: idUpdater,
+      });
+  }
+
+  /**
    * Find business by id with business_hours using LEFT JOIN (single query).
    * Returns null if not found or soft-deleted.
    */

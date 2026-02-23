@@ -22,6 +22,9 @@
     "address": {
       "string": "Address must be a text value"
     },
+    "status": {
+      "invalid": "Status must be one of: pending, active, banned"
+    },
     "latitude": {
       "number": "Latitude must be a valid number",
       "range": "Latitude must be between -90 and 90"

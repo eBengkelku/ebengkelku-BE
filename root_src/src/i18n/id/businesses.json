@@ -22,6 +22,9 @@
     "address": {
       "string": "Alamat harus berupa teks"
     },
+    "status": {
+      "invalid": "Status harus salah satu dari: pending, active, banned"
+    },
     "latitude": {
       "number": "Latitude harus berupa angka",
       "range": "Latitude harus antara -90 dan 90"

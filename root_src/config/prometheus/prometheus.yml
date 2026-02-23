@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'ebengkelku-be'
+    static_configs:
+      - targets: ['nest-app-api:3004']
